@@ -3,7 +3,7 @@ ifneq ("$(wildcard $(CURDIR)/build.properties)","")
 	include $(CURDIR)/build.properties
 endif
 
-build-%: version-% tag-git-%
+build-%: set-version-% tag-git-%;
 
 tag-git-%: tests set-version-%
 	git tag -a $(build.version) -m "Release $(build.version)"
