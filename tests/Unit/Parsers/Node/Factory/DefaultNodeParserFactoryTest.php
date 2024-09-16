@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\Node\Factory;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\NodeParserExistsException;
@@ -14,6 +12,8 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultNodeParserFactoryTest extends TestCase
 {

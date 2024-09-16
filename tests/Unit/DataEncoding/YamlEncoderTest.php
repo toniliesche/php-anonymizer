@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataEncoding\YamlEncoder;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class YamlEncoderTest extends TestCase
 {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
 
-use PHPUnit\Framework\TestCase;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
@@ -17,6 +16,7 @@ use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
 use PhpAnonymizer\Anonymizer\Model\RuleSet;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
+use PHPUnit\Framework\TestCase;
 
 class ProcessingUnitTest extends TestCase
 {

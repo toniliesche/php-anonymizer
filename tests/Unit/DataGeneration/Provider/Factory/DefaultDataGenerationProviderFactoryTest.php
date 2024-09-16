@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration\Provider\Factory;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInterface;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
@@ -13,6 +11,8 @@ use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Exception\DataGenerationProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultDataGenerationProviderFactoryTest extends TestCase
 {

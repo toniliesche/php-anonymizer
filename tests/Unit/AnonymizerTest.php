@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit;
 
-use PHPUnit\Framework\TestCase;
 use PhpAnonymizer\Anonymizer\Anonymizer;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
@@ -14,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
+use PHPUnit\Framework\TestCase;
 
 class AnonymizerTest extends TestCase
 {

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding;
 
-use Safe\Exceptions\YamlException;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
+use Safe\Exceptions\YamlException;
 use function Safe\yaml_parse;
 
 class YamlEncoder implements DataEncoderInterface

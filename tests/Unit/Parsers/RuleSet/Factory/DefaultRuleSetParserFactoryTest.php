@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet\Factory;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidRuleSetParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\RulesetParserExistsException;
@@ -13,6 +11,8 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetParserException;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultRuleSetParserFactoryTest extends TestCase
 {

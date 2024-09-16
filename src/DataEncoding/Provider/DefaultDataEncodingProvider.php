@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding\Provider;
 
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\CloneEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
@@ -20,6 +18,8 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Exception\MissingProviderRequirementException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataEncoderException;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 {

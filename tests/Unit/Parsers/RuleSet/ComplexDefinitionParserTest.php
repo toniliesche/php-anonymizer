@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
@@ -14,6 +12,8 @@ use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class ComplexDefinitionParserTest extends TestCase
 {
@@ -55,7 +55,7 @@ class ComplexDefinitionParserTest extends TestCase
         $parser = new DefaultRuleSetParser(new ComplexRegexParser());
         $this->expectException(InvalidArgumentException::class);
         $parser->parseDefinition(
-        /** @phpstan-ignore-next-line  */
+            /** @phpstan-ignore-next-line  */
             [
                 new stdClass(),
             ],

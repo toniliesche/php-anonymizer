@@ -6,8 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration\Provider;
 
 use Faker\Factory;
 use Faker\Generator;
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
@@ -16,6 +14,8 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Exception\UnsupportedDataTypeException;
 use PhpAnonymizer\Anonymizer\Test\Helper\DataGeneration\RandomIntGenerator;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultDataGenerationProviderTest extends TestCase
 {

@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding\Provider;
 
-use PHPUnit\Framework\TestCase;
-use RuntimeException;
-use stdClass;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\NoOpEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
@@ -17,6 +13,10 @@ use PhpAnonymizer\Anonymizer\Enum\DataEncoder;
 use PhpAnonymizer\Anonymizer\Exception\DataEncoderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class DefaultDataEncodingProviderTest extends TestCase
 {

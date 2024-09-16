@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Parser\RuleSet;
 
-use Safe\Exceptions\PcreException;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
@@ -14,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use Safe\Exceptions\PcreException;
 
 readonly class DefaultRuleSetParser implements RuleSetParserInterface
 {

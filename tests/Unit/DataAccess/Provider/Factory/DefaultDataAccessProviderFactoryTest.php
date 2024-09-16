@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess\Provider\Factory;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DefaultDataAccessProviderFactory;
@@ -13,6 +11,8 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataAccessProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataAccessProviderDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessProviderException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultDataAccessProviderFactoryTest extends TestCase
 {

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\Node;
 
-use PHPUnit\Framework\TestCase;
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PHPUnit\Framework\TestCase;
 
 class ComplexRegexParserTest extends TestCase
 {

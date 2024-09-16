@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration;
 
 use Faker\Factory;
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Enum\DataField;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class FakerAwareStringGeneratorTest extends TestCase
 {

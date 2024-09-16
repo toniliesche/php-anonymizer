@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
 
-use PHPUnit\Framework\TestCase;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Model\Node;
+use PHPUnit\Framework\TestCase;
 
 class NodeTest extends TestCase
 {

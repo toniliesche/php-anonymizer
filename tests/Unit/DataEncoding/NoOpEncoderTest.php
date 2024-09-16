@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataEncoding\NoOpEncoder;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class NoOpEncoderTest extends TestCase
 {

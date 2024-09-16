@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use Error;
-use ReflectionClass;
-use ReflectionException;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use ReflectionClass;
+use ReflectionException;
 
 class ReflectionDataAccess extends AbstractObjectDataAccess
 {

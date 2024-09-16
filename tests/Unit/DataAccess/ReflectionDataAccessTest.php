@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataAccess\ReflectionDataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class ReflectionDataAccessTest extends TestCase
 {

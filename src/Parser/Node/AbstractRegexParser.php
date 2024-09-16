@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
-use Safe\Exceptions\PcreException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidRegExpException;
 use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use Safe\Exceptions\PcreException;
 use function Safe\preg_match;
 
 abstract class AbstractRegexParser implements NodeParserInterface

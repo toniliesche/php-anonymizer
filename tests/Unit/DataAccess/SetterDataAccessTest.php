@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class SetterDataAccessTest extends TestCase
 {

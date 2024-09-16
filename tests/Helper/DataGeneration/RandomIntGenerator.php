@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\DataGeneration;
 
-use Random\RandomException;
 use PhpAnonymizer\Anonymizer\DataGeneration\DataGeneratorInterface;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use Random\RandomException;
 
 /**
  * @template-implements DataGeneratorInterface<int>

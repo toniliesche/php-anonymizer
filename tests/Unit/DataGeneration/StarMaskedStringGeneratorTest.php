@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class StarMaskedStringGeneratorTest extends TestCase
 {

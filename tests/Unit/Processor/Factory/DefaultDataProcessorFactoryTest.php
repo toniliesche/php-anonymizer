@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Processor\Factory;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
@@ -16,6 +14,8 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownDataProcessorException;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class DefaultDataProcessorFactoryTest extends TestCase
 {

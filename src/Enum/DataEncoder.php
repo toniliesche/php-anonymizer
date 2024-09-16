@@ -11,5 +11,4 @@ enum DataEncoder: string
     case NOOP = 'noop';
     case SYMFONY = 'symfony';
     case YAML = 'yaml';
-
 }

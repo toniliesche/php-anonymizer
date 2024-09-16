@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Integration;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataEncoder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Data;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class AnonymizerTest extends TestCase
 {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataEncoding\CloneEncoder;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class CloneEncoderTest extends TestCase
 {

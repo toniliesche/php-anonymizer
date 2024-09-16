@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use ArrayObject;
-use PHPUnit\Framework\TestCase;
-use stdClass;
 use PhpAnonymizer\Anonymizer\DataAccess\ArrayDataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class ArrayDataAccessTest extends TestCase
 {

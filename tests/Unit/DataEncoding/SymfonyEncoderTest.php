@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding;
 
-use PHPUnit\Framework\TestCase;
-use stdClass;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyEncoder;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
@@ -14,6 +11,9 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
+use PHPUnit\Framework\TestCase;
+use stdClass;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class SymfonyEncoderTest extends TestCase
 {

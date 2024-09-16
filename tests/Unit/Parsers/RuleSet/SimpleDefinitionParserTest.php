@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet;
 
-use PHPUnit\Framework\TestCase;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
@@ -12,6 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
+use PHPUnit\Framework\TestCase;
 
 class SimpleDefinitionParserTest extends TestCase
 {
