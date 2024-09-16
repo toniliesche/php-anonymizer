@@ -3,7 +3,9 @@ ifneq ("$(wildcard $(CURDIR)/build.properties)","")
 	include $(CURDIR)/build.properties
 endif
 
-tag-git-%: build-docker-php-% build-docker-nginx-%
+build-%: version-% tag-git-%
+
+tag-git-%: tests set-version-%
 	git tag -a $(build.version) -m "Release $(build.version)"
 	git push origin $(build.version)
 
@@ -15,9 +17,6 @@ set-version-rc:
 
 set-version-patch:
 	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix}.${build.version.patch})
-
-clean:
-	rm -rf .env.dev .env.prod .idea .git* composer.lock docker free-wedding-website-template.jpg LICENSE.txt migrations* phpstan* phpunit* READ-ME.txt scss symfony.lock var web/assets
 
 increase-%: update-% write-properties
 	@echo updated build.properties file
