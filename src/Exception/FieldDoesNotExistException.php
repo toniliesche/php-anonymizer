@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Exception;
 
+use function implode;
+use function sprintf;
+
 final class FieldDoesNotExistException extends NotFoundException
 {
     /**
@@ -11,7 +14,7 @@ final class FieldDoesNotExistException extends NotFoundException
      */
     public static function fromPath(array $path): self
     {
-        return new self(\sprintf('Field does not exist : [%s]', \implode('.', $path)));
+        return new self(sprintf('Field does not exist : [%s]', implode('.', $path)));
     }
 
     /**
@@ -19,6 +22,6 @@ final class FieldDoesNotExistException extends NotFoundException
      */
     public static function orIsNotAccessibleFromPath(array $path): self
     {
-        return new self(\sprintf('Field does not exist or is not accessible : [%s]', \implode('.', $path)));
+        return new self(sprintf('Field does not exist or is not accessible : [%s]', implode('.', $path)));
     }
 }

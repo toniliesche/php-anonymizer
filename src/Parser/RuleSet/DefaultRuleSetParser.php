@@ -14,6 +14,10 @@ use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
 use Safe\Exceptions\PcreException;
+use function count;
+use function explode;
+use function is_string;
+use function sprintf;
 
 readonly class DefaultRuleSetParser implements RuleSetParserInterface
 {
@@ -30,19 +34,19 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
         $tree = new Tree();
 
         foreach ($rules as $definition) {
-            if (!\is_string($definition)) {
+            if (!is_string($definition)) {
                 throw new InvalidArgumentException('Rule definition must be a string.');
             }
 
-            $definitionParts = \explode('.', $definition);
-            $levels = \count($definitionParts);
+            $definitionParts = explode('.', $definition);
+            $levels = count($definitionParts);
             $childNode = $tree;
 
             foreach ($definitionParts as $level => $nodeName) {
                 $parentNode = $childNode;
                 $ruleResult = $this->nodeParser->parseNodeName($nodeName);
                 if (!$ruleResult->isValid) {
-                    throw new InvalidNodeNameException(\sprintf('Invalid node name "%s".', $nodeName));
+                    throw new InvalidNodeNameException(sprintf('Invalid node name "%s".', $nodeName));
                 }
 
                 $nodeType = $level > ($levels - 2) ? NodeType::LEAF : NodeType::NODE;
@@ -52,7 +56,7 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
                     $childNode = $parentNode->getChildNode($ruleResult->property);
                     if ($childNode->nodeType !== $nodeType || $childNode->dataAccess !== $dataAccess || $childNode->isArray !== $ruleResult->isArray) {
                         throw new NodeDefinitionMismatchException(
-                            \sprintf('Node definition mismatch for node "%s".', $ruleResult->property),
+                            sprintf('Node definition mismatch for node "%s".', $ruleResult->property),
                         );
                     }
 

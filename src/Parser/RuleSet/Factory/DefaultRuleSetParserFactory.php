@@ -11,6 +11,10 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetParserException;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
+use function in_array;
+use function is_callable;
+use function is_null;
+use function sprintf;
 
 class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 {
@@ -29,8 +33,8 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
      */
     public function registerCustomRulesetParser(string $name, mixed $definition): void
     {
-        if (\in_array($name, self::RULE_SET_PARSERS, true) || \in_array($name, $this->customRuleSetParsers, true)) {
-            throw new RulesetParserExistsException(\sprintf('Cannot override existing rule set parser: "%s"', $name));
+        if (in_array($name, self::RULE_SET_PARSERS, true) || in_array($name, $this->customRuleSetParsers, true)) {
+            throw new RulesetParserExistsException(sprintf('Cannot override existing rule set parser: "%s"', $name));
         }
 
         if ($definition instanceof RuleSetParserInterface) {
@@ -39,7 +43,7 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
             return;
         }
 
-        if (!\is_callable($definition)) {
+        if (!is_callable($definition)) {
             throw new InvalidRuleSetParserDefinitionException('Rule set parser definition must be a callable');
         }
 
@@ -48,7 +52,7 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 
     public function getRulesetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface
     {
-        if (\is_null($type)) {
+        if (is_null($type)) {
             throw new InvalidRuleSetParserDefinitionException('Rule set parser type must be provided');
         }
 
@@ -72,7 +76,7 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 
         return match ($type) {
             RuleSetParser::DEFAULT->value => new DefaultRuleSetParser($nodeParser),
-            default => throw new UnknownRuleSetParserException(\sprintf('Unknown rule set parser: "%s"', $type)),
+            default => throw new UnknownRuleSetParserException(sprintf('Unknown rule set parser: "%s"', $type)),
         };
     }
 }

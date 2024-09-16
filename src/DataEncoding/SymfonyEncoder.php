@@ -14,6 +14,9 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use function get_class;
+use function is_array;
+use function is_object;
 
 readonly class SymfonyEncoder implements DataEncoderInterface
 {
@@ -44,11 +47,11 @@ readonly class SymfonyEncoder implements DataEncoderInterface
      */
     public function decode(mixed $data, TempStorage $tempStorage): array
     {
-        if (!\is_object($data)) {
+        if (!is_object($data)) {
             throw new DataEncodingException('SymfonyEncoder can only decode objects');
         }
 
-        $tempStorage->store('symfony-encoder-type', \get_class($data));
+        $tempStorage->store('symfony-encoder-type', get_class($data));
 
         try {
             return $this->normalizer->normalize($data);
@@ -67,7 +70,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
      */
     public function encode(mixed $data, TempStorage $tempStorage): object
     {
-        if (!\is_array($data)) {
+        if (!is_array($data)) {
             throw new DataEncodingException('SymfonyEncoder can only encode arrays');
         }
 
@@ -92,6 +95,6 @@ readonly class SymfonyEncoder implements DataEncoderInterface
 
     public function supports(mixed $data): bool
     {
-        return \is_object($data);
+        return is_object($data);
     }
 }

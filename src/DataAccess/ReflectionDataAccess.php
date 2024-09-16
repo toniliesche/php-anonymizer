@@ -9,6 +9,7 @@ use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use ReflectionClass;
 use ReflectionException;
+use function array_slice;
 
 class ReflectionDataAccess extends AbstractObjectDataAccess
 {
@@ -18,7 +19,7 @@ class ReflectionDataAccess extends AbstractObjectDataAccess
     public function hasChild(array $path, mixed $parent, string $name): bool
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         return (new ReflectionClass($parent))->hasProperty($name);
@@ -30,7 +31,7 @@ class ReflectionDataAccess extends AbstractObjectDataAccess
     public function getChild(array $path, mixed $parent, string $name): mixed
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         $reflection = new ReflectionClass($parent);
@@ -47,7 +48,7 @@ class ReflectionDataAccess extends AbstractObjectDataAccess
     public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         $reflection = new ReflectionClass($parent);

@@ -11,7 +11,10 @@ use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Safe\Exceptions\YamlException;
+use function is_array;
+use function is_string;
 use function Safe\yaml_parse;
+use function yaml_emit;
 
 class YamlEncoder implements DataEncoderInterface
 {
@@ -27,7 +30,7 @@ class YamlEncoder implements DataEncoderInterface
      */
     public function decode(mixed $data, TempStorage $tempStorage): array
     {
-        if (!\is_string($data)) {
+        if (!is_string($data)) {
             throw new DataEncodingException('YamlEncoder can only decode strings');
         }
 
@@ -46,11 +49,11 @@ class YamlEncoder implements DataEncoderInterface
      */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
-        if (!\is_array($data)) {
+        if (!is_array($data)) {
             throw new DataEncodingException('YamlEncoder can only encode arrays');
         }
 
-        return \yaml_emit($data);
+        return yaml_emit($data);
     }
 
     public function getOverrideDataAccess(): ?string
@@ -60,6 +63,6 @@ class YamlEncoder implements DataEncoderInterface
 
     public function supports(mixed $data): bool
     {
-        return \is_string($data);
+        return is_string($data);
     }
 }

@@ -13,6 +13,8 @@ use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataAccessExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessException;
+use function in_array;
+use function sprintf;
 
 class DefaultDataAccessProvider implements DataAccessProviderInterface
 {
@@ -32,8 +34,8 @@ class DefaultDataAccessProvider implements DataAccessProviderInterface
 
     public function registerCustomDataAccess(string $name, DataAccessInterface $dataAccess): void
     {
-        if ($this->supports($name) || \in_array($name, [DataAccess::DEFAULT->value, DataAccess::AUTODETECT->value], true)) {
-            throw new DataAccessExistsException(\sprintf('Cannot override existing data access: "%s"', $name));
+        if ($this->supports($name) || in_array($name, [DataAccess::DEFAULT->value, DataAccess::AUTODETECT->value], true)) {
+            throw new DataAccessExistsException(sprintf('Cannot override existing data access: "%s"', $name));
         }
 
         $this->customDataAccesses[] = $name;
@@ -42,7 +44,7 @@ class DefaultDataAccessProvider implements DataAccessProviderInterface
 
     public function supports(string $dataAccess): bool
     {
-        return \in_array($dataAccess, self::DATA_ACCESSES, true) || \in_array($dataAccess, $this->customDataAccesses, true);
+        return in_array($dataAccess, self::DATA_ACCESSES, true) || in_array($dataAccess, $this->customDataAccesses, true);
     }
 
     public function provideDataAccess(string $dataAccess): DataAccessInterface
@@ -68,7 +70,7 @@ class DefaultDataAccessProvider implements DataAccessProviderInterface
             DataAccess::PROPERTY->value => new PropertyDataAccess(),
             DataAccess::REFLECTION->value => new ReflectionDataAccess(),
             DataAccess::SETTER->value => new SetterDataAccess(),
-            default => throw new UnknownDataAccessException(\sprintf('Unknown data access: "%s"', $dataAccess)),
+            default => throw new UnknownDataAccessException(sprintf('Unknown data access: "%s"', $dataAccess)),
         };
     }
 }

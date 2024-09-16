@@ -10,6 +10,9 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccessProvider;
 use PhpAnonymizer\Anonymizer\Exception\DataAccessProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataAccessProviderDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessProviderException;
+use function in_array;
+use function is_callable;
+use function sprintf;
 
 class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInterface
 {
@@ -28,8 +31,8 @@ class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInter
      */
     public function registerCustomDataAccessProvider(string $name, mixed $definition): void
     {
-        if (\in_array($name, self::DATA_ACCESS_PROVIDER, true) || \in_array($name, $this->customDataAccessProviders, true)) {
-            throw new DataAccessProviderExistsException(\sprintf('Cannot override existing data access provider: "%s"', $name));
+        if (in_array($name, self::DATA_ACCESS_PROVIDER, true) || in_array($name, $this->customDataAccessProviders, true)) {
+            throw new DataAccessProviderExistsException(sprintf('Cannot override existing data access provider: "%s"', $name));
         }
 
         if ($definition instanceof DataAccessProviderInterface) {
@@ -38,7 +41,7 @@ class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInter
             return;
         }
 
-        if (!\is_callable($definition)) {
+        if (!is_callable($definition)) {
             throw new InvalidDataAccessProviderDefinitionException('Node parser definition must either be a callable or an instance of DataAccessProviderInterface');
         }
 
@@ -63,7 +66,7 @@ class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInter
         if (isset($this->customDataAccessProviders[$type])) {
             $dataAccessProvider = $this->customDataAccessProviders[$type]();
             if (!$dataAccessProvider instanceof DataAccessProviderInterface) {
-                throw new InvalidDataAccessProviderDefinitionException(\sprintf('Custom data access "%s" provider must implement DataAccessProviderInterface', $type));
+                throw new InvalidDataAccessProviderDefinitionException(sprintf('Custom data access "%s" provider must implement DataAccessProviderInterface', $type));
             }
 
             return $dataAccessProvider;
@@ -71,7 +74,7 @@ class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInter
 
         return match ($type) {
             DataAccessProvider::DEFAULT->value => new DefaultDataAccessProvider(),
-            default => throw new UnknownDataAccessProviderException(\sprintf('Unknown data access provider: "%s"', $type)),
+            default => throw new UnknownDataAccessProviderException(sprintf('Unknown data access provider: "%s"', $type)),
         };
     }
 }

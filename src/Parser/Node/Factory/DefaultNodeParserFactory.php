@@ -11,6 +11,9 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownNodeParserException;
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use function in_array;
+use function is_callable;
+use function sprintf;
 
 class DefaultNodeParserFactory implements NodeParserFactoryInterface
 {
@@ -30,8 +33,8 @@ class DefaultNodeParserFactory implements NodeParserFactoryInterface
      */
     public function registerCustomNodeParser(string $name, mixed $definition): void
     {
-        if (\in_array($name, self::NODE_PARSERS, true) || \in_array($name, $this->customNodeParsers, true)) {
-            throw new NodeParserExistsException(\sprintf('Cannot override existing node parser: "%s"', $name));
+        if (in_array($name, self::NODE_PARSERS, true) || in_array($name, $this->customNodeParsers, true)) {
+            throw new NodeParserExistsException(sprintf('Cannot override existing node parser: "%s"', $name));
         }
 
         if ($definition instanceof NodeParserInterface) {
@@ -40,7 +43,7 @@ class DefaultNodeParserFactory implements NodeParserFactoryInterface
             return;
         }
 
-        if (!\is_callable($definition)) {
+        if (!is_callable($definition)) {
             throw new InvalidNodeParserDefinitionException('Node parser definition must either be a callable or an instance of NodeParserInterface');
         }
 
@@ -74,7 +77,7 @@ class DefaultNodeParserFactory implements NodeParserFactoryInterface
         return match ($type) {
             NodeParser::SIMPLE->value => new SimpleRegexParser(),
             NodeParser::COMPLEX->value => new ComplexRegexParser(),
-            default => throw new UnknownNodeParserException(\sprintf('Unknown node parser: "%s"', $type)),
+            default => throw new UnknownNodeParserException(sprintf('Unknown node parser: "%s"', $type)),
         };
     }
 }

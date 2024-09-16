@@ -20,6 +20,8 @@ use PhpAnonymizer\Anonymizer\Exception\MissingProviderRequirementException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataEncoderException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use function in_array;
+use function sprintf;
 
 class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 {
@@ -101,8 +103,8 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 
     public function registerCustomDataEncoder(string $name, DataEncoderInterface $encoder): void
     {
-        if (\in_array($name, self::ENCODERS, true) || \in_array($name, $this->customDataEncoders, true)) {
-            throw new DataEncoderExistsException(\sprintf('Cannot override existing data encoder: "%s"', $name));
+        if (in_array($name, self::ENCODERS, true) || in_array($name, $this->customDataEncoders, true)) {
+            throw new DataEncoderExistsException(sprintf('Cannot override existing data encoder: "%s"', $name));
         }
 
         $this->customDataEncoders[] = $name;
@@ -130,7 +132,7 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
                 $this->denormalizer ?? throw new MissingProviderRequirementException('SymfonyEncoder needs an instance of DenormalizerInterface to be instantiated'),
             ),
             DataEncoder::YAML->value => new YamlEncoder(),
-            default => throw new UnknownDataEncoderException(\sprintf('Unknown data encoder: "%s"', $type)),
+            default => throw new UnknownDataEncoderException(sprintf('Unknown data encoder: "%s"', $type)),
         };
     }
 }

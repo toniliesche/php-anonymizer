@@ -13,6 +13,9 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidDataProcessorDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataProcessorException;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
+use function in_array;
+use function is_callable;
+use function sprintf;
 
 class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
 {
@@ -31,8 +34,8 @@ class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
      */
     public function registerCustomDataProcessor(string $name, mixed $definition): void
     {
-        if (\in_array($name, self::DATA_PROCESSORS, true) || \in_array($name, $this->customDataProcessors, true)) {
-            throw new DataProcessorExistsException(\sprintf('Cannot override existing data processor: "%s"', $name));
+        if (in_array($name, self::DATA_PROCESSORS, true) || in_array($name, $this->customDataProcessors, true)) {
+            throw new DataProcessorExistsException(sprintf('Cannot override existing data processor: "%s"', $name));
         }
 
         if ($definition instanceof DataProcessorInterface) {
@@ -41,7 +44,7 @@ class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
             return;
         }
 
-        if (!\is_callable($definition)) {
+        if (!is_callable($definition)) {
             throw new InvalidDataProcessorDefinitionException('Data processor definition must be a callable');
         }
 
@@ -86,7 +89,7 @@ class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
                 $dataGenerationProvider ?? throw new InvalidDataProcessorDefinitionException('Data generation provider is required'),
                 $dataEncodingProvider ?? throw new InvalidDataProcessorDefinitionException('Data encoding provider is required'),
             ),
-            default => throw new UnknownDataProcessorException(\sprintf('Unknown data processor: "%s"', $type)),
+            default => throw new UnknownDataProcessorException(sprintf('Unknown data processor: "%s"', $type)),
         };
     }
 }

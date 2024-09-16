@@ -12,6 +12,12 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Exception\UnsupportedDataTypeException;
 use PhpAnonymizer\Anonymizer\Interfaces\FakerAwareInterface;
+use function get_class;
+use function gettype;
+use function in_array;
+use function is_object;
+use function md5;
+use function sprintf;
 
 class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
 {
@@ -39,7 +45,7 @@ class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
      */
     public function registerCustomDataGenerator(DataGeneratorInterface $generator): void
     {
-        if (!\in_array($generator, $this->customGenerators, true)) {
+        if (!in_array($generator, $this->customGenerators, true)) {
             if (isset($this->faker) && $generator instanceof FakerAwareInterface) {
                 $generator->setFaker($this->faker);
             }
@@ -78,7 +84,7 @@ class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
 
     public function setSeed(string $seedSecret): void
     {
-        $this->faker->seed(\md5($seedSecret));
+        $this->faker->seed(md5($seedSecret));
     }
 
     public function provideDataGenerator(mixed $value, ?string $valueType): DataGeneratorInterface
@@ -95,11 +101,11 @@ class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
             }
         }
 
-        $type = \gettype($value);
-        if (\is_object($value)) {
-            $type .= ' (' . \get_class($value) . ')';
+        $type = gettype($value);
+        if (is_object($value)) {
+            $type .= ' (' . get_class($value) . ')';
         }
 
-        throw new UnsupportedDataTypeException(\sprintf('No generator found for value of type: %s (data type: %s)', $valueType, $type));
+        throw new UnsupportedDataTypeException(sprintf('No generator found for value of type: %s (data type: %s)', $valueType, $type));
     }
 }

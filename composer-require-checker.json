@@ -1,7 +1,11 @@
 {
   "symbol-whitelist": [
+    "Composer\\InstalledVersions",
     "Faker\\Factory",
     "Faker\\Generator",
+    "Symfony\\Component\\Serializer\\Exception\\ExceptionInterface",
+    "Symfony\\Component\\Serializer\\Normalizer\\DenormalizerInterface",
+    "Symfony\\Component\\Serializer\\Normalizer\\NormalizerInterface",
     "yaml_emit"
   ]
 }

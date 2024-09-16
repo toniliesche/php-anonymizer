@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use function sprintf;
 
 class Node implements ChildNodeAccessInterface
 {
@@ -41,7 +42,7 @@ class Node implements ChildNodeAccessInterface
             }
         }
 
-        throw new ChildNodeNotFoundException(\sprintf('Child node with name "%s" not found.', $name));
+        throw new ChildNodeNotFoundException(sprintf('Child node with name "%s" not found.', $name));
     }
 
     public function hasChildNode(string $name): bool

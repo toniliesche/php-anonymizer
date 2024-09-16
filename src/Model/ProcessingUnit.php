@@ -11,6 +11,7 @@ use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInter
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
+use function sprintf;
 
 class ProcessingUnit
 {
@@ -31,7 +32,7 @@ class ProcessingUnit
         $encoder = $this->dataEncodingProvider->provideEncoder($encoding);
         if (!$encoder->supports($this->data)) {
             return throw new DataEncodingException(
-                \sprintf('The provided data is not supported by the encoder %s', $encoding),
+                sprintf('The provided data is not supported by the encoder %s', $encoding),
             );
         }
 

@@ -11,6 +11,9 @@ use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Exception\DataGenerationProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionException;
+use function in_array;
+use function is_callable;
+use function sprintf;
 
 class DefaultDataGenerationProviderFactory implements DataGenerationProviderFactoryInterface
 {
@@ -29,8 +32,8 @@ class DefaultDataGenerationProviderFactory implements DataGenerationProviderFact
      */
     public function registerCustomDataGenerationProvider(string $name, mixed $definition): void
     {
-        if (\in_array($name, self::DATA_GENERATION_PROVIDERS, true) || \in_array($name, $this->customDataGenerationProviders, true)) {
-            throw new DataGenerationProviderExistsException(\sprintf('Cannot override existing data generation provider: "%s"', $name));
+        if (in_array($name, self::DATA_GENERATION_PROVIDERS, true) || in_array($name, $this->customDataGenerationProviders, true)) {
+            throw new DataGenerationProviderExistsException(sprintf('Cannot override existing data generation provider: "%s"', $name));
         }
 
         if ($definition instanceof DataGenerationProviderInterface) {
@@ -39,7 +42,7 @@ class DefaultDataGenerationProviderFactory implements DataGenerationProviderFact
             return;
         }
 
-        if (!\is_callable($definition)) {
+        if (!is_callable($definition)) {
             throw new InvalidDataGenerationProviderDefinitionException('Data generation provider definition must be a callable');
         }
 

@@ -8,6 +8,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidRegExpException;
 use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
 use Safe\Exceptions\PcreException;
 use function Safe\preg_match;
+use function sprintf;
 
 abstract class AbstractRegexParser implements NodeParserInterface
 {
@@ -18,7 +19,7 @@ abstract class AbstractRegexParser implements NodeParserInterface
             preg_match($this->regexp, '');
         } catch (PcreException $ex) {
             throw new InvalidRegExpException(
-                message: \sprintf('Invalid regular expression: "%s"', $this->regexp),
+                message: sprintf('Invalid regular expression: "%s"', $this->regexp),
                 previous: $ex,
             );
         }

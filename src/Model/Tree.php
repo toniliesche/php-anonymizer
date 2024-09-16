@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
+use function sprintf;
 
 class Tree implements ChildNodeAccessInterface
 {
@@ -29,7 +30,7 @@ class Tree implements ChildNodeAccessInterface
             }
         }
 
-        throw new ChildNodeNotFoundException(\sprintf('Child node with name "%s" not found.', $name));
+        throw new ChildNodeNotFoundException(sprintf('Child node with name "%s" not found.', $name));
     }
 
     public function hasChildNode(string $name): bool

@@ -10,6 +10,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetException;
 use PhpAnonymizer\Anonymizer\Model\RuleSet;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
+use function sprintf;
 
 class Anonymizer
 {
@@ -31,7 +32,7 @@ class Anonymizer
      */
     public function run(string $ruleSetName, mixed $data, ?string $encoding = null): mixed
     {
-        $ruleSet = $this->ruleSets[$ruleSetName] ?? throw new UnknownRuleSetException(\sprintf('Rule set "%s" not found', $ruleSetName));
+        $ruleSet = $this->ruleSets[$ruleSetName] ?? throw new UnknownRuleSetException(sprintf('Rule set "%s" not found', $ruleSetName));
 
         return $this->processor->process($data, $ruleSet, $encoding);
     }

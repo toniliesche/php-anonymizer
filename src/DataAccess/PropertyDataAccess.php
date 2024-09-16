@@ -10,6 +10,8 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use ReflectionClass;
 use ReflectionException;
 use stdClass;
+use function array_slice;
+use function property_exists;
 
 class PropertyDataAccess extends AbstractObjectDataAccess
 {
@@ -19,11 +21,11 @@ class PropertyDataAccess extends AbstractObjectDataAccess
     public function hasChild(array $path, mixed $parent, string $name): bool
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         if ($parent instanceof stdClass) {
-            return \property_exists($parent, $name);
+            return property_exists($parent, $name);
         }
 
         $reflection = new ReflectionClass($parent);
@@ -34,7 +36,7 @@ class PropertyDataAccess extends AbstractObjectDataAccess
     public function getChild(array $path, mixed $parent, string $name): mixed
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         return $parent->{$name} ?? throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
@@ -43,7 +45,7 @@ class PropertyDataAccess extends AbstractObjectDataAccess
     public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
     {
         if (!$this->supports($parent)) {
-            throw InvalidObjectTypeException::notAnObject(\array_slice($path, 0, -1));
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
         try {

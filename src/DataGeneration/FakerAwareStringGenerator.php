@@ -10,6 +10,10 @@ use PhpAnonymizer\Anonymizer\Enum\DataField;
 use PhpAnonymizer\Anonymizer\Exception\CannotResolveValueException;
 use PhpAnonymizer\Anonymizer\Interfaces\FakerAwareInterface;
 use PhpAnonymizer\Anonymizer\Traits\FakerAwareTrait;
+use function implode;
+use function in_array;
+use function is_string;
+use function sprintf;
 
 /**
  * @template-implements DataGeneratorInterface<string>
@@ -48,11 +52,11 @@ class FakerAwareStringGenerator implements DataGeneratorInterface, FakerAwareInt
 
     public function supports(mixed $value, ?string $valueType): bool
     {
-        if (!\is_string($value)) {
+        if (!is_string($value)) {
             return false;
         }
 
-        if (isset($this->faker) && \in_array($valueType, self::DATA_FIELDS, true)) {
+        if (isset($this->faker) && in_array($valueType, self::DATA_FIELDS, true)) {
             return true;
         }
 
@@ -61,7 +65,7 @@ class FakerAwareStringGenerator implements DataGeneratorInterface, FakerAwareInt
 
     public function generate(array $path, mixed $oldValue, ?string $valueType): mixed
     {
-        return $this->resolve($valueType) ?? $this->fallbackDataGenerator?->generate($path, $oldValue, $valueType) ?? throw new CannotResolveValueException(\sprintf('Cannot resolve value for path %s', \implode('.', $path)));
+        return $this->resolve($valueType) ?? $this->fallbackDataGenerator?->generate($path, $oldValue, $valueType) ?? throw new CannotResolveValueException(sprintf('Cannot resolve value for path %s', implode('.', $path)));
     }
 
     private function resolve(?string $valueType): ?string

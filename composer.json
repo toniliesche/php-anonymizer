@@ -11,8 +11,8 @@
   ],
   "require": {
     "php": "^8.2",
-    "thecodingmachine/safe": "^2.5",
-    "myclabs/deep-copy": "^1.12"
+    "myclabs/deep-copy": "^1.12",
+    "thecodingmachine/safe": "^2.5"
   },
   "require-dev": {
     "ext-json": "*",
@@ -27,13 +27,14 @@
     "phpstan/phpstan-phpunit": "^1.4",
     "phpunit/phpunit": "^11",
     "rector/rector": "^1.2",
-    "thecodingmachine/phpstan-safe-rule": "^1.2",
-    "symfony/serializer": "^7.1"
+    "symfony/serializer": "^7.1",
+    "thecodingmachine/phpstan-safe-rule": "^1.2"
   },
   "suggest": {
     "ext-json": "JSON extension is required to use the JSON data encoder",
     "ext-yaml": "YAML extension is required to use the YAML data encoder",
-    "fakerphp/faker": "Data library for generation of fake data"
+    "fakerphp/faker": "Data library for generation of fake data",
+    "symfony/serializer": "Serializer component to normalize and denormalize data objects"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
