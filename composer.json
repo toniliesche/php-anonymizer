@@ -1,0 +1,62 @@
+{
+  "name": "php-anonymizer/anonymizer",
+  "description": "Library to remove confidential data from different data containers",
+  "license": "proprietary",
+  "type": "library",
+  "authors": [
+    {
+      "name": "Toni Liesche",
+      "email": "dev@toniliesche.de"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "thecodingmachine/safe": "^2.5",
+    "myclabs/deep-copy": "^1.12"
+  },
+  "require-dev": {
+    "ext-json": "*",
+    "ext-yaml": "*",
+    "ergebnis/composer-normalize": "^2.43",
+    "fakerphp/faker": "^1.23",
+    "friendsofphp/php-cs-fixer": "^3.62",
+    "icanhazstring/composer-unused": "dev-main",
+    "infection/infection": "^0.29.6",
+    "phpmd/phpmd": "^2.15",
+    "phpstan/phpstan": "^1.11",
+    "phpstan/phpstan-phpunit": "^1.4",
+    "phpunit/phpunit": "^11",
+    "rector/rector": "^1.2",
+    "thecodingmachine/phpstan-safe-rule": "^1.2",
+    "symfony/serializer": "^7.1"
+  },
+  "suggest": {
+    "ext-json": "JSON extension is required to use the JSON data encoder",
+    "ext-yaml": "YAML extension is required to use the YAML data encoder",
+    "fakerphp/faker": "Data library for generation of fake data"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "PhpAnonymizer\\Anonymizer\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PhpAnonymizer\\Anonymizer\\Test\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "ergebnis/composer-normalize": true,
+      "infection/extension-installer": true
+    }
+  },
+  "extra": {
+    "composer-normalize": {
+      "indent-size": 2,
+      "indent-style": "space"
+    }
+  }
+}

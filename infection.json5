@@ -1,0 +1,14 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "mutators": {
+        "@default": true
+    },
+    "testFramework":"phpunit",
+    "initialTestsPhpOptions": "-d zend_extension=xdebug.so",
+    "testFrameworkOptions": "--filter=Unit"
+}

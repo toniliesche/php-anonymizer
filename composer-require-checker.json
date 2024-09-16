@@ -1,0 +1,7 @@
+{
+  "symbol-whitelist": [
+    "Faker\\Factory",
+    "Faker\\Generator",
+    "yaml_emit"
+  ]
+}

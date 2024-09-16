@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<phpmd-baseline>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/AnonymizerBuilder.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/AnonymizerBuilder.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/AnonymizerBuilder.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/ArrayDataAccess.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/AutoDetectDataAccess.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/PropertyDataAccess.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataAccess/Provider/Factory/DefaultDataAccessProviderFactory.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/ReflectionDataAccess.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/SetterDataAccess.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataGeneration/FakerAwareStringGenerator.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataGeneration/Provider/Factory/DefaultDataGenerationProviderFactory.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataGeneration/StarMaskedStringGenerator.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataAccessProviderDefinitionException.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataGenerationProviderDefinitionException.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="src/Model/NodeParsingResult.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Model/ProcessingUnit.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/DefaultDataProcessor.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DataProcessorFactoryInterface.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DefaultDataProcessorFactory.php"/>
+</phpmd-baseline>
