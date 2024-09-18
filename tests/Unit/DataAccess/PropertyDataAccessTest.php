@@ -6,7 +6,9 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use PhpAnonymizer\Anonymizer\DataAccess\PropertyDataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
@@ -24,6 +26,14 @@ class PropertyDataAccessTest extends TestCase
         $this->assertTrue($access->hasChild(['test'], $data, 'foo'));
         $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
         $this->assertFalse($access->hasChild(['test'], $data, 'FOO'));
+    }
+
+    public function testCanCheckIfUnitializedChildPropertyDoesNotExist(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new Barfoo();
+        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnCheckForChildPropertyOfNonObject(): void
@@ -69,6 +79,16 @@ class PropertyDataAccessTest extends TestCase
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->getChild(['test'], $data, 'bar');
+    }
+
+    public function testWillFailOnRetrieveValueOfUninitializedChildProperty(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new Barfoo();
+
+        $this->expectException(FieldIsNotInitializedException::class);
+        $access->getChild(['test'], $data, 'foo');
     }
 
     public function testWillFailOnRetrieveValueOfPrivateChildProperty(): void

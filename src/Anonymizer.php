@@ -19,7 +19,7 @@ class Anonymizer
 
     public function __construct(
         private readonly RuleSetParserInterface $ruleSetParser,
-        private readonly DataProcessorInterface $processor,
+        private readonly DataProcessorInterface $dataProcessor,
     ) {
     }
 
@@ -34,7 +34,7 @@ class Anonymizer
     {
         $ruleSet = $this->ruleSets[$ruleSetName] ?? throw new UnknownRuleSetException(sprintf('Rule set "%s" not found', $ruleSetName));
 
-        return $this->processor->process($data, $ruleSet, $encoding);
+        return $this->dataProcessor->process($data, $ruleSet, $encoding);
     }
 
     /**
