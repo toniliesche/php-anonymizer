@@ -9,6 +9,10 @@ tag-git-%: tests set-version-%
 	git tag -a $(build.version) -m "Release $(build.version)"
 	git push origin $(build.version)
 
+new-release-branch:
+	git checkout -b release/$(build.version.major).$(build.version.minor).x
+	git push origin release/$(build.version.major).$(build.version.minor).x
+
 set-version-release:
 	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix})
 
@@ -20,6 +24,12 @@ set-version-patch:
 
 increase-%: update-% write-properties
 	@echo updated build.properties file
+
+print-version: set-version-release
+	@echo ${build.version}
+
+print-branch:
+	@echo release/$(build.version.major).$(build.version.minor).x
 
 update-major:
 	@$(eval build.version.major := $(shell echo $$(($(build.version.major) + 1))))

@@ -1,0 +1,84 @@
+name: Increase Version
+description: Increase version number and create release branches
+
+inputs:
+  base_sha:
+    description: The base sha to compare against
+    required: true
+    default: ${{ github.event.pull_request.base.sha }}
+  head_sha:
+    description: The sha to compare against
+    required: true
+    default: ${{ github.sha }}
+  allow_major:
+    description: Allow major version increase
+    required: false
+    default: true
+  allow_minor:
+    description: Allow minor version increase
+    required: false
+    default: true
+  allow_bugfix:
+    description: Allow bugfix version increase
+    required: false
+    default: true
+
+runs:
+  uses: composite
+  steps:
+    - name: Parse commits
+      id: get_commits
+      run: |
+        commits=$(git log --pretty=format:"%s" $(echo ${{ inputs.base_sha }})..$(echo ${{ inputs.head_sha }}))
+        
+        major_commits="false"
+        minor_commits="false"
+        bugfix_commits="false"
+        
+        while read -r commit; do
+          if [ ${{ inputs.allow_major }} ] && [ $commit == *"[major]"* ]; then
+            major_commits="true"
+            minor_commits="false"
+            bugfix_commits="false"
+            break
+          fi
+        
+          if [ ${{ inputs.allow_minor }} ] && [ $commit == *"[minor]"* ]; then
+            if [ $major_commits == "false" ]; then
+              minor_commits="true"
+              bugfix_commits="false"
+            fi
+          fi
+        
+          if [ ${{ inputs.allow_bugfix }} ] && [ $commit == *"[bugfix]"* ]; then
+            if [ $minor_commits == "false" ]; then
+              bugfix_commits="true"
+            fi
+          fi
+        done <<< "$commits"
+
+        if [ "$major_commits" = "true" ]; then
+          echo "target_version=major" >> $GITHUB_ENV
+        elif [ "$minor_commits" = "true" ]; then
+          echo "target_version=minor" >> $GITHUB_ENV
+        elif [ "$bugfix_commits" = "true" ]; then
+          echo "target_version=bugfix" >> $GITHUB_ENV
+        fi
+
+    - name: Increase version
+      run: |
+          if [ ${ steps.get_commits.outputs.target_version } != '' ]; then
+            make increase-${{ steps.get_commits.outputs.target_version }}
+            echo "new_version=true" >> $GITHUB_ENV
+          
+            if [ ${{ steps.get_commits.outputs.target_version }} != "bugfix" ]; then
+              echo "new_branch=false" >> $GITHUB_ENV
+            else
+              echo "new_branch=true" >> $GITHUB_ENV
+            fi
+        else
+          echo "new_version=false" >> $GITHUB_ENV
+          echo "new_branch=false" >> $GITHUB_ENV
+        fi
+
+    - name:

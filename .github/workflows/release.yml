@@ -1,0 +1,50 @@
+name: Release
+description: Release Workflow
+
+on:
+  push:
+    branches:
+      - release/*
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        uses: ./.github/actions/php-build
+        with:
+          php_version: 8.2
+          php_extensions: yaml
+      - name: Increase Version
+        uses: ./.github/actions/increase-version
+      - name: Version
+        id: next_version
+        uses: ./.github/actions/parse-version
+      - name: Check
+        uses: ./.github/actions/php-check
+
+  release:
+    runs-on: ubuntu-latest
+    if:
+    needs: checks
+    steps:
+      - name: Increase Version
+        id: increase_version
+        uses: ./.github/actions/increase-version
+        with:
+          base_sha: '${{ github.event.pull_request.base.sha }}'
+          head_sha: ${{ github.event.pull_request.head.sha }}
+          allow_bugfix:
+          allow_minor:
+          allow_major:
+      - name: Parse Version
+        if: steps.increase_version.outputs.new_version == 'true'
+        id: next_version
+        uses: ./.github/actions/parse-version
+      - name: Release
+        if: steps.increase_version.outputs.new_version == 'true'
+        uses: ./.github/actions/release
+        with:
+          new_release_branch: ${{ steps.increase_version.outputs.new_branch }}
+          release_branch: ${{ steps.next_version.outputs.release_branch }}
+          release_version: ${{ steps.next_version.outputs.release_version }}

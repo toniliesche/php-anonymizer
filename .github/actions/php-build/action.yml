@@ -1,0 +1,27 @@
+name: PHP Build
+description: Build php docker image and php package
+
+inputs:
+  php_extensions:
+    description: PHP extensions to install
+    default: yaml
+    required: false
+  php_version:
+    description: Select php version
+    default: 8.2
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php_version }}
+        coverage: xdebug
+        extensions: ${{ inputs.php_extensions }}
+        tools: composer, composer-require-checker
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install dependencies
+      run: composer install
