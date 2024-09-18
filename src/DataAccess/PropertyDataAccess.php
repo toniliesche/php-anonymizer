@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use ReflectionClass;
 use ReflectionException;
@@ -30,13 +31,22 @@ class PropertyDataAccess extends AbstractObjectDataAccess
 
         $reflection = new ReflectionClass($parent);
 
-        return $reflection->hasProperty($name) && $reflection->getProperty($name)->isPublic();
+        return $reflection->hasProperty($name)
+            && $reflection->getProperty($name)->isPublic()
+            && $reflection->getProperty($name)->isInitialized($parent)
+            && $reflection->getProperty($name)->getValue($parent) !== null;
     }
 
     public function getChild(array $path, mixed $parent, string $name): mixed
     {
         if (!$this->supports($parent)) {
             throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
+        }
+
+        $reflection = new ReflectionClass($parent);
+
+        if ($reflection->hasProperty($name) && !$reflection->getProperty($name)->isInitialized($parent)) {
+            throw FieldIsNotInitializedException::fromPath($path);
         }
 
         return $parent->{$name} ?? throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);

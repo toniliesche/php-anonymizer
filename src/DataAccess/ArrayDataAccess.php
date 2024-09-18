@@ -21,7 +21,7 @@ class ArrayDataAccess implements DataAccessInterface
             throw InvalidObjectTypeException::notAnArray(array_slice($path, 0, -1));
         }
 
-        return array_key_exists($name, $parent);
+        return array_key_exists($name, $parent) && isset($parent[$name]);
     }
 
     /**

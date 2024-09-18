@@ -274,7 +274,7 @@ class AnonymizerBuilder
 
         return new Anonymizer(
             ruleSetParser: $this->ruleSetParser,
-            processor: $this->dataProcessor,
+            dataProcessor: $this->dataProcessor,
         );
     }
 }

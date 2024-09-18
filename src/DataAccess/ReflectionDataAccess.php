@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use ReflectionClass;
 use ReflectionException;
@@ -22,7 +23,11 @@ class ReflectionDataAccess extends AbstractObjectDataAccess
             throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
-        return (new ReflectionClass($parent))->hasProperty($name);
+        $reflection = new ReflectionClass($parent);
+
+        return $reflection->hasProperty($name)
+            && $reflection->getProperty($name)->isInitialized($parent)
+            && $reflection->getProperty($name)->getValue($parent) !== null;
     }
 
     /**
@@ -37,6 +42,10 @@ class ReflectionDataAccess extends AbstractObjectDataAccess
         $reflection = new ReflectionClass($parent);
         if (!$reflection->hasProperty($name)) {
             throw FieldDoesNotExistException::fromPath($path);
+        }
+
+        if (!$reflection->getProperty($name)->isInitialized($parent)) {
+            throw FieldIsNotInitializedException::fromPath($path);
         }
 
         return $reflection->getProperty($name)->getValue($parent);

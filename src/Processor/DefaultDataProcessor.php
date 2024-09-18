@@ -15,7 +15,7 @@ readonly class DefaultDataProcessor implements DataProcessorInterface
     public function __construct(
         private DataAccessProviderInterface $dataAccessProvider,
         private DataGenerationProviderInterface $dataGenerationProvider,
-        private DataEncodingProviderInterface $dataTransformationProvider,
+        private DataEncodingProviderInterface $dataEncodingProvider,
     ) {
     }
 
@@ -24,7 +24,7 @@ readonly class DefaultDataProcessor implements DataProcessorInterface
         return (new ProcessingUnit(
             dataGenerationProvider: $this->dataGenerationProvider,
             dataAccessProvider: $this->dataAccessProvider,
-            dataEncodingProvider: $this->dataTransformationProvider,
+            dataEncodingProvider: $this->dataEncodingProvider,
             ruleSet: $ruleSet,
             data: $data,
         ))->process($encoding);

@@ -6,7 +6,9 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -26,6 +28,14 @@ class SetterDataAccessTest extends TestCase
         $this->assertTrue($access->hasChild(['test'], $data, 'baz'));
         $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
         $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
+    }
+
+    public function testCanCheckIfUnitializedChildPropertyDoesNotExist(): void
+    {
+        $access = new SetterDataAccess();
+
+        $data = new Barfoo();
+        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnCheckForChildPropertyOfNonObject(): void
@@ -77,6 +87,16 @@ class SetterDataAccessTest extends TestCase
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->getChild(['test'], $data, 'foo2');
+    }
+
+    public function testWillFailOnRetrieveValueOfUninitializedChildProperty(): void
+    {
+        $access = new SetterDataAccess();
+
+        $data = new Barfoo();
+
+        $this->expectException(FieldIsNotInitializedException::class);
+        $access->getChild(['test'], $data, 'foo');
     }
 
     public function testWillFailOnRetrieveValueOfWriteonlyChildProperty(): void
