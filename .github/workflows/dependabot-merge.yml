@@ -23,7 +23,12 @@ jobs:
       - name: Check
         uses: ./.github/actions/php-check
       - name: Merge
-        run:
+        run: |
+          git checkout develop
+          git merge ${{ github.ref_name }} --no-ff
+          git push origin develop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   automerge:
     runs-on: ubuntu-latest
