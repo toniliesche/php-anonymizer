@@ -49,21 +49,21 @@ runs:
         bugfix_commits="false"
         
         while read -r commit; do
-          if [ ${{ inputs.allow_major }} ] && [ $commit == *"[major]"* ]; then
+          if [ ${{ inputs.allow_major }} ] && [[ "$commit" == major* ]]; then
             major_commits="true"
             minor_commits="false"
             bugfix_commits="false"
             break
           fi
         
-          if [ ${{ inputs.allow_minor }} ] && ([ $commit == *"[minor]"* ] || [ $commit == *"[feat]"* ]); then
+          if [ ${{ inputs.allow_minor }} ] && ([[ "$commit" == minor* ]] || [[ "$commit" == feat* ]]); then
             if [ $major_commits == "false" ]; then
               minor_commits="true"
               bugfix_commits="false"
             fi
           fi
         
-          if [ ${{ inputs.allow_bugfix }} ] && ([ $commit == *"[bugfix]"* ] || [ $commit == *"[chore]"* ]); then
+          if [ ${{ inputs.allow_bugfix }} ] && ([[ "$commit" == bugfix* ]] || [[ "$commit" == chore* ]]); then
             if [ $minor_commits == "false" ]; then
               bugfix_commits="true"
             fi
