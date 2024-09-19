@@ -23,6 +23,14 @@ inputs:
     required: false
     default: true
 
+outputs:
+  new_version:
+    description: Whether a new version was created
+  new_branch:
+    description: Whether a new branch was created
+  target_version:
+    description: The target version to increase
+
 runs:
   using: composite
   steps:
@@ -69,20 +77,21 @@ runs:
 
     - name: Increase version
       shell: bash
+      id: increase_version
       run: |
-          if [ ! -z "${{ steps.get_commits.outputs.target_version }}" ]; then
-            make increase-${{ steps.get_commits.outputs.target_version }}
-            echo "new_version=true" >> $GITHUB_ENV
-          
-            if [ ${{ steps.get_commits.outputs.target_version }} != "bugfix" ]; then
-              echo "new_branch=false" >> $GITHUB_ENV
-            else
-              echo "new_branch=true" >> $GITHUB_ENV
-            fi
-          else
-            echo "new_version=false" >> $GITHUB_ENV
+        if [ ! -z "${{ steps.get_commits.outputs.target_version }}" ]; then
+          make increase-${{ steps.get_commits.outputs.target_version }}
+          echo "new_version=true" >> $GITHUB_ENV
+        
+          if [ ${{ steps.get_commits.outputs.target_version }} != "bugfix" ]; then
             echo "new_branch=false" >> $GITHUB_ENV
+          else
+            echo "new_branch=true" >> $GITHUB_ENV
           fi
+        else
+          echo "new_version=false" >> $GITHUB_ENV
+          echo "new_branch=false" >> $GITHUB_ENV
+        fi
 
     - name: Setup git
       shell: bash
@@ -91,7 +100,11 @@ runs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
     - name: Commit new version
-      if: env.new_version == 'true'
+      if: steps.increase_version.new_version == 'true'
       shell: bash
       run: |
-        
+        git add build.properties
+        git commit -m "chore: new release version"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
