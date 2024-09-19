@@ -49,32 +49,35 @@ runs:
         bugfix_commits="false"
         
         while read -r commit; do
-          if [ ${{ inputs.allow_major }} ] && [[ "$commit" == major* ]]; then
+          if [[ ${{ inputs.allow_major }} ]] && [[ "$commit" == major* ]]; then
+            echo found major commit message: $commit
             major_commits="true"
             minor_commits="false"
             bugfix_commits="false"
             break
           fi
         
-          if [ ${{ inputs.allow_minor }} ] && ([[ "$commit" == minor* ]] || [[ "$commit" == feat* ]]); then
-            if [ $major_commits == "false" ]; then
+          if [[ ${{ inputs.allow_minor }} ]] && ([[ "$commit" == minor* ]] || [[ "$commit" == feat* ]]); then
+            if [ $major_commits == "false" ] && [ $minor_commits == "false" ]; then
+              echo found minor commit message: $commit
               minor_commits="true"
               bugfix_commits="false"
             fi
           fi
         
-          if [ ${{ inputs.allow_bugfix }} ] && ([[ "$commit" == bugfix* ]] || [[ "$commit" == chore* ]]); then
-            if [ $minor_commits == "false" ]; then
+          if [[ ${{ inputs.allow_bugfix }} ]] && ([[ "$commit" == bugfix* ]] || [[ "$commit" == chore* ]]); then
+            if [ $minor_commits == "false" ] && [ $bugfix_commits == "false" ]; then
+              echo found bugfix commit message: $commit
               bugfix_commits="true"
             fi
           fi
         done <<< "$commits"
 
-        if [ "$major_commits" == "true" ]; then
+        if [[ "$major_commits" == "true" ]]; then
           echo "target_version=major" >> $GITHUB_ENV
-        elif [ "$minor_commits" == "true" ]; then
+        elif [[ "$minor_commits" == "true" ]]; then
           echo "target_version=minor" >> $GITHUB_ENV
-        elif [ "$bugfix_commits" == "true" ]; then
+        elif [[ "$bugfix_commits" == "true" ]]; then
           echo "target_version=bugfix" >> $GITHUB_ENV
         fi
 
