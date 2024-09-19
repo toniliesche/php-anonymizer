@@ -2,11 +2,11 @@ name: Increase Version
 description: Increase version number and create release branches
 
 inputs:
-  base_sha:
+  base_ref:
     description: The base sha to compare against
     required: true
     default: ${{ github.event.pull_request.base.sha }}
-  head_sha:
+  merge_commit_sha:
     description: The sha to compare against
     required: true
     default: ${{ github.sha }}
@@ -30,7 +30,7 @@ runs:
       id: get_commits
       shell: bash
       run: |
-        commits=$(git log --pretty=format:"%s" $(echo ${{ inputs.base_sha }})..$(echo ${{ inputs.head_sha }}))
+        commits=$(git log --pretty=format:"%s" ${{ inputs.base_ref }}..${{ inputs.merge_commit_sha }})
         
         major_commits="false"
         minor_commits="false"

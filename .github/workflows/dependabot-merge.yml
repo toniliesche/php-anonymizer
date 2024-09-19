@@ -35,6 +35,6 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Merge
         run: |
-          gh pr merge ${{ github.event.pull_request.number }} --squash --auto --merge
+          gh pr merge ${{ github.event.pull_request.number }} --auto --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
