@@ -22,4 +22,5 @@ runs:
         extensions: ${{ inputs.php_extensions }}
         tools: composer, composer-require-checker
     - name: Install dependencies
+      shell: bash
       run: composer install

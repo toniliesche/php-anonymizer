@@ -5,6 +5,7 @@ runs:
   uses: composite
   steps:
     - name: Determine next version
+      shell: bash
       run: |
         branch=$(make print-branch)
         version=$(make print-version)

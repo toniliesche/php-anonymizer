@@ -28,6 +28,7 @@ runs:
   steps:
     - name: Parse commits
       id: get_commits
+      shell: bash
       run: |
         commits=$(git log --pretty=format:"%s" $(echo ${{ inputs.base_sha }})..$(echo ${{ inputs.head_sha }}))
         
@@ -66,6 +67,7 @@ runs:
         fi
 
     - name: Increase version
+      shell: bash
       run: |
           if [ ${ steps.get_commits.outputs.target_version } != '' ]; then
             make increase-${{ steps.get_commits.outputs.target_version }}
