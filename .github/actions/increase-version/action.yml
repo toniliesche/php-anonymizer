@@ -78,9 +78,19 @@ runs:
             else
               echo "new_branch=true" >> $GITHUB_ENV
             fi
-        else
-          echo "new_version=false" >> $GITHUB_ENV
-          echo "new_branch=false" >> $GITHUB_ENV
-        fi
+          else
+            echo "new_version=false" >> $GITHUB_ENV
+            echo "new_branch=false" >> $GITHUB_ENV
+          fi
 
-    - name:
+    - name: Setup git
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit new version
+      if: env.new_version == 'true'
+      shell: bash
+      run: |
+        
