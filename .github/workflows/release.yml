@@ -1,12 +1,15 @@
 name: Release
 
 on:
-  push:
+  pull_request:
+    types:
+      - closed
     branches:
       - release/*
 
 jobs:
   checks:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,7 +29,6 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    if:
     needs: checks
     steps:
       - name: Checkout code
@@ -35,8 +37,8 @@ jobs:
         id: increase_version
         uses: ./.github/actions/increase-version
         with:
-          base_sha: '${{ github.event.pull_request.base.sha }}'
-          head_sha: ${{ github.event.pull_request.head.sha }}
+          base_ref: ${{ github.event.pull_request.base.ref }}
+          merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}
           allow_bugfix:
           allow_minor:
           allow_major:
