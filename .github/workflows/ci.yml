@@ -1,5 +1,4 @@
 name: CI
-description: Continuous Integration Workflow
 
 on:
   pull_request:
