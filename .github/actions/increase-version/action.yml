@@ -22,6 +22,9 @@ inputs:
     description: Allow bugfix version increase
     required: false
     default: true
+  github_token:
+    description: The github token
+    required: true
 
 outputs:
   new_version:
@@ -107,4 +110,4 @@ runs:
         git commit -m "chore: new release version"
         git push
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github_token }}
