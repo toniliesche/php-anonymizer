@@ -45,14 +45,14 @@ runs:
             break
           fi
         
-          if [ ${{ inputs.allow_minor }} ] && [ $commit == *"[minor]"* ]; then
+          if [ ${{ inputs.allow_minor }} ] && ([ $commit == *"[minor]"* ] || [ $commit == *"[feat]"* ]); then
             if [ $major_commits == "false" ]; then
               minor_commits="true"
               bugfix_commits="false"
             fi
           fi
         
-          if [ ${{ inputs.allow_bugfix }} ] && [ $commit == *"[bugfix]"* ]; then
+          if [ ${{ inputs.allow_bugfix }} ] && ([ $commit == *"[bugfix]"* ] || [ $commit == *"[chore]"* ]); then
             if [ $minor_commits == "false" ]; then
               bugfix_commits="true"
             fi
