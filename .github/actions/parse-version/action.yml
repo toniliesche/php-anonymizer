@@ -1,6 +1,12 @@
 name: Parse Next Version
 description: Determine next release version
 
+outputs:
+  release_branch:
+    description: The release branch
+  release_version:
+    description: The release version
+
 runs:
   using: composite
   steps:

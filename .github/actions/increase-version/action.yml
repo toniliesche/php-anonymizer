@@ -97,6 +97,7 @@ runs:
         fi
 
     - name: Setup git
+      if: steps.increase_version.new_version == 'true'
       shell: bash
       run: |
         git config --global user.name "github-actions[bot]"
@@ -110,4 +111,4 @@ runs:
         git commit -m "chore: new release version"
         git push
       env:
-        GITHUB_TOKEN: ${{ github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
