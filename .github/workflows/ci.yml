@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Build
         uses: ./.github/actions/php-build
         with:
