@@ -41,14 +41,22 @@ runs:
       id: get_commits
       shell: bash
       run: |
+        echo "allow_major: ${{ inputs.allow_major }}"
+        echo "allow_minor: ${{ inputs.allow_minor }}"
+        echo "allow_bugfix: ${{ inputs.allow_bugfix }}"
+        
         git fetch
         commits=$(git log --pretty=format:"%s" ${{ inputs.base_ref }}..${{ inputs.merge_commit_sha }})
+        
+        echo "commits: $commits"
         
         major_commits="false"
         minor_commits="false"
         bugfix_commits="false"
         
         while read -r commit; do
+          echo "commit: $commit"
+        
           if [[ ${{ inputs.allow_major }} ]] && [[ "$commit" == major* ]]; then
             echo found major commit message: $commit
             major_commits="true"
