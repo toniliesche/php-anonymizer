@@ -30,6 +30,7 @@ runs:
       id: get_commits
       shell: bash
       run: |
+        git fetch
         commits=$(git log --pretty=format:"%s" ${{ inputs.base_ref }}..${{ inputs.merge_commit_sha }})
         
         major_commits="false"
