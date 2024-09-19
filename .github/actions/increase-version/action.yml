@@ -69,7 +69,7 @@ runs:
     - name: Increase version
       shell: bash
       run: |
-          if [ ${ steps.get_commits.outputs.target_version } != '' ]; then
+          if [ ${{ steps.get_commits.outputs.target_version }} != '' ]; then
             make increase-${{ steps.get_commits.outputs.target_version }}
             echo "new_version=true" >> $GITHUB_ENV
           
