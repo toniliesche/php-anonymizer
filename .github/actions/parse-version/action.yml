@@ -1,0 +1,14 @@
+name: Parse Next Version
+description: Determine next release version
+
+runs:
+  uses: composite
+  steps:
+    - name: Determine next version
+      shell: bash
+      run: |
+        branch=$(make print-branch)
+        version=$(make print-version)
+        
+        echo "release_branch=${branch}" >> $GITHUB_ENV
+        echo "release_version=${version}" >> $GITHUB_ENV

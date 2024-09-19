@@ -1,0 +1,35 @@
+name: PHP Checks
+description: Run all code quality related checks
+
+runs:
+  using: composite
+  steps:
+    - name: Run style check
+      shell: bash
+      run: |
+        vendor/bin/php-cs-fixer check src 
+        vendor/bin/php-cs-fixer check tests
+    - name: Run code check
+      shell: bash
+      run: vendor/bin/rector process src --dry-run
+    - name: Run composer.json check
+      shell: bash
+      run: composer normalize --dry-run
+    - name: Run missing dependencies check
+      shell: bash
+      run: composer-require-checker
+    - name: Run unused dependencies check
+      shell: bash
+      run: vendor/bin/composer-unused --no-ansi
+    - name: Run dependencies audit
+      shell: bash
+      run: composer audit
+    - name: Run mess detection
+      shell: bash
+      run: vendor/bin/phpmd src text phpmd.xml
+    - name: Run static analysis
+      shell: bash
+      run: vendor/bin/phpstan
+    - name: Run phpunit tests
+      shell: bash
+      run: vendor/bin/phpunit --coverage-html=.coverage

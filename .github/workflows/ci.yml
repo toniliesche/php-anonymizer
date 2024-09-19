@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Build
+        uses: ./.github/actions/php-build
+        with:
+          php_version: 8.2
+          php_extensions: yaml
+      - name: Check
+        uses: ./.github/actions/php-check

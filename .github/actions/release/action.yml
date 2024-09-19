@@ -1,0 +1,16 @@
+name: Release
+description: Release new version
+
+inputs:
+  release_version:
+    description: The release version
+    required: true
+  new_release_branch:
+    description: New release branch
+    required: true
+  release_branch:
+    description: Release branch
+    required: true
+
+runs:
+  on: composite
