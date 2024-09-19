@@ -45,7 +45,7 @@ runs:
         echo "allow_minor: ${{ inputs.allow_minor }}"
         echo "allow_bugfix: ${{ inputs.allow_bugfix }}"
         
-        git fetch --all --depth=0
+        git fetch --all --unshallow
         commits=$(git log --pretty=format:"%s" ${{ inputs.base_ref }}..${{ inputs.merge_commit_sha }})
         
         echo "commits: $commits"
