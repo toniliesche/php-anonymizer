@@ -24,7 +24,7 @@ inputs:
     default: true
 
 runs:
-  uses: composite
+  using: composite
   steps:
     - name: Parse commits
       id: get_commits

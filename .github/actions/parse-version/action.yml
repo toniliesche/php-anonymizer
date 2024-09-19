@@ -2,7 +2,7 @@ name: Parse Next Version
 description: Determine next release version
 
 runs:
-  uses: composite
+  using: composite
   steps:
     - name: Determine next version
       shell: bash
