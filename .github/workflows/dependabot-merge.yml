@@ -1,4 +1,5 @@
 name: Dependabot Merge
+description: Merge Dependabot PRs
 
 on:
   pull_request:
@@ -22,6 +23,7 @@ jobs:
       - name: Check
         uses: ./.github/actions/php-check
       - name: Merge
+        run:
 
   automerge:
     runs-on: ubuntu-latest
