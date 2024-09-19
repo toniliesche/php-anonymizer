@@ -70,11 +70,11 @@ runs:
           fi
         done <<< "$commits"
 
-        if [ "$major_commits" = "true" ]; then
+        if [ "$major_commits" == "true" ]; then
           echo "target_version=major" >> $GITHUB_ENV
-        elif [ "$minor_commits" = "true" ]; then
+        elif [ "$minor_commits" == "true" ]; then
           echo "target_version=minor" >> $GITHUB_ENV
-        elif [ "$bugfix_commits" = "true" ]; then
+        elif [ "$bugfix_commits" == "true" ]; then
           echo "target_version=bugfix" >> $GITHUB_ENV
         fi
 
