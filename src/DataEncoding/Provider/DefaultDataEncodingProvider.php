@@ -9,6 +9,8 @@ use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\NoOpEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyEncoder;
+use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyToArrayEncoder;
+use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyToJsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\YamlEncoder;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
@@ -130,6 +132,12 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
             DataEncoder::SYMFONY->value => new SymfonyEncoder(
                 $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyEncoder needs an instance of NormalizerInterface to be instantiated'),
                 $this->denormalizer ?? throw new MissingProviderRequirementException('SymfonyEncoder needs an instance of DenormalizerInterface to be instantiated'),
+            ),
+            DataEncoder::SYMFONY_TO_ARRAY->value => new SymfonyToArrayEncoder(
+                $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyToArrayEncoder needs an instance of NormalizerInterface to be instantiated'),
+            ),
+            DataEncoder::SYMFONY_TO_JSON->value => new SymfonyToJsonEncoder(
+                $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyToJsonEncoder needs an instance of NormalizerInterface to be instantiated'),
             ),
             DataEncoder::YAML->value => new YamlEncoder(),
             default => throw new UnknownDataEncoderException(sprintf('Unknown data encoder: "%s"', $type)),
