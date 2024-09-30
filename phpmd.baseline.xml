@@ -10,6 +10,8 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/ReflectionDataAccess.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/SetterDataAccess.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/DataEncoding/Provider/DefaultDataEncodingProvider.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="src/DataEncoding/SymfonyToArrayEncoder.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="src/DataEncoding/SymfonyToJsonEncoder.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataGeneration/FakerAwareStringGenerator.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataGeneration/Provider/Factory/DefaultDataGenerationProviderFactory.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataGeneration/StarMaskedStringGenerator.php"/>
