@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-readonly class SymfonyToArrayEncoder
+readonly class SymfonyToArrayEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
