@@ -117,6 +117,9 @@ security-check:
 mess-detection:
 	vendor/bin/phpmd src text phpmd.xml
 
+md-baseline:
+	vendor/bin/phpmd src text phpmd.xml --generate-baseline
+
 rector-check:
 	vendor/bin/rector process src --dry-run
 
