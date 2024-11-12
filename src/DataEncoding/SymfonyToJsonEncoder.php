@@ -15,7 +15,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-readonly class SymfonyToJsonEncoder
+readonly class SymfonyToJsonEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
