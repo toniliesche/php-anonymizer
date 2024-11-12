@@ -11,12 +11,8 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
-
 use function is_array;
-use function is_string;
-use function json_decode;
 use function json_encode;
-
 use const JSON_THROW_ON_ERROR;
 
 class ArrayToJsonEncoder implements DataEncoderInterface
