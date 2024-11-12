@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding\Provider;
 
+use PhpAnonymizer\Anonymizer\DataEncoding\ArrayToJsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\CloneEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
@@ -126,6 +127,7 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
     private function resolveEncoder(string $type): DataEncoderInterface
     {
         return match ($type) {
+            DataEncoder::ARRAY_TO_JSON->value => new ArrayToJsonEncoder(),
             DataEncoder::CLONE->value => new CloneEncoder(),
             DataEncoder::JSON->value => new JsonEncoder(),
             DataEncoder::NOOP->value => new NoOpEncoder(),
