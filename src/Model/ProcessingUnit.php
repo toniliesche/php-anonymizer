@@ -22,6 +22,7 @@ class ProcessingUnit
         private readonly DataGenerationProviderInterface $dataGenerationProvider,
         private readonly DataAccessProviderInterface $dataAccessProvider,
         private readonly ?DataEncodingProviderInterface $dataEncodingProvider,
+        private readonly RuleSetProviderInterface $ruleSetProvider,
         private readonly RuleSet $ruleSet,
         private readonly mixed $data,
         private readonly TempStorage $tempStorage = new TempStorage(),
@@ -50,19 +51,34 @@ class ProcessingUnit
     /**
      * @param string[] $path
      */
-    private function processNode(array $path, mixed &$data, Node $rule): mixed
+    private function processNode(array $path, mixed &$data, Node $node): mixed
     {
-        $path[] = $rule->name;
+        $path[] = $node->name;
 
-        $dataAccess = $this->getDataAccess($rule->dataAccess);
-        if (!$dataAccess->hasChild($path, $data, $rule->name)) {
+        $dataAccess = $this->getDataAccess($node->dataAccess);
+        if (!$dataAccess->hasChild($path, $data, $node->name)) {
             return $data;
         }
 
-        $value = $dataAccess->getChild($path, $data, $rule->name);
-        $value = $this->processValue($path, $rule, $value);
+        $value = $dataAccess->getChild($path, $data, $node->name);
 
-        $dataAccess->setChildValue($path, $data, $rule->name, $value);
+        if ($node->containsNestedData()) {
+            $nestedUnit = new ProcessingUnit(
+                $this->dataGenerationProvider,
+                $this->dataAccessProvider,
+                $this->dataEncodingProvider,
+                $this->ruleSetProvider,
+                $this->ruleSetProvider->getRuleSet($node->nestedRule),
+                $value,
+                new TempStorage(),
+            );
+
+            $value = $nestedUnit->process($node->nestedType);
+        } else {
+            $value = $this->processValue($path, $node, $value);
+        }
+
+        $dataAccess->setChildValue($path, $data, $node->name, $value);
 
         return $data;
     }

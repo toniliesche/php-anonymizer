@@ -20,6 +20,8 @@ class Node implements ChildNodeAccessInterface
         public NodeType $nodeType,
         public ?string $valueType,
         public bool $isArray,
+        public ?string $nestedType = null,
+        public ?string $nestedRule = null,
         public array $childNodes = [],
     ) {
         foreach ($this->childNodes as $childNode) {
@@ -27,10 +29,18 @@ class Node implements ChildNodeAccessInterface
                 throw new InvalidArgumentException('All child nodes must be of type Node');
             }
         }
+
+        if (!is_null($this->nestedType) && !empty($childNodes)) {
+            throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
+        }
     }
 
     public function addChildNode(Node $node): void
     {
+        if (!is_null($this->nestedType)) {
+            throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
+        }
+
         $this->childNodes[] = $node;
     }
 
@@ -54,5 +64,10 @@ class Node implements ChildNodeAccessInterface
         }
 
         return false;
+    }
+
+    public function containsNestedData(): bool
+    {
+        return !is_null($this->nestedType);
     }
 }

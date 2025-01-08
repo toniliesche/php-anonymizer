@@ -16,7 +16,7 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
     ],
     DataAccess::AUTODETECT->value,
@@ -31,7 +31,7 @@ $data = new Order(
     $person,
 );
 
-$anonymizedData = $anonymizer->run('person-data', $data, 'clone');
+$anonymizedData = $anonymizer->run('order', $data, 'clone');
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

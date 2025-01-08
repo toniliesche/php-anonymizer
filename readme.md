@@ -71,7 +71,7 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         'order.person.first_name',
         'order.person.last_name',
@@ -87,7 +87,7 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('person-data', $data);
+$anonymizedData = $anonymizer->run('order', $data);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);
@@ -142,7 +142,7 @@ represents a level in the data structure. The following example shows how to wri
 // examples/02_01_definitions_basic_rules.php
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         'order.person.first_name',
         'order.person.last_name',
@@ -159,7 +159,7 @@ a certain level. This can be realized by putting `[]` in front of a keyword.
 // examples/02_02_definitions_array_rules.php
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         '[]orders.person.first_name',
         '[]orders.person.last_name',
@@ -182,7 +182,7 @@ Example with direct property access on object. This methods requires the propert
 // examples/02_03_01_definitions_property_access_by_property.php
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         'order.person.firstName[property]',
         'order.person.lastName[property]',
@@ -197,7 +197,7 @@ Example with property access via getter and setter method. This method requires 
 // examples/02_03_02_definitions_property_access_by_setter.php
 
 $anonymizer->registerRuleSet(
-    'address-data',
+    'order',
     [
         'order.person.firstName[setter]',
         'order.person.lastName[setter]',
@@ -211,7 +211,7 @@ The safest way to access properties on objects, is to use reflection.
 // examples/02_03_03_definitions_property_access_via_reflection.php
 
 $anonymizer->registerRuleSet(
-    'address-data',
+    'order',
     [
         'order.person.firstName[reflection]',
         'order.person.lastName[reflection]',
@@ -226,7 +226,7 @@ verbose.
 // 02_03_04_definitions_property_access_mixed.php
 
 $anonymizer->registerRuleSet(
-    'address-data',
+    'order',
     [
         '[]orders[array].person[setter].firstName[property]',
         '[]orders[array].person[setter].lastName[property]',
@@ -248,6 +248,8 @@ Supported access methods as of now are:
 
 ### 02.04 Fake data type annotation *[complex rule parser only]*
 
+! Notice: This feature CANNOT be combined with the nested data type annotation.
+
 Until now all that we have achieved, is to replace the data with starred out place holders that have the same length as
 the original data. As sometimes it is more desirable to replace the data with more real world-like fake data, it is
 possible to tell the Anonymizer which kind of data we want to set as a field's replacement.
@@ -262,7 +264,7 @@ within the square brackets, e.g. `order.person.firstName[#firstName]`.
 // examples/02_04_01_definitions_fake_data.php
 
 $anonymizer->registerRuleSet(
-    'address-data',
+    'order',
     [
         'order.person.firstName[#firstName]',
         'order.person.lastName[#lastName]',
@@ -277,10 +279,42 @@ case, the fake data type must be preceded by the access method, e.g. `order.pers
 // examples/02_04_02_definitions_fake_data_with_property_access.php
 
 $anonymizer->registerRuleSet(
-    'address-data',
+    'order',
     [
         'order.person.firstName[property#firstName]',
         'order.person.lastName[property#lastName]',
+    ],
+);
+```
+
+### 02.05 Nested data type annotation *[complex rule parser only]*
+
+! Notice: This feature CANNOT be combined with the fake data type annotation.
+
+In some cases it can be necessary to define a way of anonymizing data that have been stored in a nested data type. This can happen when a string formatted field contains a complete json document for example. In this case we need two information to be defined: The type of the nested data (e.g. json) and the rule set that should handle the nested data (as this data is handled as a separate object).
+
+The data type will be annotated after a leading `?` symbol, followed by a `/` separated rule name, e.g. `order.address[?json/address]`.
+
+```php
+// examples/02_05_01_definitions_nested_data.php
+
+$anonymizer->registerRuleSet(
+    'order',
+    [
+        'order.address[?json/address]',
+    ],
+);
+```
+
+And again, also in this case it is possible to mix the nested data type annotations with the other access methods. In this case, the fake data type must be preceded by the access method, e.g. `order.address[property?json/address]`.
+
+```php
+// examples/02_05_02_definitions_nested_data_with_property_access.php
+
+$anonymizer->registerRuleSet(
+    'order',
+    [
+        'order.address[property?json/address]',
     ],
 );
 ```
@@ -391,7 +425,7 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('person-data', $data, 'noop');
+$anonymizedData = $anonymizer->run('order', $data, 'noop');
 ```
 
 Example output for the noop encoder on an array.
@@ -418,7 +452,7 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('person-data', $data, 'noop');
+$anonymizedData = $anonymizer->run('order', $data, 'noop');
 ```
 
 Example output for the noop encoder on an object.
@@ -445,7 +479,7 @@ As the `clone` keyword only creates a shallow copy of the top level object, we u
 // examples/04_02_01_clone_encoder_change.php
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         'person.firstName',
         'person.lastName',
@@ -453,7 +487,7 @@ $anonymizer->registerRuleSet(
     DataAccess::AUTODETECT->value,
 );
 
-$anonymizedData = $anonymizer->run('person-data', $data, 'clone');
+$anonymizedData = $anonymizer->run('order', $data, 'clone');
 ```
 
 Example output for the clone encoder after data has been changed.
@@ -472,12 +506,12 @@ In the next step, we change our rule set to not modify any data within the clone
 // examples/04_02_02_clone_encoder_no_change.php
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [],
     DataAccess::AUTODETECT->value,
 );
 
-$anonymizedData = $anonymizer->run('person-data', $data, 'clone');
+$anonymizedData = $anonymizer->run('order', $data, 'clone');
 ```
 
 Example output for the clone encoder after data hasn't been changed.

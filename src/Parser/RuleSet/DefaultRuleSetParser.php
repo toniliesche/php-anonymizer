@@ -69,6 +69,8 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
                     nodeType: $nodeType,
                     valueType: $ruleResult->valueType,
                     isArray: $ruleResult->isArray,
+                    nestedType: $ruleResult->nestedType,
+                    nestedRule: $ruleResult->nestedRule,
                 );
                 $parentNode->addChildNode($childNode);
             }

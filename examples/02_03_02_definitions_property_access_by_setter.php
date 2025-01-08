@@ -15,7 +15,7 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         'order.person.firstName[setter]',
         'order.person.lastName[setter]',
@@ -30,7 +30,7 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('person-data', $data);
+$anonymizedData = $anonymizer->run('order', $data);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

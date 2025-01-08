@@ -41,6 +41,8 @@ abstract class AbstractRegexParser implements NodeParserInterface
             $matches['property'],
             !empty($matches['data_access']) ? $matches['data_access'] : null,
             !empty($matches['value']) ? $matches['value'] : null,
+            !empty($matches['nested_type']) ? $matches['nested_type'] : null,
+            !empty($matches['nested_rule']) ? $matches['nested_rule'] : null,
         );
     }
 }
