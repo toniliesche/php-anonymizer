@@ -11,6 +11,7 @@ use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
 use PhpAnonymizer\Anonymizer\Model\RuleSet;
@@ -247,6 +248,58 @@ class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process('json');
         $this->assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
+    }
+
+    public function testWillFailOnArrayProcessingOfSimpleValue(): void
+    {
+        $nameNode = new Node(
+            name: 'name',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $addressNode = new Node(
+            name: 'addresses',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::NODE,
+            valueType: null,
+            isArray: true,
+            childNodes: [
+                $nameNode,
+            ],
+        );
+
+        $tree = new Tree(
+            childNodes: [
+                $addressNode,
+            ],
+        );
+
+        $ruleSet = new RuleSet(
+            tree: $tree,
+            defaultDataAccess: DataAccess::ARRAY->value,
+        );
+
+        $data = [
+            'addresses' => 'invalid type',
+        ];
+
+        $processingUnit = new ProcessingUnit(
+            new DefaultDataGeneratorProvider(
+                [
+                    new StarMaskedStringGenerator(),
+                ],
+            ),
+            new DefaultDataAccessProvider(),
+            new DefaultDataEncodingProvider(),
+            $ruleSet,
+            $data,
+        );
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $processingUnit->process();
     }
 
     public function testWillFailOnProcessingWhenInvalidEncodingIsGiven(): void

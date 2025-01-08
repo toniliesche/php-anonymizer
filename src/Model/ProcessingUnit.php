@@ -11,6 +11,7 @@ use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInter
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use function sprintf;
 
 class ProcessingUnit
@@ -72,6 +73,10 @@ class ProcessingUnit
     private function processValue(array $path, Node $rule, mixed $value): mixed
     {
         if ($rule->isArray) {
+            if (!is_array($value)) {
+                throw InvalidObjectTypeException::notAnArray($path);
+            }
+
             return $this->processListValue($path, $rule, $value);
         }
 
