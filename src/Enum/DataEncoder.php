@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Enum;
 
 enum DataEncoder: string
 {
+    case ARRAY_TO_JSON = 'array2json';
     case CLONE = 'clone';
     case JSON = 'json';
     case NOOP = 'noop';

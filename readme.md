@@ -28,13 +28,13 @@
     - [04.05 SymfonyEncoder](#0405-symfonyencoder)
 - [06 Extended Information](#06-extended-information)
     - [06.01 Manual setup of Anonymizer](#0601-manual-setup-of-anonymizer)
-      - [06.01.01 RuleSet parser](#060101-ruleset-parser)
-      - [06.01.02 DependencyChecker](#060102-dependencychecker)
-      - [06.01.03 DataAccessProvider](#060103-dataaccessprovider)
-      - [06.01.04 DataGenerationProvider](#060104-datagenerationprovider)
-      - [06.01.05 DataEncodingProvider](#060105-dataencodingprovider)
-      - [06.01.06 DataProcessor](#060106-dataprocessor)
-      - [06.01.07 Anonymizer](#060107-anonymizer)
+        - [06.01.01 RuleSet parser](#060101-ruleset-parser)
+        - [06.01.02 DependencyChecker](#060102-dependencychecker)
+        - [06.01.03 DataAccessProvider](#060103-dataaccessprovider)
+        - [06.01.04 DataGenerationProvider](#060104-datagenerationprovider)
+        - [06.01.05 DataEncodingProvider](#060105-dataencodingprovider)
+        - [06.01.06 DataProcessor](#060106-dataprocessor)
+        - [06.01.07 Anonymizer](#060107-anonymizer)
     - [06.02 Builder setup of Anonymizer](#0602-builder-setup-of-anonymizer)
 
 ### Purpose
@@ -360,13 +360,16 @@ $builder = (new AnonymizerBuilder())
 The `Analyzer` main service class supports the use of a data encoding class. The sole purpose of this data encoding
 class is to make the input data accessible for transformation:
 
-| Encoder        | Description                    | Input Encode | Output Encode | Input Decode | Output Decode |
-|----------------|--------------------------------|--------------|---------------|--------------|---------------|
-| NoOpEncoder    | does not change the input data | `mixed`      | `mixed`       | `mixed`      | `mixed`       |
-| CloneEncoder   | clones objects on decode       | `mixed`      | `mixed`       | `mixed`      | `mixed`       |
-| JsonEncoder    | encodes data as JSON           | `array`      | `string`      | `string`     | `array`       |
-| YamlEncoder    | encodes data as YAML           | `array`      | `string`      | `string`     | `array`       |
-| SymfonyEncoder | transforms objects to array    | `array`      | `object`      | `object`     | `array`       |
+| Encoder               | Description                    | Input Encode | Output Encode | Input Decode | Output Decode |
+|-----------------------|--------------------------------|--------------|---------------|--------------|---------------|
+| NoOpEncoder           | does not change the input data | `mixed`      | `mixed`       | `mixed`      | `mixed`       |
+| CloneEncoder          | clones objects on decode       | `mixed`      | `mixed`       | `mixed`      | `mixed`       |
+| JsonEncoder           | encodes data as JSON           | `array`      | `string`      | `string`     | `array`       |
+| YamlEncoder           | encodes data as YAML           | `array`      | `string`      | `string`     | `array`       |
+| SymfonyEncoder        | transforms objects to array    | `object`     | `array`       | `array`      | `object`      |
+| SymfonyToJsonEncoder  | transforms object to json      | `object`     | `array`       | `array`      | `string`      |
+| SymfonyToArrayEncoder | transforms objects to array    | `object`     | `array`       | `array`      | `array`       |
+| ArrayToJsonEncoder    | transforms array to json       | `array`      | `array`       | `array`      | `string`      |
 
 ### 04.01 NoOpEncoder
 
@@ -463,7 +466,7 @@ Check $data === $anonymizedData
 bool(false)
 ```
 
-In the next step, we change our rule set to not modify any data within the cloned object. 
+In the next step, we change our rule set to not modify any data within the cloned object.
 
 ```php
 // examples/04_02_02_clone_encoder_no_change.php
