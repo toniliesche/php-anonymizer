@@ -62,23 +62,25 @@ class ProcessingUnit
 
         $value = $dataAccess->getChild($path, $data, $node->name);
 
-        if ($node->containsNestedData()) {
-            $nestedUnit = new ProcessingUnit(
-                $this->dataGenerationProvider,
-                $this->dataAccessProvider,
-                $this->dataEncodingProvider,
-                $this->ruleSetProvider,
-                $this->ruleSetProvider->getRuleSet($node->nestedRule),
-                $value,
-                new TempStorage(),
-            );
+        if (!$node->hasFilterRule() || ($node->filterValue === $dataAccess->getChild($path, $data, $node->filterField))) {
+            if ($node->containsNestedData()) {
+                $nestedUnit = new ProcessingUnit(
+                    $this->dataGenerationProvider,
+                    $this->dataAccessProvider,
+                    $this->dataEncodingProvider,
+                    $this->ruleSetProvider,
+                    $this->ruleSetProvider->getRuleSet($node->nestedRule),
+                    $value,
+                    new TempStorage(),
+                );
 
-            $value = $nestedUnit->process($node->nestedType);
-        } else {
-            $value = $this->processValue($path, $node, $value);
+                $value = $nestedUnit->process($node->nestedType);
+            } else {
+                $value = $this->processValue($path, $node, $value);
+            }
+
+            $dataAccess->setChildValue($path, $data, $node->name, $value);
         }
-
-        $dataAccess->setChildValue($path, $data, $node->name, $value);
 
         return $data;
     }

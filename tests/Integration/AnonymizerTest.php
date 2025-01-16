@@ -123,6 +123,47 @@ class AnonymizerTest extends TestCase
         $this->assertSame('{"address":{"firstName":"Marley","lastName":"Kerluke","city":"New York"}}', $processedData);
     }
 
+    public function testCanSubstituteValuesInFilteredFieldsOnly(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withFaker(true)
+            ->withFakerSeed('test')
+            ->withNodeParserType(NodeParser::COMPLEX->value)
+            ->build();
+
+        $anonymizer->registerRuleSet(
+            name: 'properties',
+            definitions: [
+                '[]properties.value[%name/firstName]',
+                '[]properties.value[%name/lastName]',
+            ],
+        );
+
+        $data = [
+            'properties' => [
+                [
+                    'name' => 'firstName',
+                    'value' => 'John',
+                ],
+                [
+                    'name' => 'lastName',
+                    'value' => 'Doe',
+                ],
+                [
+                    'name' => 'city',
+                    'value' => 'New York',
+                ],
+            ],
+        ];
+
+        $processedData = $anonymizer->run('properties', $data);
+
+        $this->assertSame('****', $processedData['properties'][0]['value']);
+        $this->assertSame('***', $processedData['properties'][1]['value']);
+        $this->assertSame('New York', $processedData['properties'][2]['value']);
+    }
+
     public function testCanSubstituteDataInObjectViaSetterMethod(): void
     {
         $anonymizer = (new AnonymizerBuilder())

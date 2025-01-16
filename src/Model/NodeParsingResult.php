@@ -16,6 +16,8 @@ readonly class NodeParsingResult
         public ?string $valueType = null,
         public ?string $nestedType = null,
         public ?string $nestedRule = null,
+        public ?string $filterField = null,
+        public ?string $filterValue = null,
     ) {
         if (!is_null($this->nestedType)) {
             if (is_null($this->nestedRule)) {
@@ -25,6 +27,10 @@ readonly class NodeParsingResult
             if (!is_null($this->valueType)) {
                 throw new RuleDefinitionException('Value type must be null if nested type is not null');
             }
+        }
+
+        if (!is_null($this->filterField) && is_null($this->filterValue)) {
+            throw new RuleDefinitionException('Filter value must not be null if filter field is not null');
         }
     }
 }
