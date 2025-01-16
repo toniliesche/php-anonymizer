@@ -16,12 +16,12 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/Dependency/DefaultDependencyChecker.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataAccessProviderDefinitionException.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataGenerationProviderDefinitionException.php"/>
+  <violation rule="PHPMD\Rule\Design\LongParameterList" file="src/Model/Node.php" method="__construct"/>
   <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="src/Model/NodeParsingResult.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Model/ProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Model/ProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="src/Model/ProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/Model/ProcessingUnit.php"/>
-  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Parser/RuleSet/DefaultRuleSetParser.php" method="parseDefinition"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/DefaultDataProcessor.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DataProcessorFactoryInterface.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DefaultDataProcessorFactory.php"/>

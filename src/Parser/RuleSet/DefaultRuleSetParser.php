@@ -8,7 +8,6 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
-use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
@@ -54,6 +53,7 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
 
                 if ($parentNode->hasConflictingChildNode($ruleResult, $dataAccess, $nodeType)) {
                     $childNode = $parentNode->getChildNode($ruleResult->property);
+
                     continue;
                 }
 
