@@ -8,7 +8,6 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
-use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
@@ -52,13 +51,8 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
                 $nodeType = $level > ($levels - 2) ? NodeType::LEAF : NodeType::NODE;
                 $dataAccess = $ruleResult->dataAccess ?? DataAccess::DEFAULT->value;
 
-                if ($parentNode->hasChildNode($ruleResult->property)) {
+                if ($parentNode->hasConflictingChildNode($ruleResult, $dataAccess, $nodeType)) {
                     $childNode = $parentNode->getChildNode($ruleResult->property);
-                    if ($childNode->nodeType !== $nodeType || $childNode->dataAccess !== $dataAccess || $childNode->isArray !== $ruleResult->isArray) {
-                        throw new NodeDefinitionMismatchException(
-                            sprintf('Node definition mismatch for node "%s".', $ruleResult->property),
-                        );
-                    }
 
                     continue;
                 }
@@ -69,6 +63,10 @@ readonly class DefaultRuleSetParser implements RuleSetParserInterface
                     nodeType: $nodeType,
                     valueType: $ruleResult->valueType,
                     isArray: $ruleResult->isArray,
+                    nestedType: $ruleResult->nestedType,
+                    nestedRule: $ruleResult->nestedRule,
+                    filterField: $ruleResult->filterField,
+                    filterValue: $ruleResult->filterValue,
                 );
                 $parentNode->addChildNode($childNode);
             }

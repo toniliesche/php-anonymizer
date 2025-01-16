@@ -17,17 +17,17 @@
   "require-dev": {
     "ext-json": "*",
     "ext-yaml": "*",
-    "ergebnis/composer-normalize": "^2.43",
-    "fakerphp/faker": "^1.23",
-    "friendsofphp/php-cs-fixer": "^3.62",
+    "ergebnis/composer-normalize": "^2.45",
+    "fakerphp/faker": "^1.24",
+    "friendsofphp/php-cs-fixer": "^3.68",
     "icanhazstring/composer-unused": "dev-main",
     "infection/infection": "^0.29.6",
     "phpmd/phpmd": "^2.15",
-    "phpstan/phpstan": "^1.11",
+    "phpstan/phpstan": "^1.12",
     "phpstan/phpstan-phpunit": "^1.4",
     "phpunit/phpunit": "^11",
     "rector/rector": "^1.2",
-    "symfony/serializer": "^7.1",
+    "symfony/serializer": "^7.2",
     "thecodingmachine/phpstan-safe-rule": "^1.2"
   },
   "suggest": {

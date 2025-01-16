@@ -6,20 +6,15 @@ namespace PhpAnonymizer\Anonymizer;
 
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
-use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetException;
 use PhpAnonymizer\Anonymizer\Model\RuleSet;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
-use function sprintf;
 
-class Anonymizer
+readonly class Anonymizer
 {
-    /** @var RuleSet[] */
-    private array $ruleSets = [];
-
     public function __construct(
-        private readonly RuleSetParserInterface $ruleSetParser,
-        private readonly DataProcessorInterface $dataProcessor,
+        private RuleSetParserInterface $ruleSetParser,
+        private DataProcessorInterface $dataProcessor,
     ) {
     }
 
@@ -32,9 +27,7 @@ class Anonymizer
      */
     public function run(string $ruleSetName, mixed $data, ?string $encoding = null): mixed
     {
-        $ruleSet = $this->ruleSets[$ruleSetName] ?? throw new UnknownRuleSetException(sprintf('Rule set "%s" not found', $ruleSetName));
-
-        return $this->dataProcessor->process($data, $ruleSet, $encoding);
+        return $this->dataProcessor->process($data, $ruleSetName, $encoding);
     }
 
     /**
@@ -47,9 +40,11 @@ class Anonymizer
         }
 
         $tree = $this->ruleSetParser->parseDefinition($definitions);
-        $this->ruleSets[$name] = new RuleSet(
+        $ruleSet = new RuleSet(
             tree: $tree,
             defaultDataAccess: $defaultDataAccess,
         );
+
+        $this->dataProcessor->getRuleSetProvider()->registerRuleSet($name, $ruleSet);
     }
 }

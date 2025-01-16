@@ -11,9 +11,11 @@ use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
 use PhpAnonymizer\Anonymizer\Model\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\RuleSetProvider;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
@@ -67,6 +69,7 @@ class ProcessingUnitTest extends TestCase
             ),
             new DefaultDataAccessProvider(),
             new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
             $ruleSet,
             $data,
         );
@@ -130,6 +133,7 @@ class ProcessingUnitTest extends TestCase
             ),
             new DefaultDataAccessProvider(),
             new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
             $ruleSet,
             $data,
         );
@@ -189,6 +193,7 @@ class ProcessingUnitTest extends TestCase
             ),
             new DefaultDataAccessProvider(),
             new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
             $ruleSet,
             $data,
         );
@@ -241,12 +246,133 @@ class ProcessingUnitTest extends TestCase
             ),
             new DefaultDataAccessProvider(),
             new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
             $ruleSet,
             $data,
         );
 
         $processedData = $processingUnit->process('json');
         $this->assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
+    }
+
+    public function testCanRunComplexProcessingOfDataWithNestedJsonInput(): void
+    {
+        $nameNode = new Node(
+            name: 'name',
+            dataAccess: DataAccess::ARRAY->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $addressTree = new Tree(
+            childNodes: [
+                $nameNode,
+            ],
+        );
+
+        $addressRuleSet = new RuleSet(
+            tree: $addressTree,
+            defaultDataAccess: DataAccess::ARRAY->value,
+        );
+
+        $addressesNode = new Node(
+            name: 'address',
+            dataAccess: DataAccess::ARRAY->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+            nestedType: 'json',
+            nestedRule: 'address',
+        );
+
+        $addressesTree = new Tree(
+            childNodes: [
+                $addressesNode,
+            ],
+        );
+
+        $addressesRuleSet = new RuleSet(
+            tree: $addressesTree,
+            defaultDataAccess: DataAccess::ARRAY->value,
+        );
+
+        $ruleSetProvider = new RuleSetProvider();
+        $ruleSetProvider->registerRuleSet('address', $addressRuleSet);
+        $ruleSetProvider->registerRuleSet('addresses', $addressesRuleSet);
+
+        $data = [
+            'address' => '{"name":"John Doe","city":"New York"}',
+        ];
+
+        $processingUnit = new ProcessingUnit(
+            new DefaultDataGeneratorProvider(
+                [
+                    new StarMaskedStringGenerator(),
+                ],
+            ),
+            new DefaultDataAccessProvider(),
+            new DefaultDataEncodingProvider(),
+            $ruleSetProvider,
+            $addressesRuleSet,
+            $data,
+        );
+
+        $processedData = $processingUnit->process();
+        $this->assertSame('{"name":"********","city":"New York"}', $processedData['address']);
+    }
+
+    public function testWillFailOnArrayProcessingOfSimpleValue(): void
+    {
+        $nameNode = new Node(
+            name: 'name',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $addressNode = new Node(
+            name: 'addresses',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::NODE,
+            valueType: null,
+            isArray: true,
+            childNodes: [
+                $nameNode,
+            ],
+        );
+
+        $tree = new Tree(
+            childNodes: [
+                $addressNode,
+            ],
+        );
+
+        $ruleSet = new RuleSet(
+            tree: $tree,
+            defaultDataAccess: DataAccess::ARRAY->value,
+        );
+
+        $data = [
+            'addresses' => 'invalid type',
+        ];
+
+        $processingUnit = new ProcessingUnit(
+            new DefaultDataGeneratorProvider(
+                [
+                    new StarMaskedStringGenerator(),
+                ],
+            ),
+            new DefaultDataAccessProvider(),
+            new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
+            $ruleSet,
+            $data,
+        );
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $processingUnit->process();
     }
 
     public function testWillFailOnProcessingWhenInvalidEncodingIsGiven(): void
@@ -294,6 +420,7 @@ class ProcessingUnitTest extends TestCase
             ),
             new DefaultDataAccessProvider(),
             new DefaultDataEncodingProvider(),
+            new RuleSetProvider(),
             $ruleSet,
             $data,
         );

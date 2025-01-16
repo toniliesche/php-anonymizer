@@ -11,7 +11,7 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'person-data',
+    'order',
     [
         // the [] in front of orders mark this layer to be a list of person objects
         '[]orders.person.first_name',
@@ -35,7 +35,7 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('person-data', $data);
+$anonymizedData = $anonymizer->run('order', $data);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);
