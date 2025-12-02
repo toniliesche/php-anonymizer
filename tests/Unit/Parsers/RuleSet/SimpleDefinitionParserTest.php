@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PHPUnit\Framework\TestCase;
 
-class SimpleDefinitionParserTest extends TestCase
+final class SimpleDefinitionParserTest extends TestCase
 {
     public function testCanParseMultiLevelTreeDefinition(): void
     {

@@ -12,7 +12,7 @@ use function array_slice;
 use function method_exists;
 use function ucfirst;
 
-class SetterDataAccess extends AbstractObjectDataAccess
+final class SetterDataAccess extends AbstractObjectDataAccess
 {
     public function hasChild(array $path, mixed $parent, string $name): bool
     {

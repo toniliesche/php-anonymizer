@@ -18,7 +18,7 @@ use RuntimeException;
 use stdClass;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
-class DefaultDataEncodingProviderTest extends TestCase
+final class DefaultDataEncodingProviderTest extends TestCase
 {
     public function testWillFailOnInitializationWhenSymfonyPackageIsMissingAndNormalizerIsGiven(): void
     {

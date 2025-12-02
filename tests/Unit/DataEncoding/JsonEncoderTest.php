@@ -12,7 +12,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class JsonEncoderTest extends TestCase
+final class JsonEncoderTest extends TestCase
 {
     public function testWillFailOnInitializationWhenJsonExceptionIsMissing(): void
     {

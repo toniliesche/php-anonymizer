@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class StarMaskedStringGeneratorTest extends TestCase
+final class StarMaskedStringGeneratorTest extends TestCase
 {
     public function testCanVerifySupportOfStrings(): void
     {

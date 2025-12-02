@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Data;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class AnonymizerTest extends TestCase
+final class AnonymizerTest extends TestCase
 {
     public function testCanSubstituteDataInArray(): void
     {

@@ -16,7 +16,7 @@ use function is_callable;
 use function is_null;
 use function sprintf;
 
-class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
+final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 {
     private const RULE_SET_PARSERS = [
         RuleSetParser::DEFAULT->value,
@@ -50,7 +50,7 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
         $this->customRuleSetParsers[$name] = $definition;
     }
 
-    public function getRuleSetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface
+    public function getRuleSetParser(?string $type, ?NodeParserInterface $nodeParser = null): RuleSetParserInterface
     {
         if (is_null($type)) {
             throw new InvalidRuleSetParserDefinitionException('Rule set parser type must be provided');

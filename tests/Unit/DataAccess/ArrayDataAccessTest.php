@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class ArrayDataAccessTest extends TestCase
+final class ArrayDataAccessTest extends TestCase
 {
     public function testCanCheckIfChildPropertyExists(): void
     {

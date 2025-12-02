@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Model\Node;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PHPUnit\Framework\TestCase;
 
-class TreeTest extends TestCase
+final class TreeTest extends TestCase
 {
     public function testCanCheckIfChildNodesExist(): void
     {

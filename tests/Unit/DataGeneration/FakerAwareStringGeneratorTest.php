@@ -12,7 +12,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class FakerAwareStringGeneratorTest extends TestCase
+final class FakerAwareStringGeneratorTest extends TestCase
 {
     public function testCanVerifySupportOfStrings(): void
     {

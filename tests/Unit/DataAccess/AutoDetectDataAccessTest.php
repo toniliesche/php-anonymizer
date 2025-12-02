@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class AutoDetectDataAccessTest extends TestCase
+final class AutoDetectDataAccessTest extends TestCase
 {
     public function testWillFailOnInitializationWithInvalidDefinition(): void
     {

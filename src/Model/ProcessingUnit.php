@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use function sprintf;
 
-class ProcessingUnit
+final class ProcessingUnit
 {
     private ?string $overrideDataAccess = null;
 

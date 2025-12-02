@@ -16,7 +16,7 @@ use PhpAnonymizer\Anonymizer\Exception\DataAccessExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessException;
 use PHPUnit\Framework\TestCase;
 
-class DefaultDataAccessProviderTest extends TestCase
+final class DefaultDataAccessProviderTest extends TestCase
 {
     public function testCanVerifySupportOfDataAccessTypes(): void
     {

@@ -18,7 +18,7 @@ use function is_object;
 use function md5;
 use function sprintf;
 
-class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
+final class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
 {
     /** @var DataGeneratorInterface<mixed>[] */
     private array $customGenerators = [];

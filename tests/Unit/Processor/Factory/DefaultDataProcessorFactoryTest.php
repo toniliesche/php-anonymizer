@@ -17,7 +17,7 @@ use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataProcessorFactoryTest extends TestCase
+final class DefaultDataProcessorFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataProcessor(): void
     {

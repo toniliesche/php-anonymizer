@@ -14,7 +14,7 @@ use stdClass;
 use function array_slice;
 use function property_exists;
 
-class PropertyDataAccess extends AbstractObjectDataAccess
+final class PropertyDataAccess extends AbstractObjectDataAccess
 {
     /**
      * @throws ReflectionException

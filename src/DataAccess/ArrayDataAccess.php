@@ -10,7 +10,7 @@ use function array_key_exists;
 use function array_slice;
 use function is_array;
 
-class ArrayDataAccess implements DataAccessInterface
+final class ArrayDataAccess implements DataAccessInterface
 {
     public function hasChild(array $path, mixed $parent, string $name): bool
     {

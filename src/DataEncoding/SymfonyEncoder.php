@@ -17,7 +17,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use function is_array;
 use function is_object;
 
-readonly class SymfonyEncoder implements DataEncoderInterface
+final readonly class SymfonyEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
@@ -85,7 +85,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

@@ -12,7 +12,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class YamlEncoderTest extends TestCase
+final class YamlEncoderTest extends TestCase
 {
     public function testInitializationFailsOnMissingYamlExtension(): void
     {

@@ -34,7 +34,8 @@
     "rector/type-perfect": "^2.1",
     "spaze/phpstan-disallowed-calls": "^4.7",
     "symfony/serializer": "^7.4",
-    "thecodingmachine/phpstan-safe-rule": "^1.2"
+    "thecodingmachine/phpstan-safe-rule": "^1.2",
+    "rector/swiss-knife": "^2.3"
   },
   "suggest": {
     "ext-json": "JSON extension is required to use the JSON data encoder",

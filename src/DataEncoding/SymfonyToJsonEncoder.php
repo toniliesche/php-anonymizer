@@ -15,7 +15,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-readonly class SymfonyToJsonEncoder implements DataEncoderInterface
+final readonly class SymfonyToJsonEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
@@ -77,7 +77,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

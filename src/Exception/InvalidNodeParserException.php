@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Exception;
 
-class InvalidNodeParserException extends BaseAnonymizerException
+final class InvalidNodeParserException extends BaseAnonymizerException
 {
 }

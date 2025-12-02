@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetException;
 
-class RuleSetProvider implements RuleSetProviderInterface
+final class RuleSetProvider implements RuleSetProviderInterface
 {
     /** @var RuleSet[] */
     private array $ruleSets = [];

@@ -10,7 +10,7 @@ use PhpAnonymizer\Anonymizer\Model\RuleSet;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 
-readonly class Anonymizer
+final readonly class Anonymizer
 {
     public function __construct(
         private RuleSetParserInterface $ruleSetParser,

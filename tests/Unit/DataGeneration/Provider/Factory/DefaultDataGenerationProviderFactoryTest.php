@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionEx
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataGenerationProviderFactoryTest extends TestCase
+final class DefaultDataGenerationProviderFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataGenerationProvider(): void
     {

@@ -15,7 +15,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultNodeParserFactoryTest extends TestCase
+final class DefaultNodeParserFactoryTest extends TestCase
 {
     public function testCanProvideNodeParserWithSimpleRegularExpressionsParser(): void
     {

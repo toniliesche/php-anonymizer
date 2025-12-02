@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
 use PHPUnit\Framework\TestCase;
 
-class ArrayRuleSetParserTest extends TestCase
+final class ArrayRuleSetParserTest extends TestCase
 {
     public function testParseRules(): void
     {

@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PHPUnit\Framework\TestCase;
 
-class NodeTest extends TestCase
+final class NodeTest extends TestCase
 {
     public function testWillFailOnInitializationWithInvalidChildNodes(): void
     {

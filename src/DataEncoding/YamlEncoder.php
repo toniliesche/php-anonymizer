@@ -16,7 +16,7 @@ use function is_string;
 use function Safe\yaml_parse;
 use function yaml_emit;
 
-class YamlEncoder implements DataEncoderInterface
+final class YamlEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {
@@ -54,7 +54,7 @@ class YamlEncoder implements DataEncoderInterface
         return yaml_emit($data);
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

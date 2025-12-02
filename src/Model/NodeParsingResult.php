@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
 
-readonly class NodeParsingResult
+final readonly class NodeParsingResult
 {
     public function __construct(
         public bool $isValid,

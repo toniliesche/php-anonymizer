@@ -10,7 +10,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class CloneEncoderTest extends TestCase
+final class CloneEncoderTest extends TestCase
 {
     public function testCanCloneObjectIntoNewInstanceOnDecode(): void
     {

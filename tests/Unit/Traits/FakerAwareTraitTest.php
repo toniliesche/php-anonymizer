@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class FakerAwareTraitTest extends TestCase
+final class FakerAwareTraitTest extends TestCase
 {
     public function testWillFailOnInjectingFakerWhenFakerLibraryIsMissing(): void
     {

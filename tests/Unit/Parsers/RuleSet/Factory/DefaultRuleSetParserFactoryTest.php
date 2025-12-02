@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultRuleSetParserFactoryTest extends TestCase
+final class DefaultRuleSetParserFactoryTest extends TestCase
 {
     public function testCanProvideDefaultRuleSetParser(): void
     {

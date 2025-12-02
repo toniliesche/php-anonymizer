@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessProviderException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataAccessProviderFactoryTest extends TestCase
+final class DefaultDataAccessProviderFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataAccessProvider(): void
     {

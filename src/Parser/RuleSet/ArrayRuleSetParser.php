@@ -17,7 +17,7 @@ use function array_key_exists;
 use function implode;
 use function sprintf;
 
-class ArrayRuleSetParser implements RuleSetParserInterface
+final class ArrayRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
         private readonly NodeParserInterface $nodeParser = new SimpleRegexpParser(),

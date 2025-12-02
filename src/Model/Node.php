@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 
-class Node implements ChildNodeAccessInterface
+final class Node implements ChildNodeAccessInterface
 {
     use ChildNodeAwareTrait;
 

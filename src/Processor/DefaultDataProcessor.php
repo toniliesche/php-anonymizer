@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
 use PhpAnonymizer\Anonymizer\Model\RuleSetProvider;
 use PhpAnonymizer\Anonymizer\Model\RuleSetProviderInterface;
 
-readonly class DefaultDataProcessor implements DataProcessorInterface
+final readonly class DefaultDataProcessor implements DataProcessorInterface
 {
     public function __construct(
         private DataAccessProviderInterface $dataAccessProvider,

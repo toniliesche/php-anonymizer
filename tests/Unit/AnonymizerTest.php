@@ -15,7 +15,7 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PHPUnit\Framework\TestCase;
 
-class AnonymizerTest extends TestCase
+final class AnonymizerTest extends TestCase
 {
     public function testWillFailOnRegisteringingDefaultAsDataAccessForRuleSet(): void
     {

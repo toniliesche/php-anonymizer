@@ -39,7 +39,7 @@ use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 /**
  * @codeCoverageIgnoreStart
  */
-class AnonymizerBuilder
+final class AnonymizerBuilder
 {
     private string $nodeParserType;
 

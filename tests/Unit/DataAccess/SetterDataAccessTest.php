@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class SetterDataAccessTest extends TestCase
+final class SetterDataAccessTest extends TestCase
 {
     public function testCanCheckIfChildPropertyExists(): void
     {

@@ -13,7 +13,7 @@ use function is_bool;
 use function is_string;
 use function sprintf;
 
-class ArrayNodeParser implements NodeParserInterface
+final class ArrayNodeParser implements NodeParserInterface
 {
     private const STRING_SETTINGS = [
         'data_access',

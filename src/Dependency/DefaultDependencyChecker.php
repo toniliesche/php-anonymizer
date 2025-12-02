@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use function class_exists;
 use function extension_loaded;
 
-class DefaultDependencyChecker implements DependencyCheckerInterface
+final class DefaultDependencyChecker implements DependencyCheckerInterface
 {
     public function __construct()
     {

@@ -14,7 +14,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class PropertyDataAccessTest extends TestCase
+final class PropertyDataAccessTest extends TestCase
 {
     public function testCanCheckIfChildPropertyExists(): void
     {

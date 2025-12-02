@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 
-class NodeMapper
+final class NodeMapper
 {
     public function mapNodeParsingResult(
         NodeParsingResult $ruleResult,

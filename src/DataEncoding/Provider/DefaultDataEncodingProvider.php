@@ -26,7 +26,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use function in_array;
 use function sprintf;
 
-class DefaultDataEncodingProvider implements DataEncodingProviderInterface
+final class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 {
     private const ENCODERS = [
         DataEncoder::CLONE->value,

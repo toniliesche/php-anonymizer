@@ -20,7 +20,7 @@ use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
 
-class ProcessingUnitTest extends TestCase
+final class ProcessingUnitTest extends TestCase
 {
     public function testCanRunSimpleProcessingOfDataInArray(): void
     {

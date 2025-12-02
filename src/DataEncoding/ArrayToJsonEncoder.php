@@ -15,7 +15,7 @@ use function is_array;
 use function Safe\json_encode;
 use const JSON_THROW_ON_ERROR;
 
-class ArrayToJsonEncoder implements DataEncoderInterface
+final class ArrayToJsonEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {
@@ -53,7 +53,7 @@ class ArrayToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

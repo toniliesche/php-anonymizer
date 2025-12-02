@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class ComplexDefinitionParserTest extends TestCase
+final class ComplexDefinitionParserTest extends TestCase
 {
     public function testCanParseMultiLevelTreeDefinition(): void
     {

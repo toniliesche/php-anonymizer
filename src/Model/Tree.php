@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 
-class Tree implements ChildNodeAccessInterface
+final class Tree implements ChildNodeAccessInterface
 {
     use ChildNodeAwareTrait;
 

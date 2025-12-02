@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Parser\Node;
 /**
  * @deprecated - part of deprecated RegexpRuleSetParser
  */
-class ComplexRegexpParser extends AbstractRegexpParser
+final class ComplexRegexpParser extends AbstractRegexpParser
 {
     public function __construct()
     {

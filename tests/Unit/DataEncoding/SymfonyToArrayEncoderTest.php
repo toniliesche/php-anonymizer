@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
-class SymfonyToArrayEncoderTest extends TestCase
+final class SymfonyToArrayEncoderTest extends TestCase
 {
     public function testWillFailOnInitializationWhenSymfonyPackageIsMissing(): void
     {

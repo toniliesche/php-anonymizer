@@ -17,7 +17,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\DataGeneration\RandomIntGenerator;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataGenerationProviderTest extends TestCase
+final class DefaultDataGenerationProviderTest extends TestCase
 {
     public function testWillFailOnInitializationWithInvalidDefinition(): void
     {

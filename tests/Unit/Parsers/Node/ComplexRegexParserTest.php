@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PHPUnit\Framework\TestCase;
 use Safe\Exceptions\PcreException;
 
-class ComplexRegexParserTest extends TestCase
+final class ComplexRegexParserTest extends TestCase
 {
     /**
      * @throws PcreException

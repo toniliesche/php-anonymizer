@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class NoOpEncoderTest extends TestCase
+final class NoOpEncoderTest extends TestCase
 {
     public function testCanPassObjectViaReferenceWithoutChangeOnDecode(): void
     {
