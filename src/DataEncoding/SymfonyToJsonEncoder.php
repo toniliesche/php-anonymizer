@@ -46,7 +46,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
             throw new DataEncodingException('SymfonyEncoder can only decode objects');
         }
 
-        $tempStorage->store('symfony-encoder-type', get_class($data));
+        $tempStorage->store('symfony-encoder-type', $data::class);
 
         try {
             return $this->normalizer->normalize($data);

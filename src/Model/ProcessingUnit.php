@@ -16,7 +16,7 @@ use function sprintf;
 
 class ProcessingUnit
 {
-    private ?string $overrideDataAccess;
+    private ?string $overrideDataAccess = null;
 
     public function __construct(
         private readonly DataGenerationProviderInterface $dataGenerationProvider,

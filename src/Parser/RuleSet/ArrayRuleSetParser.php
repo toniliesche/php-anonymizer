@@ -14,17 +14,16 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use function array_key_exists;
-use function get_class;
 use function implode;
 use function sprintf;
 
 class ArrayRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
-        private NodeParserInterface $nodeParser = new SimpleRegexpParser(),
+        private readonly NodeParserInterface $nodeParser = new SimpleRegexpParser(),
     ) {
         if (!$this->nodeParser instanceof ArrayNodeParser) {
-            throw new InvalidNodeParserException(sprintf('Node Parser must be of type %s, %s given', ArrayNodeParser::class, get_class($this->nodeParser)));
+            throw new InvalidNodeParserException(sprintf('Node Parser must be of type %s, %s given', ArrayNodeParser::class, $this->nodeParser::class));
         }
     }
 

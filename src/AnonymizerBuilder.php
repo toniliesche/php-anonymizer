@@ -43,7 +43,7 @@ class AnonymizerBuilder
 {
     private string $nodeParserType;
 
-    private ?NodeParserInterface $nodeParser;
+    private ?NodeParserInterface $nodeParser = null;
 
     private string $ruleSetParserType;
 
@@ -55,11 +55,11 @@ class AnonymizerBuilder
 
     private string $dataAccessProviderType;
 
-    private ?DataAccessProviderInterface $dataAccessProvider;
+    private ?DataAccessProviderInterface $dataAccessProvider = null;
 
     private string $dataGeneratorType;
 
-    private ?DataGenerationProviderInterface $dataGenerationProvider;
+    private ?DataGenerationProviderInterface $dataGenerationProvider = null;
 
     private bool $withFaker = false;
 

@@ -17,7 +17,6 @@ use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use Safe\Exceptions\PcreException;
 use function count;
 use function explode;
-use function get_class;
 use function implode;
 use function is_string;
 use function sprintf;
@@ -28,7 +27,7 @@ readonly class RegexpRuleSetParser implements RuleSetParserInterface
         private NodeParserInterface $nodeParser = new SimpleRegexpParser(),
     ) {
         if (!$this->nodeParser instanceof AbstractRegexpParser) {
-            throw new InvalidNodeParserException(sprintf('Node Parser must extend %s, %s given', AbstractRegexpParser::class, get_class($this->nodeParser)));
+            throw new InvalidNodeParserException(sprintf('Node Parser must extend %s, %s given', AbstractRegexpParser::class, $this->nodeParser::class));
         }
     }
 

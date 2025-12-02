@@ -12,7 +12,6 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Exception\UnsupportedDataTypeException;
 use PhpAnonymizer\Anonymizer\Interfaces\FakerAwareInterface;
-use function get_class;
 use function gettype;
 use function in_array;
 use function is_object;
@@ -103,7 +102,7 @@ class DefaultDataGeneratorProvider implements DataGenerationProviderInterface
 
         $type = gettype($value);
         if (is_object($value)) {
-            $type .= ' (' . get_class($value) . ')';
+            $type .= ' (' . $value::class . ')';
         }
 
         throw new UnsupportedDataTypeException(sprintf('No generator found for value of type: %s (data type: %s)', $valueType, $type));

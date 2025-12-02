@@ -49,7 +49,7 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
     public function __construct(
         private mixed $normalizer = null,
         private mixed $denormalizer = null,
-        private DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
     ) {
         if ($normalizer !== null) {
             if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
