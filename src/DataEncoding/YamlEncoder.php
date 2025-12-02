@@ -16,7 +16,7 @@ use function is_string;
 use function Safe\yaml_parse;
 use function yaml_emit;
 
-final class YamlEncoder implements DataEncoderInterface
+final readonly class YamlEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {

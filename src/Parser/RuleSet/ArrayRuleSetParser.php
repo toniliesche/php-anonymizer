@@ -17,11 +17,11 @@ use function array_key_exists;
 use function implode;
 use function sprintf;
 
-final class ArrayRuleSetParser implements RuleSetParserInterface
+final readonly class ArrayRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
-        private readonly NodeParserInterface $nodeParser = new SimpleRegexpParser(),
-        private readonly NodeMapper $nodeMapper = new NodeMapper(),
+        private NodeParserInterface $nodeParser = new SimpleRegexpParser(),
+        private NodeMapper $nodeMapper = new NodeMapper(),
     ) {
         if (!$this->nodeParser instanceof ArrayNodeParser) {
             throw new InvalidNodeParserException(sprintf('Node Parser must be of type %s, %s given', ArrayNodeParser::class, $this->nodeParser::class));

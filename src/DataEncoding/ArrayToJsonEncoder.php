@@ -15,7 +15,7 @@ use function is_array;
 use function Safe\json_encode;
 use const JSON_THROW_ON_ERROR;
 
-final class ArrayToJsonEncoder implements DataEncoderInterface
+final readonly class ArrayToJsonEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {
