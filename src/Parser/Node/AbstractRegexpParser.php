@@ -48,12 +48,20 @@ abstract class AbstractRegexpParser implements NodeParserInterface
             isValid: true,
             isArray: isset($matches['array']) && ($matches['array'] !== ''),
             property: $matches['property'],
-            dataAccess: isset($matches['data_access']) && ($matches['data_access'] !== '') ? $matches['data_access'] : null,
-            valueType: isset($matches['value']) && ($matches['value'] !== '') ? $matches['value'] : null,
-            nestedType: isset($matches['nested_type']) && ($matches['nested_type'] !== '') ? $matches['nested_type'] : null,
-            nestedRule: isset($matches['nested_rule']) && ($matches['nested_rule'] !== '') ? $matches['nested_rule'] : null,
-            filterField: isset($matches['filter_field']) && ($matches['filter_field'] !== '') ? $matches['filter_field'] : null,
-            filterValue: isset($matches['filter_value']) && ($matches['filter_value'] !== '') ? $matches['filter_value'] : null,
+            dataAccess: $this->getValue($matches, 'data_access'),
+            valueType: $this->getValue($matches, 'value'),
+            nestedType: $this->getValue($matches, 'nested_type'),
+            nestedRule: $this->getValue($matches, 'nested_rule'),
+            filterField: $this->getValue($matches, 'filter_field'),
+            filterValue: $this->getValue($matches, 'filter_value'),
         );
+    }
+
+    /**
+     * @param null|array<string,string> $matches
+     */
+    private function getValue(?array $matches, string $field): ?string
+    {
+        return isset($matches[$field]) && ($matches[$field] !== '') ? $matches[$field] : null;
     }
 }

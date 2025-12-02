@@ -33,7 +33,8 @@ class ArrayNodeParser implements NodeParserInterface
             return new NodeParsingResult(isValid: false);
         }
 
-        $this->validateFields($node, $path);
+        $this->validateName($node, $path);
+        $this->validateOptions($node, $path);
         $this->validateConstraints($node, $path);
 
         return new NodeParsingResult(
@@ -51,10 +52,8 @@ class ArrayNodeParser implements NodeParserInterface
 
     /**
      * @param array<mixed> $node
-     *
-     * @throws PcreException
      */
-    private function validateFields(array $node, string $path): void
+    private function validateName(array $node, string $path): void
     {
         if (!array_key_exists('name', $node)) {
             throw new InvalidNodeDefinitionException(
@@ -74,7 +73,15 @@ class ArrayNodeParser implements NodeParserInterface
                 ),
             );
         }
+    }
 
+    /**
+     * @param array<mixed> $node
+     *
+     * @throws PcreException
+     */
+    private function validateOptions(array $node, string $path): void
+    {
         foreach (self::STRING_SETTINGS as $setting) {
             if (array_key_exists($setting, $node) && (!is_string($node[$setting]) || trim($node[$setting]) === '')) {
                 throw new InvalidNodeDefinitionException(
