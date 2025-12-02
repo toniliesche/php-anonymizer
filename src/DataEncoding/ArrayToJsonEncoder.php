@@ -12,7 +12,7 @@ use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use function is_array;
-use function json_encode;
+use function Safe\json_encode;
 use const JSON_THROW_ON_ERROR;
 
 class ArrayToJsonEncoder implements DataEncoderInterface

@@ -13,8 +13,8 @@ use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use function is_array;
 use function is_string;
-use function json_decode;
-use function json_encode;
+use function Safe\json_decode;
+use function Safe\json_encode;
 use const JSON_THROW_ON_ERROR;
 
 class JsonEncoder implements DataEncoderInterface
