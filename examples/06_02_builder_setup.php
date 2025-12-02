@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
@@ -77,7 +77,7 @@ $builder->withDefaults();
  *   - will be resolved from node parser factory (set in (06.02.01)[#060201-creating-anonymizerbuilder])
  * - using one option will override the other
  */
-$builder->withNodeParser(new ComplexRegexParser());
+$builder->withNodeParser(new ComplexRegexpParser());
 $builder->withNodeParserType('simple');
 
 // 06.02.04 Setting RuleSetParser

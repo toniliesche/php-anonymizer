@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Model\Tree;
 interface RuleSetParserInterface
 {
     /**
-     * @param string[] $rules
+     * @param array<mixed> $rules
      */
     public function parseDefinition(array $rules): Tree;
 }

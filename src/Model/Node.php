@@ -83,4 +83,18 @@ class Node implements ChildNodeAccessInterface
     {
         return (bool) ($this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue);
     }
+
+    public static function fromNodeParsingResult(
+        NodeParsingResult $ruleResult,
+        NodeType $nodeType,
+        string $defaultDataAccess,
+    ): Node {
+        return new Node(
+            name: $ruleResult->property,
+            dataAccess: $ruleResult->dataAccess ?? $defaultDataAccess,
+            nodeType: $nodeType,
+            valueType: $ruleResult->valueType,
+            isArray: $ruleResult->isArray,
+        );
+    }
 }

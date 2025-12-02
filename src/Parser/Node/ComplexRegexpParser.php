@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
-class ComplexRegexParser extends AbstractRegexParser
+/**
+ * @deprecated - part of deprecated RegexpRuleSetParser
+ */
+class ComplexRegexpParser extends AbstractRegexpParser
 {
     public function __construct()
     {

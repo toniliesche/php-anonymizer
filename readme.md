@@ -572,7 +572,7 @@ composer require symfony/serializer
 ```php
 // examples/06_01_manual_setup.php
 
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 
 // 06.01.01 RuleSet parser
@@ -587,7 +587,7 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
  *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser
  */
 $ruleSetParser = new DefaultRuleSetParser(
-    nodeParser: new ComplexRegexParser(),
+    nodeParser: new ComplexRegexpParser(),
 );
 ```
 

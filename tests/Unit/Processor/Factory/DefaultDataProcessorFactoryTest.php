@@ -60,11 +60,11 @@ class DefaultDataProcessorFactoryTest extends TestCase
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $callable);
 
-        $processor = $factory->getDataProcessor(
+        $this->expectNotToPerformAssertions();
+        $factory->getDataProcessor(
             type: 'custom',
             dataEncodingProvider: new DefaultDataEncodingProvider(),
         );
-        $this->assertInstanceOf(DataProcessorInterface::class, $processor);
     }
 
     public function testCanRegisterAndProvideCustomDataProcessorWithInstance(): void

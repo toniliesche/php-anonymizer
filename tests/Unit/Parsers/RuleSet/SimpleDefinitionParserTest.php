@@ -8,8 +8,6 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
 use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PHPUnit\Framework\TestCase;
 
@@ -24,10 +22,7 @@ class SimpleDefinitionParserTest extends TestCase
             ],
         );
 
-        $this->assertInstanceOf(Tree::class, $tree);
-
         $dataLevel = $tree->getChildNode('data');
-        $this->assertInstanceOf(Node::class, $dataLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $dataLevel->dataAccess);
         $this->assertSame('data', $dataLevel->name);
         $this->assertSame(NodeType::NODE, $dataLevel->nodeType);
@@ -35,7 +30,6 @@ class SimpleDefinitionParserTest extends TestCase
         $this->assertFalse($dataLevel->isArray);
 
         $addressLevel = $dataLevel->getChildNode('address');
-        $this->assertInstanceOf(Node::class, $addressLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
         $this->assertSame('address', $addressLevel->name);
         $this->assertSame(NodeType::NODE, $addressLevel->nodeType);
@@ -43,7 +37,6 @@ class SimpleDefinitionParserTest extends TestCase
         $this->assertFalse($dataLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertInstanceOf(Node::class, $nameLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
         $this->assertSame('name', $nameLevel->name);
         $this->assertSame(NodeType::LEAF, $nameLevel->nodeType);
@@ -61,10 +54,7 @@ class SimpleDefinitionParserTest extends TestCase
             ],
         );
 
-        $this->assertInstanceOf(Tree::class, $tree);
-
         $addressLevel = $tree->getChildNode('address');
-        $this->assertInstanceOf(Node::class, $addressLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
         $this->assertSame('address', $addressLevel->name);
         $this->assertSame(NodeType::NODE, $addressLevel->nodeType);
@@ -72,7 +62,6 @@ class SimpleDefinitionParserTest extends TestCase
         $this->assertTrue($addressLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertInstanceOf(Node::class, $nameLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
         $this->assertSame('name', $nameLevel->name);
         $this->assertSame(NodeType::LEAF, $nameLevel->nodeType);
@@ -80,7 +69,6 @@ class SimpleDefinitionParserTest extends TestCase
         $this->assertFalse($nameLevel->isArray);
 
         $streetLevel = $addressLevel->getChildNode('street');
-        $this->assertInstanceOf(Node::class, $streetLevel);
         $this->assertSame(DataAccess::DEFAULT->value, $streetLevel->dataAccess);
         $this->assertSame('street', $streetLevel->name);
         $this->assertSame(NodeType::LEAF, $streetLevel->nodeType);

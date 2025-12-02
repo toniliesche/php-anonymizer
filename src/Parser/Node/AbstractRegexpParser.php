@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PhpAnonymizer\Anonymizer\Parser\Node;
+
+use PhpAnonymizer\Anonymizer\Exception\InvalidRegExpException;
+use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use Safe\Exceptions\PcreException;
+use function is_string;
+use function Safe\preg_match;
+use function sprintf;
+
+/**
+ * @deprecated - part of deprecated RegexpRuleSetParser
+ */
+abstract class AbstractRegexpParser implements NodeParserInterface
+{
+    public function __construct(private readonly string $regexp)
+    {
+        // @codeCoverageIgnoreStart
+        try {
+            preg_match($this->regexp, '');
+        } catch (PcreException $ex) {
+            throw new InvalidRegExpException(
+                message: sprintf('Invalid regular expression: "%s"', $this->regexp),
+                previous: $ex,
+            );
+        }
+        // @codeCoverageIgnoreEnd
+    }
+
+    public function parseNodeName(string $nodeName, string $path): NodeParsingResult
+    {
+        return $this->parseNode($nodeName, $path);
+    }
+
+    /**
+     * @throws PcreException
+     */
+    public function parseNode(array|string $node, string $path): NodeParsingResult
+    {
+        if (!is_string($node) || preg_match($this->regexp, $node, $matches) === 0) {
+            return new NodeParsingResult(false);
+        }
+
+        return new NodeParsingResult(
+            isValid: true,
+            isArray: !empty($matches['array']),
+            property: $matches['property'],
+            dataAccess: !empty($matches['data_access']) ? $matches['data_access'] : null,
+            valueType: !empty($matches['value']) ? $matches['value'] : null,
+            nestedType: !empty($matches['nested_type']) ? $matches['nested_type'] : null,
+            nestedRule: !empty($matches['nested_rule']) ? $matches['nested_rule'] : null,
+            filterField: !empty($matches['filter_field']) ? $matches['filter_field'] : null,
+            filterValue: !empty($matches['filter_value']) ? $matches['filter_value'] : null,
+        );
+    }
+}

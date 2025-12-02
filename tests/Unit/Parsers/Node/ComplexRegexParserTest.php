@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\Node;
 
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PHPUnit\Framework\TestCase;
 use Safe\Exceptions\PcreException;
 
@@ -16,9 +16,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeName(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data');
+        $result = $parser->parseNodeName('data', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -36,9 +36,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccess(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property]');
+        $result = $parser->parseNodeName('data[property]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -56,9 +56,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[#name]');
+        $result = $parser->parseNodeName('data[#name]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -76,9 +76,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithNestedType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[?json/address]');
+        $result = $parser->parseNodeName('data[?json/address]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -96,10 +96,10 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testWillFailOnDataTypeAndNestedType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
         $this->expectException(RuleDefinitionException::class);
-        $parser->parseNodeName('data[#name?json/address]');
+        $parser->parseNodeName('data[#name?json/address]', '');
     }
 
     /**
@@ -107,9 +107,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testWillFailOnMissingNestedTypeRule(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[?json]');
+        $result = $parser->parseNodeName('data[?json]', '');
 
         $this->assertFalse($result->isValid);
     }
@@ -119,9 +119,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccessAndDataType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property#name]');
+        $result = $parser->parseNodeName('data[property#name]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -139,9 +139,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccessAndNestedType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property?json/address]');
+        $result = $parser->parseNodeName('data[property?json/address]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -159,9 +159,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithFilter(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[%name/firstName]');
+        $result = $parser->parseNodeName('data[%name/firstName]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -179,9 +179,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccessAndFilter(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property%name/firstName]');
+        $result = $parser->parseNodeName('data[property%name/firstName]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -199,9 +199,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccessAndDataTypeAndFilter(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property#firstName%name/firstName]');
+        $result = $parser->parseNodeName('data[property#firstName%name/firstName]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -219,9 +219,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseSimpleNodeNameWithDataAccessFilterAndDataType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property%name/firstName#firstName]');
+        $result = $parser->parseNodeName('data[property%name/firstName#firstName]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertFalse($result->isArray);
@@ -239,9 +239,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseArrayNodeName(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data');
+        $result = $parser->parseNodeName('[]data', '');
 
         $this->assertTrue($result->isValid);
         $this->assertTrue($result->isArray);
@@ -259,9 +259,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseArrayNodeNameWithDataAccess(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[property]');
+        $result = $parser->parseNodeName('[]data[property]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertTrue($result->isArray);
@@ -279,9 +279,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseArrayNodeNameWithDataType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[#name]');
+        $result = $parser->parseNodeName('[]data[#name]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertTrue($result->isArray);
@@ -299,9 +299,9 @@ class ComplexRegexParserTest extends TestCase
      */
     public function testCanParseArrayNodeNameWithDataAccessAndDataType(): void
     {
-        $parser = new ComplexRegexParser();
+        $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[property#name]');
+        $result = $parser->parseNodeName('[]data[property#name]', '');
 
         $this->assertTrue($result->isValid);
         $this->assertTrue($result->isArray);

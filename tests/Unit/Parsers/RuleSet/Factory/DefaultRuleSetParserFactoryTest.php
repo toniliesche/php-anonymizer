@@ -8,7 +8,7 @@ use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidRuleSetParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\RulesetParserExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetParserException;
-use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +19,7 @@ class DefaultRuleSetParserFactoryTest extends TestCase
     public function testCanProvideDefaultRuleSetParser(): void
     {
         $factory = new DefaultRuleSetParserFactory();
-        $parser = $factory->getRuleSetParser(RuleSetParser::DEFAULT->value, new SimpleRegexParser());
+        $parser = $factory->getRuleSetParser(RuleSetParser::DEFAULT->value, new SimpleRegexpParser());
 
         $this->assertInstanceOf(DefaultRuleSetParser::class, $parser);
     }

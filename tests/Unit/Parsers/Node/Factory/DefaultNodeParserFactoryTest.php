@@ -8,10 +8,10 @@ use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\NodeParserExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownNodeParserException;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
-use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -22,7 +22,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory = new DefaultNodeParserFactory();
         $parser = $factory->getNodeParser(NodeParser::SIMPLE->value);
 
-        $this->assertInstanceOf(SimpleRegexParser::class, $parser);
+        $this->assertInstanceOf(SimpleRegexpParser::class, $parser);
     }
 
     public function testCanProvideNodeParserWithComplexRegularExpressionsParser(): void
@@ -30,7 +30,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory = new DefaultNodeParserFactory();
         $parser = $factory->getNodeParser(NodeParser::COMPLEX->value);
 
-        $this->assertInstanceOf(ComplexRegexParser::class, $parser);
+        $this->assertInstanceOf(ComplexRegexpParser::class, $parser);
     }
 
     public function testCanProvideNullNodeParser(): void

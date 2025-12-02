@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvide
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
@@ -32,7 +32,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
  *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser
  */
 $ruleSetParser = new DefaultRuleSetParser(
-    nodeParser: new ComplexRegexParser(),
+    nodeParser: new ComplexRegexpParser(),
 );
 
 // 06.01.02 DependencyChecker

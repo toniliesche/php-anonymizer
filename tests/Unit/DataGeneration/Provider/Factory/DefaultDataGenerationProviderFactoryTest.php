@@ -56,8 +56,8 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $provider);
 
-        $provider = $factory->getDataGenerationProvider('custom');
-        $this->assertSame($provider, $provider);
+        $generatedProvider = $factory->getDataGenerationProvider('custom');
+        $this->assertSame($provider, $generatedProvider);
     }
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void

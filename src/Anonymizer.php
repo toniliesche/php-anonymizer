@@ -31,7 +31,7 @@ readonly class Anonymizer
     }
 
     /**
-     * @param string[] $definitions
+     * @param array<mixed> $definitions
      */
     public function registerRuleSet(string $name, array $definitions, string $defaultDataAccess = DataAccess::ARRAY->value): void
     {

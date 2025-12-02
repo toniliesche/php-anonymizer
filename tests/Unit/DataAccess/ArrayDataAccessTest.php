@@ -104,6 +104,7 @@ class ArrayDataAccessTest extends TestCase
         $data = new stdClass();
 
         $this->expectException(InvalidObjectTypeException::class);
+        // @phpstan-ignore-next-line
         $access->setChildValue(['test'], $data, 'foo', '123');
     }
 
