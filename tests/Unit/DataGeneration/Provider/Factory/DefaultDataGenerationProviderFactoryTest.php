@@ -21,7 +21,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory = new DefaultDataGenerationProviderFactory();
         $provider = $factory->getDataGenerationProvider(DataGenerationProvider::DEFAULT->value);
 
-        $this->assertInstanceOf(DefaultDataGeneratorProvider::class, $provider);
+        self::assertInstanceOf(DefaultDataGeneratorProvider::class, $provider);
     }
 
     public function testCanProvideNull(): void
@@ -29,7 +29,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory = new DefaultDataGenerationProviderFactory();
         $provider = $factory->getDataGenerationProvider(null);
 
-        $this->assertNull($provider);
+        self::assertNull($provider);
     }
 
     public function testWillFailOnProvideUnknownDataGenerationProvider(): void
@@ -47,7 +47,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory->registerCustomDataGenerationProvider('custom', $callable);
 
         $provider = $factory->getDataGenerationProvider('custom');
-        $this->assertInstanceOf(DataGenerationProviderInterface::class, $provider);
+        self::assertInstanceOf(DataGenerationProviderInterface::class, $provider);
     }
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
@@ -57,7 +57,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory->registerCustomDataGenerationProvider('custom', $provider);
 
         $generatedProvider = $factory->getDataGenerationProvider('custom');
-        $this->assertSame($provider, $generatedProvider);
+        self::assertSame($provider, $generatedProvider);
     }
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void

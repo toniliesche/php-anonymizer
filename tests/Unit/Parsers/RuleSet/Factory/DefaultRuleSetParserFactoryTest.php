@@ -21,7 +21,7 @@ class DefaultRuleSetParserFactoryTest extends TestCase
         $factory = new DefaultRuleSetParserFactory();
         $parser = $factory->getRuleSetParser(RuleSetParser::DEFAULT->value, new SimpleRegexpParser());
 
-        $this->assertInstanceOf(DefaultRuleSetParser::class, $parser);
+        self::assertInstanceOf(DefaultRuleSetParser::class, $parser);
     }
 
     public function testWillFailOnRetrieveNullRuleSetParser(): void
@@ -47,7 +47,7 @@ class DefaultRuleSetParserFactoryTest extends TestCase
         $factory->registerCustomRuleSetParser('custom', $callable);
 
         $parser = $factory->getRuleSetParser('custom');
-        $this->assertInstanceOf(DefaultRuleSetParser::class, $parser);
+        self::assertInstanceOf(DefaultRuleSetParser::class, $parser);
     }
 
     public function testCanRegisterAndRetrieveCustomRuleSetParserWithInstance(): void
@@ -57,7 +57,7 @@ class DefaultRuleSetParserFactoryTest extends TestCase
         $factory->registerCustomRuleSetParser('custom', $parser);
 
         $resolvedParser = $factory->getRuleSetParser('custom');
-        $this->assertInstanceOf(DefaultRuleSetParser::class, $resolvedParser);
+        self::assertInstanceOf(DefaultRuleSetParser::class, $resolvedParser);
     }
 
     public function testWillFailOnRegisterCustomRuleSetParserOnNameConflict(): void
@@ -86,6 +86,6 @@ class DefaultRuleSetParserFactoryTest extends TestCase
 
         $this->expectException(InvalidRuleSetParserDefinitionException::class);
         $factory->registerCustomRuleSetParser('custom', $callable);
-        $factory->getRulesetParser('custom');
+        $factory->getRuleSetParser('custom');
     }
 }

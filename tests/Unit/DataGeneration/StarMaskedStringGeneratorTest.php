@@ -15,14 +15,14 @@ class StarMaskedStringGeneratorTest extends TestCase
     {
         $dataGenerator = new StarMaskedStringGenerator();
 
-        $this->assertTrue($dataGenerator->supports('Hello World', null));
+        self::assertTrue($dataGenerator->supports('Hello World', null));
     }
 
     public function testCanVerifyNonSupportOfObjects(): void
     {
         $dataGenerator = new StarMaskedStringGenerator();
 
-        $this->assertFalse($dataGenerator->supports(new stdClass(), null));
+        self::assertFalse($dataGenerator->supports(new stdClass(), null));
     }
 
     public function testCanHideData(): void
@@ -32,7 +32,7 @@ class StarMaskedStringGeneratorTest extends TestCase
         $string = 'Hello World';
         $anonymizedString = $dataGenerator->generate(['test'], $string, null);
 
-        $this->assertSame('***********', $anonymizedString);
+        self::assertSame('***********', $anonymizedString);
     }
 
     public function testWillFailOnHideDataOnNonStrings(): void

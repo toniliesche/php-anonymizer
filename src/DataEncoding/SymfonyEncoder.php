@@ -65,9 +65,6 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): object
     {
         if (!is_array($data)) {
@@ -77,6 +74,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         $type = $tempStorage->retrieve('symfony-encoder-type');
 
         try {
+            /** @var array<int|string,mixed> $data */
             return $this->denormalizer->denormalize($data, $type);
             // @codeCoverageIgnoreStart
         } catch (ExceptionInterface $ex) {

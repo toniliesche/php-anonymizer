@@ -60,9 +60,6 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
         if (!is_array($data)) {
@@ -70,6 +67,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
 
         try {
+            /** @var array<int|string,mixed> $data */
             return json_encode($data, JSON_THROW_ON_ERROR);
         } catch (JsonException $ex) {
             throw new DataEncodingException(

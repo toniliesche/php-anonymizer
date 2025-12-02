@@ -29,7 +29,7 @@ class JsonEncoderTest extends TestCase
         $data = '{"firstName":"John","lastName":"Doe"}';
 
         $decodedData = $encoder->decode($data, new TempStorage());
-        $this->assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
+        self::assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
     }
 
     public function testWillFailOnDecodeOnNonString(): void
@@ -56,7 +56,7 @@ class JsonEncoderTest extends TestCase
         $data = ['firstName' => 'John', 'lastName' => 'Doe'];
 
         $encodedData = $encoder->encode($data, new TempStorage());
-        $this->assertSame('{"firstName":"John","lastName":"Doe"}', $encodedData);
+        self::assertSame('{"firstName":"John","lastName":"Doe"}', $encodedData);
     }
 
     public function testWillFailOnEncodeOnNonArray(): void
@@ -66,7 +66,6 @@ class JsonEncoderTest extends TestCase
 
         $this->expectException(DataEncodingException::class);
 
-        /** @phpstan-ignore-next-line */
         $encoder->encode($data, new TempStorage());
     }
 
@@ -82,7 +81,7 @@ class JsonEncoderTest extends TestCase
     public function testCanProvideArrayOverrideDataAccess(): void
     {
         $encoder = new JsonEncoder();
-        $this->assertSame('array', $encoder->getOverrideDataAccess());
+        self::assertSame('array', $encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfString(): void
@@ -90,7 +89,7 @@ class JsonEncoderTest extends TestCase
         $encoder = new JsonEncoder();
         $data = 'string';
 
-        $this->assertTrue($encoder->supports($data));
+        self::assertTrue($encoder->supports($data));
     }
 
     public function testCanVerifyNonSupportOfNonStrings(): void
@@ -99,7 +98,7 @@ class JsonEncoderTest extends TestCase
         $encoder = new JsonEncoder();
 
         foreach ($dataArray as $data) {
-            $this->assertFalse($encoder->supports($data));
+            self::assertFalse($encoder->supports($data));
         }
     }
 }

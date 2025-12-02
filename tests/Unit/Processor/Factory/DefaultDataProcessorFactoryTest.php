@@ -29,7 +29,7 @@ class DefaultDataProcessorFactoryTest extends TestCase
             new DefaultDataEncodingProvider(),
         );
 
-        $this->assertInstanceOf(DefaultDataProcessor::class, $processor);
+        self::assertInstanceOf(DefaultDataProcessor::class, $processor);
     }
 
     public function testCanProvideNull(): void
@@ -77,7 +77,7 @@ class DefaultDataProcessorFactoryTest extends TestCase
             type: 'custom',
             dataEncodingProvider: new DefaultDataEncodingProvider(),
         );
-        $this->assertSame($processor, $provider);
+        self::assertSame($processor, $provider);
     }
 
     public function testWillFailOnRegisterCustomDataProcessorOnNameConflict(): void

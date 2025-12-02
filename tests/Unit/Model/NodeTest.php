@@ -48,8 +48,8 @@ class NodeTest extends TestCase
             ],
         );
 
-        $this->assertTrue($node->hasChildNode('foo'));
-        $this->assertFalse($node->hasChildNode('baz'));
+        self::assertTrue($node->hasChildNode('foo'));
+        self::assertFalse($node->hasChildNode('baz'));
     }
 
     public function testCanGetChildNodes(): void
@@ -74,7 +74,7 @@ class NodeTest extends TestCase
         );
 
         $foo = $node->getChildNode('foo');
-        $this->assertSame($childNode, $foo);
+        self::assertSame($childNode, $foo);
 
         $this->expectException(ChildNodeNotFoundException::class);
         $node->getChildNode('baz');

@@ -25,10 +25,14 @@
     "phpmd/phpmd": "^2.15",
     "phpstan/phpstan": "^2.1",
     "phpstan/phpstan-phpunit": "^2.0",
+    "phpstan/phpstan-symfony": "^2.0",
     "phpunit/phpunit": "^11.5",
+    "phpstan/phpstan-strict-rules": "^2.0",
     "rector/rector": "^2.2",
     "symfony/serializer": "^7.4",
-    "thecodingmachine/phpstan-safe-rule": "^1.2"
+    "thecodingmachine/phpstan-safe-rule": "^1.2",
+    "phpstan/extension-installer": "^1.4",
+    "spaze/phpstan-disallowed-calls": "^4.7"
   },
   "suggest": {
     "ext-json": "JSON extension is required to use the JSON data encoder",
@@ -51,7 +55,8 @@
   "config": {
     "allow-plugins": {
       "ergebnis/composer-normalize": true,
-      "infection/extension-installer": true
+      "infection/extension-installer": true,
+      "phpstan/extension-installer": true
     }
   },
   "extra": {

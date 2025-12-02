@@ -26,20 +26,20 @@ class YamlEncoderTest extends TestCase
     public function testCanDecodeStringIntoArray(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
         $data = "---\nfirstName: John\nlastName: Doe\n...\n";
 
         $decodedData = $encoder->decode($data, new TempStorage());
-        $this->assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
+        self::assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
     }
 
     public function testWillFailOnDecodeOfNonString(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
@@ -52,7 +52,7 @@ class YamlEncoderTest extends TestCase
     public function testWillFailOnDecodeOfMalformedYaml(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
@@ -65,20 +65,20 @@ class YamlEncoderTest extends TestCase
     public function testCanEncodeArrayIntoYaml(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
         $data = ['firstName' => 'John', 'lastName' => 'Doe'];
 
         $encodedData = $encoder->encode($data, new TempStorage());
-        $this->assertSame("---\nfirstName: John\nlastName: Doe\n...\n", $encodedData);
+        self::assertSame("---\nfirstName: John\nlastName: Doe\n...\n", $encodedData);
     }
 
     public function testWillFailOnEncodeOnNonArray(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
@@ -86,43 +86,42 @@ class YamlEncoderTest extends TestCase
 
         $this->expectException(DataEncodingException::class);
 
-        /** @phpstan-ignore-next-line  */
         $encoder->encode($data, new TempStorage());
     }
 
     public function testCanProvideArrayOverrideDataAccess(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
-        $this->assertSame('array', $encoder->getOverrideDataAccess());
+        self::assertSame('array', $encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfString(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $encoder = new YamlEncoder();
         $data = 'string';
 
-        $this->assertTrue($encoder->supports($data));
+        self::assertTrue($encoder->supports($data));
     }
 
     public function testCanVerifyNonSupportOfNonStrings(): void
     {
         if (!extension_loaded('yaml')) {
-            $this->markTestSkipped('The yaml extension is not available.');
+            self::markTestSkipped('The yaml extension is not available.');
         }
 
         $dataArray = [new stdClass(), 1, 1.0, true, null, []];
         $encoder = new YamlEncoder();
 
         foreach ($dataArray as $data) {
-            $this->assertFalse($encoder->supports($data));
+            self::assertFalse($encoder->supports($data));
         }
     }
 }

@@ -46,14 +46,14 @@ abstract class AbstractRegexpParser implements NodeParserInterface
 
         return new NodeParsingResult(
             isValid: true,
-            isArray: !empty($matches['array']),
+            isArray: isset($matches['array']) && ($matches['array'] !== ''),
             property: $matches['property'],
-            dataAccess: !empty($matches['data_access']) ? $matches['data_access'] : null,
-            valueType: !empty($matches['value']) ? $matches['value'] : null,
-            nestedType: !empty($matches['nested_type']) ? $matches['nested_type'] : null,
-            nestedRule: !empty($matches['nested_rule']) ? $matches['nested_rule'] : null,
-            filterField: !empty($matches['filter_field']) ? $matches['filter_field'] : null,
-            filterValue: !empty($matches['filter_value']) ? $matches['filter_value'] : null,
+            dataAccess: isset($matches['data_access']) && ($matches['data_access'] !== '') ? $matches['data_access'] : null,
+            valueType: isset($matches['value']) && ($matches['value'] !== '') ? $matches['value'] : null,
+            nestedType: isset($matches['nested_type']) && ($matches['nested_type'] !== '') ? $matches['nested_type'] : null,
+            nestedRule: isset($matches['nested_rule']) && ($matches['nested_rule'] !== '') ? $matches['nested_rule'] : null,
+            filterField: isset($matches['filter_field']) && ($matches['filter_field'] !== '') ? $matches['filter_field'] : null,
+            filterValue: isset($matches['filter_value']) && ($matches['filter_value'] !== '') ? $matches['filter_value'] : null,
         );
     }
 }

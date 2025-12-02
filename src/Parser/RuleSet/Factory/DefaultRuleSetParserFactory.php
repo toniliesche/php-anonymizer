@@ -31,7 +31,7 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
     /**
      * @param callable|RuleSetParserInterface $definition
      */
-    public function registerCustomRulesetParser(string $name, mixed $definition): void
+    public function registerCustomRuleSetParser(string $name, mixed $definition): void
     {
         if (in_array($name, self::RULE_SET_PARSERS, true) || in_array($name, $this->customRuleSetParsers, true)) {
             throw new RulesetParserExistsException(sprintf('Cannot override existing rule set parser: "%s"', $name));
@@ -50,13 +50,13 @@ class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
         $this->customRuleSetParsers[$name] = $definition;
     }
 
-    public function getRulesetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface
+    public function getRuleSetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface
     {
         if (is_null($type)) {
             throw new InvalidRuleSetParserDefinitionException('Rule set parser type must be provided');
         }
 
-        if (!isset($this->rulesetParsers[$type])) {
+        if (!isset($this->ruleSetParsers[$type])) {
             $this->ruleSetParsers[$type] = $this->resolveRuleSetParser($type, $nodeParser);
         }
 

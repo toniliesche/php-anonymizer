@@ -67,7 +67,7 @@ class DefaultDataGenerationProviderTest extends TestCase
         );
 
         $dataGenerator = $provider->provideDataGenerator('Hello World', null);
-        $this->assertInstanceOf(StarMaskedStringGenerator::class, $dataGenerator);
+        self::assertInstanceOf(StarMaskedStringGenerator::class, $dataGenerator);
     }
 
     public function testWillFailOnProvideUnknownDataGenerator(): void
@@ -92,7 +92,7 @@ class DefaultDataGenerationProviderTest extends TestCase
         $provider->registerCustomDataGenerator(new RandomIntGenerator());
 
         $resolvedDataGenerator = $provider->provideDataGenerator(42, null);
-        $this->assertInstanceOf(RandomIntGenerator::class, $resolvedDataGenerator);
+        self::assertInstanceOf(RandomIntGenerator::class, $resolvedDataGenerator);
     }
 
     public function testCanRegisterAndProvideCustomDataGeneratorScenario2(): void
@@ -107,7 +107,7 @@ class DefaultDataGenerationProviderTest extends TestCase
         $provider->registerCustomDataGenerator($dataGenerator);
 
         $resolvedDataGenerator = $provider->provideDataGenerator(1, null);
-        $this->assertSame($dataGenerator, $resolvedDataGenerator);
+        self::assertSame($dataGenerator, $resolvedDataGenerator);
     }
 
     public function testCanRegisterCustomDataGeneratorAndInjectFaker(): void

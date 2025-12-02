@@ -20,15 +20,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -40,15 +40,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -60,15 +60,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[#name]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertSame('name', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertSame('name', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -80,15 +80,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[?json/address]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertSame('json', $result->nestedType);
-        $this->assertSame('address', $result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertSame('json', $result->nestedType);
+        self::assertSame('address', $result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -111,7 +111,7 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[?json]', '');
 
-        $this->assertFalse($result->isValid);
+        self::assertFalse($result->isValid);
     }
 
     /**
@@ -123,15 +123,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property#name]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertSame('name', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertSame('name', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -143,15 +143,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property?json/address]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertSame('json', $result->nestedType);
-        $this->assertSame('address', $result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertSame('json', $result->nestedType);
+        self::assertSame('address', $result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -163,15 +163,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[%name/firstName]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertSame('name', $result->filterField);
-        $this->assertSame('firstName', $result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertSame('name', $result->filterField);
+        self::assertSame('firstName', $result->filterValue);
     }
 
     /**
@@ -183,15 +183,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property%name/firstName]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertSame('name', $result->filterField);
-        $this->assertSame('firstName', $result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertSame('name', $result->filterField);
+        self::assertSame('firstName', $result->filterValue);
     }
 
     /**
@@ -203,15 +203,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property#firstName%name/firstName]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertSame('firstName', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertSame('name', $result->filterField);
-        $this->assertSame('firstName', $result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertSame('firstName', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertSame('name', $result->filterField);
+        self::assertSame('firstName', $result->filterValue);
     }
 
     /**
@@ -223,15 +223,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('data[property%name/firstName#firstName]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertFalse($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertSame('firstName', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertSame('name', $result->filterField);
-        $this->assertSame('firstName', $result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertFalse($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertSame('firstName', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertSame('name', $result->filterField);
+        self::assertSame('firstName', $result->filterValue);
     }
 
     /**
@@ -243,15 +243,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('[]data', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertTrue($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertTrue($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -263,15 +263,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('[]data[property]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertTrue($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertNull($result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertTrue($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertNull($result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -283,15 +283,15 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('[]data[#name]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertTrue($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertNull($result->dataAccess);
-        $this->assertSame('name', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertTrue($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertNull($result->dataAccess);
+        self::assertSame('name', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 
     /**
@@ -303,14 +303,14 @@ class ComplexRegexParserTest extends TestCase
 
         $result = $parser->parseNodeName('[]data[property#name]', '');
 
-        $this->assertTrue($result->isValid);
-        $this->assertTrue($result->isArray);
-        $this->assertSame('data', $result->property);
-        $this->assertSame('property', $result->dataAccess);
-        $this->assertSame('name', $result->valueType);
-        $this->assertNull($result->nestedType);
-        $this->assertNull($result->nestedRule);
-        $this->assertNull($result->filterField);
-        $this->assertNull($result->filterValue);
+        self::assertTrue($result->isValid);
+        self::assertTrue($result->isArray);
+        self::assertSame('data', $result->property);
+        self::assertSame('property', $result->dataAccess);
+        self::assertSame('name', $result->valueType);
+        self::assertNull($result->nestedType);
+        self::assertNull($result->nestedRule);
+        self::assertNull($result->filterField);
+        self::assertNull($result->filterValue);
     }
 }

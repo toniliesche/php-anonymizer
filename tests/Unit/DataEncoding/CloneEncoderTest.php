@@ -22,8 +22,8 @@ class CloneEncoderTest extends TestCase
 
         $decodedData = $encoder->decode($data, new TempStorage());
 
-        $this->assertEquals($data, $decodedData);
-        $this->assertNotSame($data, $decodedData);
+        self::assertEquals($data, $decodedData);
+        self::assertNotSame($data, $decodedData);
     }
 
     public function testCanPassObjectViaReferenceWithoutChangeOnEncode(): void
@@ -35,13 +35,13 @@ class CloneEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->encode($data, new TempStorage());
-        $this->assertSame($data, $encodedData);
+        self::assertSame($data, $encodedData);
     }
 
     public function testCanProvideNullOverrideDataAccess(): void
     {
         $encoder = new CloneEncoder();
-        $this->assertNull($encoder->getOverrideDataAccess());
+        self::assertNull($encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfDataTypes(): void
@@ -50,7 +50,7 @@ class CloneEncoderTest extends TestCase
         $encoder = new CloneEncoder();
 
         foreach ($dataArray as $data) {
-            $this->assertTrue($encoder->supports($data));
+            self::assertTrue($encoder->supports($data));
         }
     }
 }

@@ -21,7 +21,7 @@ class NoOpEncoderTest extends TestCase
         ];
 
         $decodedData = $encoder->decode($data, new TempStorage());
-        $this->assertSame($data, $decodedData);
+        self::assertSame($data, $decodedData);
     }
 
     public function testCanPassObjectViaReferenceWithoutChangeOnEncode(): void
@@ -34,13 +34,13 @@ class NoOpEncoderTest extends TestCase
         ];
 
         $encodedData = $encoder->encode($data, new TempStorage());
-        $this->assertSame($data, $encodedData);
+        self::assertSame($data, $encodedData);
     }
 
     public function testCanProvideNullOverrideDataAccess(): void
     {
         $encoder = new NoOpEncoder();
-        $this->assertNull($encoder->getOverrideDataAccess());
+        self::assertNull($encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfDataTypes(): void
@@ -49,7 +49,7 @@ class NoOpEncoderTest extends TestCase
         $encoder = new NoOpEncoder();
 
         foreach ($dataArray as $data) {
-            $this->assertTrue($encoder->supports($data));
+            self::assertTrue($encoder->supports($data));
         }
     }
 }

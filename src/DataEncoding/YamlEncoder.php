@@ -44,15 +44,13 @@ class YamlEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
         if (!is_array($data)) {
             throw new DataEncodingException('YamlEncoder can only encode arrays');
         }
 
+        /** @var array<int|string,mixed> $data */
         return yaml_emit($data);
     }
 

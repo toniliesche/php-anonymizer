@@ -40,8 +40,8 @@ class TreeTest extends TestCase
             ],
         );
 
-        $this->assertTrue($tree->hasChildNode('bar'));
-        $this->assertFalse($tree->hasChildNode('foo'));
+        self::assertTrue($tree->hasChildNode('bar'));
+        self::assertFalse($tree->hasChildNode('foo'));
     }
 
     public function testCanGetChildNodes(): void
@@ -72,7 +72,7 @@ class TreeTest extends TestCase
         );
 
         $bar = $tree->getChildNode('bar');
-        $this->assertSame($node, $bar);
+        self::assertSame($node, $bar);
 
         $this->expectException(ChildNodeNotFoundException::class);
         $tree->getChildNode('baz');

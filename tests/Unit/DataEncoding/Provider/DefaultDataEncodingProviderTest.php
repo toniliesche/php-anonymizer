@@ -81,7 +81,7 @@ class DefaultDataEncodingProviderTest extends TestCase
         $provider->setDenormalizer($objectNormalizer);
 
         $encoder = $provider->provideEncoder(DataEncoder::SYMFONY->value);
-        $this->assertInstanceOf(SymfonyEncoder::class, $encoder);
+        self::assertInstanceOf(SymfonyEncoder::class, $encoder);
     }
 
     public function testWillFailOnNormalizerSetterInjectionWhenSymfonyPackageIsMissing(): void
@@ -143,7 +143,7 @@ class DefaultDataEncodingProviderTest extends TestCase
         $provider = new DefaultDataEncodingProvider();
 
         $encoder = $provider->provideEncoder('noop');
-        $this->assertInstanceOf(NoOpEncoder::class, $encoder);
+        self::assertInstanceOf(NoOpEncoder::class, $encoder);
     }
 
     public function testWillFailOnProvideUnknownDataEncoder(): void
@@ -162,7 +162,7 @@ class DefaultDataEncodingProviderTest extends TestCase
         $provider->registerCustomDataEncoder('custom', $encoder);
 
         $resolvedEncoder = $provider->provideEncoder('custom');
-        $this->assertSame($encoder, $resolvedEncoder);
+        self::assertSame($encoder, $resolvedEncoder);
     }
 
     public function testWillFailOnRegisteringCustomEncoderOnNameConflict(): void

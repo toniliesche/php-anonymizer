@@ -39,22 +39,22 @@ class ArrayRuleSetParserTest extends TestCase
         );
 
         $dataLevel = $tree->getChildNode('data');
-        $this->assertEquals('data', $dataLevel->name);
-        $this->assertEquals('array', $dataLevel->dataAccess);
-        $this->assertEquals(NodeType::NODE, $dataLevel->nodeType);
-        $this->assertFalse($dataLevel->isArray);
+        self::assertEquals('data', $dataLevel->name);
+        self::assertEquals('array', $dataLevel->dataAccess);
+        self::assertEquals(NodeType::NODE, $dataLevel->nodeType);
+        self::assertFalse($dataLevel->isArray);
 
         $addressLevel = $dataLevel->getChildNode('address');
-        $this->assertEquals('address', $addressLevel->name);
-        $this->assertEquals('property', $addressLevel->dataAccess);
-        $this->assertEquals(NodeType::NODE, $addressLevel->nodeType);
-        $this->assertTrue($addressLevel->isArray);
+        self::assertEquals('address', $addressLevel->name);
+        self::assertEquals('property', $addressLevel->dataAccess);
+        self::assertEquals(NodeType::NODE, $addressLevel->nodeType);
+        self::assertTrue($addressLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertEquals('name', $nameLevel->name);
-        $this->assertEquals('setter', $nameLevel->dataAccess);
-        $this->assertEquals(NodeType::LEAF, $nameLevel->nodeType);
-        $this->assertFalse($nameLevel->isArray);
+        self::assertEquals('name', $nameLevel->name);
+        self::assertEquals('setter', $nameLevel->dataAccess);
+        self::assertEquals(NodeType::LEAF, $nameLevel->nodeType);
+        self::assertFalse($nameLevel->isArray);
     }
 
     public function testInvalidNodeNameDetected(): void

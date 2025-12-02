@@ -34,7 +34,7 @@ class Node implements ChildNodeAccessInterface
 
         $this->childNodes = $childNodes;
 
-        if (!is_null($this->nestedType) && !empty($childNodes)) {
+        if (!is_null($this->nestedType) && $childNodes !== []) {
             throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
         }
 
@@ -81,7 +81,7 @@ class Node implements ChildNodeAccessInterface
 
     public function definitionConflict(NodeParsingResult $ruleResult): bool
     {
-        return (bool) ($this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue);
+        return $this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue;
     }
 
     public static function fromNodeParsingResult(

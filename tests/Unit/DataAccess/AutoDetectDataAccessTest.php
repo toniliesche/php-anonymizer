@@ -34,8 +34,8 @@ class AutoDetectDataAccessTest extends TestCase
             'foo' => 'bar',
         ];
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertTrue($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
     }
 
     public function testCanRetrieveValueOfChildPropertyOnArray(): void
@@ -45,7 +45,7 @@ class AutoDetectDataAccessTest extends TestCase
             'foo' => 'bar',
         ];
 
-        $this->assertSame('bar', $access->getChild(['test'], $data, 'foo'));
+        self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnRetrieveValueOfNonExistantChildPropertyOnArray(): void
@@ -67,7 +67,7 @@ class AutoDetectDataAccessTest extends TestCase
         ];
 
         $access->setChildValue(['test'], $data, 'foo', 'baz');
-        $this->assertSame('baz', $data['foo']);
+        self::assertSame('baz', $data['foo']);
     }
 
     public function testCanCheckIfChildPropertyExistsOnObjectViaProperty(): void
@@ -77,8 +77,8 @@ class AutoDetectDataAccessTest extends TestCase
         $data = new stdClass();
         $data->foo = 'bar';
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertTrue($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
     }
 
     public function testCanRetrieveValueOfChildPropertyOnObjectViaProperty(): void
@@ -88,7 +88,7 @@ class AutoDetectDataAccessTest extends TestCase
         $data = new stdClass();
         $data->foo = 'bar';
 
-        $this->assertSame('bar', $access->getChild(['test'], $data, 'foo'));
+        self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnRetrieveValueOfNonExistantChildPropertyOnObjectViaProperty(): void
@@ -110,7 +110,7 @@ class AutoDetectDataAccessTest extends TestCase
         $data->foo = 'bar';
 
         $access->setChildValue(['test'], $data, 'foo', 'baz');
-        $this->assertSame('baz', $data->foo);
+        self::assertSame('baz', $data->foo);
     }
 
     public function testCanCheckIfChildPropertyExistsOnObjectViaGetter(): void
@@ -123,9 +123,9 @@ class AutoDetectDataAccessTest extends TestCase
             baz: 'baz',
         );
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'baz'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertTrue($access->hasChild(['test'], $data, 'baz'));
+        self::assertFalse($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
     }
 
     public function testCanRetrieveValueOfChildPropertyOnObjectViaGetter(): void
@@ -138,7 +138,7 @@ class AutoDetectDataAccessTest extends TestCase
             baz: 'baz',
         );
 
-        $this->assertSame('baz', $access->getChild(['test'], $data, 'baz'));
+        self::assertSame('baz', $access->getChild(['test'], $data, 'baz'));
     }
 
     public function testWillFailOnRetrieveValueOfNonExistantChildPropertyOnObjectViaGetter(): void
@@ -180,7 +180,7 @@ class AutoDetectDataAccessTest extends TestCase
         );
 
         $access->setChildValue(['test'], $data, 'baz', 'new baz');
-        $this->assertSame('new baz', $data->getBaz());
+        self::assertSame('new baz', $data->getBaz());
     }
 
     public function testWillFailOnSetValueOfReadonlyChildPropertyOnObjectViaSetter(): void
@@ -215,9 +215,9 @@ class AutoDetectDataAccessTest extends TestCase
     {
         $access = $this->getAccess();
 
-        $this->assertTrue($access->supports([]));
-        $this->assertTrue($access->supports(new stdClass()));
-        $this->assertTrue(
+        self::assertTrue($access->supports([]));
+        self::assertTrue($access->supports(new stdClass()));
+        self::assertTrue(
             $access->supports(
                 new Foobar(
                     foo: 'foo',
@@ -226,7 +226,7 @@ class AutoDetectDataAccessTest extends TestCase
                 ),
             ),
         );
-        $this->assertFalse($access->supports('foobar'));
+        self::assertFalse($access->supports('foobar'));
     }
 
     private function getAccess(): AutoDetectDataAccess

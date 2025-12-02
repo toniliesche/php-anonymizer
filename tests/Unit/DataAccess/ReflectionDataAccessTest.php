@@ -24,9 +24,9 @@ class ReflectionDataAccessTest extends TestCase
             public string $foo = 'bar';
         });
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'FOO'));
+        self::assertTrue($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertFalse($access->hasChild(['test'], $data, 'FOO'));
     }
 
     public function testCanCheckIfUnitializedChildPropertyDoesNotExist(): void
@@ -34,7 +34,7 @@ class ReflectionDataAccessTest extends TestCase
         $access = new ReflectionDataAccess();
 
         $data = new Barfoo();
-        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnCheckForChildPropertyOfNonObject(): void
@@ -57,7 +57,7 @@ class ReflectionDataAccessTest extends TestCase
             public string $foo = 'bar';
         });
 
-        $this->assertSame('bar', $access->getChild(['test'], $data, 'foo'));
+        self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnRetrieveValueOfChildPropertyOnNonObject(): void
@@ -105,7 +105,7 @@ class ReflectionDataAccessTest extends TestCase
         );
 
         $value = $access->getChild(['test'], $data, 'foo');
-        $this->assertSame('foo', $value);
+        self::assertSame('foo', $value);
     }
 
     public function testCanSetValueOfChildProperty(): void
@@ -118,8 +118,8 @@ class ReflectionDataAccessTest extends TestCase
 
         $access->setChildValue(['test'], $data, 'bar', 'baz');
 
-        $this->assertObjectHasProperty('bar', $data);
-        $this->assertSame('baz', $data->bar);
+        self::assertObjectHasProperty('bar', $data);
+        self::assertSame('baz', $data->bar);
     }
 
     public function testWillFailOnSetValueOfChildPropertyOfInvalidType(): void
@@ -164,13 +164,13 @@ class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $this->assertTrue($access->supports(new stdClass()));
-        $this->assertTrue($access->supports(new Foobar(
+        self::assertTrue($access->supports(new stdClass()));
+        self::assertTrue($access->supports(new Foobar(
             foo: 'foo',
             bar: 'bar',
             baz: 'baz',
         )));
-        $this->assertFalse($access->supports([]));
-        $this->assertFalse($access->supports('foobar'));
+        self::assertFalse($access->supports([]));
+        self::assertFalse($access->supports('foobar'));
     }
 }

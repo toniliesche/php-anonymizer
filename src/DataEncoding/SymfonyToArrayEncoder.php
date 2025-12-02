@@ -56,8 +56,6 @@ readonly class SymfonyToArrayEncoder implements DataEncoderInterface
     }
 
     /**
-     * @param array<int|string,mixed> $data
-     *
      * @return array<int|string,mixed>
      */
     public function encode(mixed $data, TempStorage $tempStorage): array
@@ -66,6 +64,7 @@ readonly class SymfonyToArrayEncoder implements DataEncoderInterface
             throw new DataEncodingException('SymfonyToArrayEncoder can only encode arrays');
         }
 
+        /** @var array<int|string,mixed> $data */
         return $data;
     }
 

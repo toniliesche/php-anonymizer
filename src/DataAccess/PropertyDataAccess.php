@@ -49,6 +49,7 @@ class PropertyDataAccess extends AbstractObjectDataAccess
             throw FieldIsNotInitializedException::fromPath($path);
         }
 
+        // @phpstan-ignore-next-line
         return $parent->{$name} ?? throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
     }
 
@@ -59,6 +60,7 @@ class PropertyDataAccess extends AbstractObjectDataAccess
         }
 
         try {
+            // @phpstan-ignore-next-line
             $parent->{$name} = $newValue;
         } catch (Error) {
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);

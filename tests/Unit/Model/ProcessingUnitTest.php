@@ -76,8 +76,8 @@ class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process();
 
-        $this->assertSame('********', $processedData['address']['name']);
-        $this->assertSame('New York', $processedData['address']['city']);
+        self::assertSame('********', $processedData['address']['name']);
+        self::assertSame('New York', $processedData['address']['city']);
     }
 
     public function testCanRunSimpleProcessingOfDataInListOfArrays(): void
@@ -140,10 +140,10 @@ class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process();
 
-        $this->assertSame('********', $processedData['addresses'][0]['name']);
-        $this->assertSame('New York', $processedData['addresses'][0]['city']);
-        $this->assertSame('********', $processedData['addresses'][1]['name']);
-        $this->assertSame('Los Angeles', $processedData['addresses'][1]['city']);
+        self::assertSame('********', $processedData['addresses'][0]['name']);
+        self::assertSame('New York', $processedData['addresses'][0]['city']);
+        self::assertSame('********', $processedData['addresses'][1]['name']);
+        self::assertSame('Los Angeles', $processedData['addresses'][1]['city']);
     }
 
     public function testCanRunSimpleDataProcessingOfNonExistantDataInArray(): void
@@ -200,8 +200,8 @@ class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process();
 
-        $this->assertSame('The Testing Corp', $processedData['address']['company']);
-        $this->assertSame('New York', $processedData['address']['city']);
+        self::assertSame('The Testing Corp', $processedData['address']['company']);
+        self::assertSame('New York', $processedData['address']['city']);
     }
 
     public function testCanRunComplexProcessingOfDataWithJsonInput(): void
@@ -252,7 +252,7 @@ class ProcessingUnitTest extends TestCase
         );
 
         $processedData = $processingUnit->process('json');
-        $this->assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
+        self::assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
     }
 
     public function testCanRunComplexProcessingOfDataWithNestedJsonInput(): void
@@ -319,7 +319,7 @@ class ProcessingUnitTest extends TestCase
         );
 
         $processedData = $processingUnit->process();
-        $this->assertSame('{"name":"********","city":"New York"}', $processedData['address']);
+        self::assertSame('{"name":"********","city":"New York"}', $processedData['address']);
     }
 
     public function testWillFailOnArrayProcessingOfSimpleValue(): void

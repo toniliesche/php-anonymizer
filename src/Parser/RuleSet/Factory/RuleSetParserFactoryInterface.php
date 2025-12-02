@@ -9,5 +9,5 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 
 interface RuleSetParserFactoryInterface
 {
-    public function getRulesetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface;
+    public function getRuleSetParser(?string $type, ?NodeParserInterface $nodeParser = null): ?RuleSetParserInterface;
 }

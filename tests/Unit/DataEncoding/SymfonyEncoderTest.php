@@ -65,7 +65,7 @@ class SymfonyEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->decode($data, new TempStorage());
-        $this->assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
+        self::assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
     }
 
     public function testWillFailOnDecodeOnNonObject(): void
@@ -94,10 +94,10 @@ class SymfonyEncoderTest extends TestCase
         ];
 
         $encodedData = $encoder->encode($data, (new TempStorage())->store('symfony-encoder-type', Address::class));
-        $this->assertInstanceOf(Address::class, $encodedData);
+        self::assertInstanceOf(Address::class, $encodedData);
 
-        $this->assertSame('John Doe', $encodedData->getName());
-        $this->assertSame('New York', $encodedData->getCity());
+        self::assertSame('John Doe', $encodedData->getName());
+        self::assertSame('New York', $encodedData->getCity());
     }
 
     public function testWillFailOnEncodeOnNonArray(): void
@@ -114,7 +114,6 @@ class SymfonyEncoderTest extends TestCase
 
         $this->expectException(DataEncodingException::class);
 
-        /** @phpstan-ignore-next-line  */
         $encoder->encode($data, new TempStorage());
     }
 
@@ -125,7 +124,7 @@ class SymfonyEncoderTest extends TestCase
             $objectNormalizer,
             $objectNormalizer,
         );
-        $this->assertSame('array', $encoder->getOverrideDataAccess());
+        self::assertSame('array', $encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfObject(): void
@@ -136,7 +135,7 @@ class SymfonyEncoderTest extends TestCase
         );
         $data = new stdClass();
 
-        $this->assertTrue($encoder->supports($data));
+        self::assertTrue($encoder->supports($data));
     }
 
     public function testCanVerifyNonSupportOfNonObjects(): void
@@ -148,7 +147,7 @@ class SymfonyEncoderTest extends TestCase
         );
 
         foreach ($dataArray as $data) {
-            $this->assertFalse($encoder->supports($data));
+            self::assertFalse($encoder->supports($data));
         }
     }
 }

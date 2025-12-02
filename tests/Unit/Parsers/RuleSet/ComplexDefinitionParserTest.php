@@ -25,22 +25,22 @@ class ComplexDefinitionParserTest extends TestCase
         );
 
         $dataLevel = $tree->getChildNode('data');
-        $this->assertSame('data', $dataLevel->name);
-        $this->assertSame('array', $dataLevel->dataAccess);
-        $this->assertSame(NodeType::NODE, $dataLevel->nodeType);
-        $this->assertFalse($dataLevel->isArray);
+        self::assertSame('data', $dataLevel->name);
+        self::assertSame('array', $dataLevel->dataAccess);
+        self::assertSame(NodeType::NODE, $dataLevel->nodeType);
+        self::assertFalse($dataLevel->isArray);
 
         $addressLevel = $dataLevel->getChildNode('address');
-        $this->assertSame('address', $addressLevel->name);
-        $this->assertSame('property', $addressLevel->dataAccess);
-        $this->assertSame(NodeType::NODE, $addressLevel->nodeType);
-        $this->assertTrue($addressLevel->isArray);
+        self::assertSame('address', $addressLevel->name);
+        self::assertSame('property', $addressLevel->dataAccess);
+        self::assertSame(NodeType::NODE, $addressLevel->nodeType);
+        self::assertTrue($addressLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertSame('name', $nameLevel->name);
-        $this->assertSame('setter', $nameLevel->dataAccess);
-        $this->assertSame(NodeType::LEAF, $nameLevel->nodeType);
-        $this->assertFalse($nameLevel->isArray);
+        self::assertSame('name', $nameLevel->name);
+        self::assertSame('setter', $nameLevel->dataAccess);
+        self::assertSame(NodeType::LEAF, $nameLevel->nodeType);
+        self::assertFalse($nameLevel->isArray);
     }
 
     public function testWillFailOnParseDefinitionWithInvalidDefinitionType(): void
