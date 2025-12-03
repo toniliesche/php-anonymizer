@@ -34,17 +34,17 @@ readonly class RegexpRuleSetParser implements RuleSetParserInterface
     /**
      * @throws PcreException
      */
-    public function parseDefinition(array $rules): Tree
+    public function parseDefinition(array $definition): Tree
     {
         $tree = new Tree();
 
         $path = [];
-        foreach ($rules as $definition) {
-            if (!is_string($definition)) {
+        foreach ($definition as $definitionRule) {
+            if (!is_string($definitionRule)) {
                 throw new InvalidArgumentException('Rule definition must be a string.');
             }
 
-            $definitionParts = explode('.', $definition);
+            $definitionParts = explode('.', $definitionRule);
             $levels = count($definitionParts);
             $childNode = $tree;
 

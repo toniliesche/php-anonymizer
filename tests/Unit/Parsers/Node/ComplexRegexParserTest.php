@@ -18,7 +18,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data', '');
+        $result = $parser->parseNode('data', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -38,7 +38,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property]', '');
+        $result = $parser->parseNode('data[property]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -58,7 +58,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[#name]', '');
+        $result = $parser->parseNode('data[#name]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -78,7 +78,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[?json/address]', '');
+        $result = $parser->parseNode('data[?json/address]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -99,7 +99,7 @@ final class ComplexRegexParserTest extends TestCase
         $parser = new ComplexRegexpParser();
 
         $this->expectException(RuleDefinitionException::class);
-        $parser->parseNodeName('data[#name?json/address]', '');
+        $parser->parseNode('data[#name?json/address]', '');
     }
 
     /**
@@ -109,7 +109,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[?json]', '');
+        $result = $parser->parseNode('data[?json]', '');
 
         self::assertFalse($result->isValid);
     }
@@ -121,7 +121,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property#name]', '');
+        $result = $parser->parseNode('data[property#name]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -141,7 +141,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property?json/address]', '');
+        $result = $parser->parseNode('data[property?json/address]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -161,7 +161,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[%name/firstName]', '');
+        $result = $parser->parseNode('data[%name/firstName]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -181,7 +181,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property%name/firstName]', '');
+        $result = $parser->parseNode('data[property%name/firstName]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -201,7 +201,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property#firstName%name/firstName]', '');
+        $result = $parser->parseNode('data[property#firstName%name/firstName]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -221,7 +221,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('data[property%name/firstName#firstName]', '');
+        $result = $parser->parseNode('data[property%name/firstName#firstName]', '');
 
         self::assertTrue($result->isValid);
         self::assertFalse($result->isArray);
@@ -241,7 +241,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data', '');
+        $result = $parser->parseNode('[]data', '');
 
         self::assertTrue($result->isValid);
         self::assertTrue($result->isArray);
@@ -261,7 +261,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[property]', '');
+        $result = $parser->parseNode('[]data[property]', '');
 
         self::assertTrue($result->isValid);
         self::assertTrue($result->isArray);
@@ -281,7 +281,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[#name]', '');
+        $result = $parser->parseNode('[]data[#name]', '');
 
         self::assertTrue($result->isValid);
         self::assertTrue($result->isArray);
@@ -301,7 +301,7 @@ final class ComplexRegexParserTest extends TestCase
     {
         $parser = new ComplexRegexpParser();
 
-        $result = $parser->parseNodeName('[]data[property#name]', '');
+        $result = $parser->parseNode('[]data[property#name]', '');
 
         self::assertTrue($result->isValid);
         self::assertTrue($result->isArray);

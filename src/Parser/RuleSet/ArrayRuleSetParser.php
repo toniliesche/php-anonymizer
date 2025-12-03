@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Parser\RuleSet;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
+use PhpAnonymizer\Anonymizer\Exception\MissingNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
 use PhpAnonymizer\Anonymizer\Model\ChildNodeAccessInterface;
@@ -30,12 +31,16 @@ final readonly class ArrayRuleSetParser implements RuleSetParserInterface
         }
     }
 
-    public function parseDefinition(array $rules): Tree
+    public function parseDefinition(array $definition): Tree
     {
         $tree = new Tree();
 
-        foreach ($rules as $definition) {
-            $this->parseNode($tree, $definition, []);
+        if (!array_key_exists('nodes', $definition) || !is_array($definition['nodes'])) {
+            throw new MissingNodeDefinitionException('Node definition must have at least one node.');
+        }
+
+        foreach ($definition['nodes'] as $nodes) {
+            $this->parseNode($tree, $nodes, []);
         }
 
         return $tree;
