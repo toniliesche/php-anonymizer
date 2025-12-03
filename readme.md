@@ -26,16 +26,16 @@
     - [04.03 JsonEncoder](#0403-jsonencoder)
     - [04.04 YamlEncoder](#0404-yamlencoder)
     - [04.05 SymfonyEncoder](#0405-symfonyencoder)
-- [06 Extended Information](#06-extended-information)
-    - [06.01 Manual setup of Anonymizer](#0601-manual-setup-of-anonymizer)
-        - [06.01.01 RuleSet parser](#060101-ruleset-parser)
-        - [06.01.02 DependencyChecker](#060102-dependencychecker)
-        - [06.01.03 DataAccessProvider](#060103-dataaccessprovider)
-        - [06.01.04 DataGenerationProvider](#060104-datagenerationprovider)
-        - [06.01.05 DataEncodingProvider](#060105-dataencodingprovider)
-        - [06.01.06 DataProcessor](#060106-dataprocessor)
-        - [06.01.07 Anonymizer](#060107-anonymizer)
-    - [06.02 Builder setup of Anonymizer](#0602-builder-setup-of-anonymizer)
+- [05 Extended Information](#06-extended-information)
+    - [05.01 Manual setup of Anonymizer](#0501-manual-setup-of-anonymizer)
+        - [05.01.01 RuleSet parser](#050101-ruleset-parser)
+        - [05.01.02 DependencyChecker](#050102-dependencychecker)
+        - [05.01.03 DataAccessProvider](#050103-dataaccessprovider)
+        - [05.01.04 DataGenerationProvider](#050104-datagenerationprovider)
+        - [05.01.05 DataEncodingProvider](#050105-dataencodingprovider)
+        - [05.01.06 DataProcessor](#050106-dataprocessor)
+        - [05.01.07 Anonymizer](#050107-anonymizer)
+    - [05.02 Builder setup of Anonymizer](#0502-builder-setup-of-anonymizer)
 
 ### Purpose
 
@@ -563,19 +563,59 @@ You can install the `symfony/serializer` package via composer:
 composer require symfony/serializer
 ```
 
-## 06 Extended Information
+## 05 Extended Information
 
-### 06.01 Manual setup of Anonymizer
+In this section you will learn about possibilities on how to setup the anonymizing toolkit for your own application.
+Currently there are two main options:
 
-#### 06.01.01 RuleSet parser
+- manual setup by wiring everything together by hand
+- using the builder toolkit for assisted setup
+
+### 05.01 Manual setup of Anonymizer
+
+#### 05.01.01 RuleSet parser
+
+The ruleset parser is the central part of the rule setup engine. It defines in which way the rules are parsed from the
+input array. In general, it is possible to define the rules in multiple ways. Currently there are two default supported
+syntaxes:
+
+- array based rules
+- string based rules (using the old, deprecated regular expression parser)
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
+
+use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
+use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
+use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
+
+// 05.01.01.01 RuleSet parser (New default)
+
+/**
+ * RuleSetParser:
+ * - must implement PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface
+ *
+ * ArrayRuleSetParser:
+ * - takes optional argument $nodeParser:
+ *   - must implement PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface
+ *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser
+ *  - takes optional argument $nodeMapper:
+ *    - must implement PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapperInterface
+ *    - defaults to PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapper
+ */
+$ruleSetParser = new ArrayRuleSetParser(
+    nodeParser: new ArrayNodeParser(),
+    nodeMapper: new DefaultNodeMapper(),
+);
+```
+
+```php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 
-// 06.01.01 RuleSet parser
+// 05.01.01.02 RuleSet parser (Old default / deprecated)
 
 /**
  * RuleSetParser:
@@ -591,14 +631,17 @@ $ruleSetParser = new DefaultRuleSetParser(
 );
 ```
 
-#### 06.01.02 DependencyChecker
+#### 05.01.02 DependencyChecker
+
+The DependencyChecker is a small utility that helps you identifying the support of optional parts of the software. It
+comes with support for installed php extensions as well as loaded composer dependencies.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 
-// 06.01.02 DependencyChecker
+// 05.01.02 DependencyChecker
 
 /**
  * DependencyChecker:
@@ -611,16 +654,19 @@ use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 $dependencyChecker = new DefaultDependencyChecker();
 ```
 
-#### 06.01.03 DataAccessProvider
+#### 05.01.03 DataAccessProvider
+
+DataAccessProviders provide access classes to iterate through the data tree of to be anonymized data. It contains
+different DataAccess implementations to access array keys, getters, object variables etc. depending on your ruleset.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataAccess\ArrayDataAccess;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DefaultDataAccessProviderFactory;
 
-// 06.01.03 DataAccessProvider
+// 05.01.03 DataAccessProvider
 
 /**
  * DataAccessProvider:
@@ -647,17 +693,20 @@ $provider->registerCustomDataAccessProvider('custom', $dataAccessProvider);
 $dataAccessProvider = $provider->getDataAccessProvider('custom');
 ```
 
-#### 06.01.04 DataGenerationProvider
+#### 05.01.04 DataGenerationProvider
+
+Setting up a DataGenerationProvider is necessary to determine, how you want to replace the anonymized data. It offers
+different strategies based on your setup, such as * replacements or Faker-based fake data.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
 
-// 06.01.04 DataGenerationProvider
+// 05.01.04 DataGenerationProvider
 
 /**
  * DataGenerationProvider:
@@ -693,15 +742,18 @@ $dataGenerationProviderFactory->registerCustomDataGenerationProvider('custom', $
 $dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvider('custom');
 ```
 
-#### 06.01.05 DataEncodingProvider
+#### 05.01.05 DataEncodingProvider
+
+A DataEncodingProvider is needed to transform the input and output of the anonymization by using the desired data
+formats. This way it is possible to change the output into of your desired data format.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 
-// 06.01.05 DataEncodingProvider
+// 05.01.05 DataEncodingProvider
 
 /**
  * DataEncodingProvider:
@@ -723,15 +775,18 @@ $dataEncodingProvider = new DefaultDataEncodingProvider();
 $dataEncodingProvider->registerCustomDataEncoder('custom', new JsonEncoder());
 ```
 
-#### 06.01.06 DataProcessor
+#### 05.01.06 DataProcessor
+
+The DataProcessor is the actual processing part that glues together all parts of the anonymization engine. It's the core
+interface between data access, data encoding and data generation.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 
-// 06.01.06 DataProcessor
+// 05.01.06 DataProcessor
 
 /**
  * DataProcessor:
@@ -765,14 +820,17 @@ $processorFactory->registerCustomDataProcessor('custom', $dataProcessor);
 $dataProcessor = $processorFactory->getDataProcessor('custom');
 ```
 
-#### 06.01.07 Anonymizer
+#### 05.01.07 Anonymizer
+
+Once, all dependencies have been set up, we can wire together the Anonymizer and pass ruleset parser and data processor
+to make it a working service.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Anonymizer;
 
-// 06.01.07 Anonymizer
+// 05.01.07 Anonymizer
 
 /**
  * Anonymizer:
@@ -790,5 +848,5 @@ $anonymizer = new Anonymizer(
 );
 ```
 
-### 06.02 Builder setup of Anonymizer
+### 05.02 Builder setup of Anonymizer
 

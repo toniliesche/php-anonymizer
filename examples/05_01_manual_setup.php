@@ -13,14 +13,36 @@ use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvide
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
+use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
+use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
+use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// 06.01.01 RuleSet parser
+// 05.01.01.01 RuleSet parser (New default)
+
+/**
+ * RuleSetParser:
+ * - must implement PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface
+ *
+ * ArrayRuleSetParser:
+ * - takes optional argument $nodeParser:
+ *   - must implement PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface
+ *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser
+ *  - takes optional argument $nodeMapper:
+ *    - must implement PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapperInterface
+ *    - defaults to PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapper
+ */
+$ruleSetParser = new ArrayRuleSetParser(
+    nodeParser: new ArrayNodeParser(),
+    nodeMapper: new DefaultNodeMapper(),
+);
+
+// 05.01.01.02 RuleSet parser (Old default / deprecated)
 
 /**
  * RuleSetParser:
@@ -35,7 +57,7 @@ $ruleSetParser = new DefaultRuleSetParser(
     nodeParser: new ComplexRegexpParser(),
 );
 
-// 06.01.02 DependencyChecker
+// 05.01.02 DependencyChecker
 
 /**
  * DependencyChecker:
@@ -47,7 +69,7 @@ $ruleSetParser = new DefaultRuleSetParser(
  */
 $dependencyChecker = new DefaultDependencyChecker();
 
-// 06.01.03 DataAccessProvider
+// 05.01.03 DataAccessProvider
 
 /**
  * DataAccessProvider:
@@ -73,7 +95,7 @@ $provider = new DefaultDataAccessProviderFactory();
 $provider->registerCustomDataAccessProvider('custom', $dataAccessProvider);
 $dataAccessProvider = $provider->getDataAccessProvider('custom');
 
-// 06.01.04 DataGenerationProvider
+// 05.01.04 DataGenerationProvider
 
 /**
  * DataGenerationProvider:
@@ -108,7 +130,7 @@ $dataGenerationProviderFactory = new DefaultDataGenerationProviderFactory();
 $dataGenerationProviderFactory->registerCustomDataGenerationProvider('custom', $dataGenerationProvider);
 $dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvider('custom');
 
-// 06.01.05 DataEncodingProvider
+// 05.01.05 DataEncodingProvider
 
 /**
  * DataEncodingProvider:
@@ -129,7 +151,7 @@ $dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvi
 $dataEncodingProvider = new DefaultDataEncodingProvider();
 $dataEncodingProvider->registerCustomDataEncoder('custom', new JsonEncoder());
 
-// 06.01.06 DataProcessor
+// 05.01.06 DataProcessor
 
 /**
  * DataProcessor:
@@ -162,7 +184,7 @@ $processorFactory = new DefaultDataProcessorFactory();
 $processorFactory->registerCustomDataProcessor('custom', $dataProcessor);
 $dataProcessor = $processorFactory->getDataProcessor('custom');
 
-// 06.01.07 Anonymizer
+// 05.01.07 Anonymizer
 
 /**
  * Anonymizer:

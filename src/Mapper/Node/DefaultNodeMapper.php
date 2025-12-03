@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace PhpAnonymizer\Anonymizer\Model;
+namespace PhpAnonymizer\Anonymizer\Mapper\Node;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
+use PhpAnonymizer\Anonymizer\Model\Node;
+use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
 
-final class NodeMapper
+final class DefaultNodeMapper implements NodeMapperInterface
 {
     public function mapNodeParsingResult(
         NodeParsingResult $ruleResult,
@@ -19,6 +21,10 @@ final class NodeMapper
             nodeType: $nodeType,
             valueType: $ruleResult->valueType,
             isArray: $ruleResult->isArray,
+            nestedType: $ruleResult->nestedType,
+            nestedRule: $ruleResult->nestedRule,
+            filterField: $ruleResult->filterField,
+            filterValue: $ruleResult->filterValue,
         );
     }
 }

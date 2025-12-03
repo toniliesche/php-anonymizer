@@ -8,7 +8,9 @@ use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidRuleSetParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\RulesetParserExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetParserException;
+use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
+use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use function in_array;
@@ -19,7 +21,9 @@ use function sprintf;
 final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 {
     private const RULE_SET_PARSERS = [
+        RuleSetParser::ARRAY->value,
         RuleSetParser::DEFAULT->value,
+        RuleSetParser::REGEXP->value,
     ];
 
     /** @var array<string,RuleSetParserInterface> */
@@ -50,21 +54,27 @@ final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
         $this->customRuleSetParsers[$name] = $definition;
     }
 
-    public function getRuleSetParser(?string $type, ?NodeParserInterface $nodeParser = null): RuleSetParserInterface
-    {
+    public function getRuleSetParser(
+        ?string $type,
+        ?NodeParserInterface $nodeParser = null,
+        ?NodeMapperInterface $nodeMapper = null,
+    ): RuleSetParserInterface {
         if (is_null($type)) {
             throw new InvalidRuleSetParserDefinitionException('Rule set parser type must be provided');
         }
 
         if (!isset($this->ruleSetParsers[$type])) {
-            $this->ruleSetParsers[$type] = $this->resolveRuleSetParser($type, $nodeParser);
+            $this->ruleSetParsers[$type] = $this->resolveRuleSetParser($type, $nodeParser, $nodeMapper);
         }
 
         return $this->ruleSetParsers[$type];
     }
 
-    private function resolveRuleSetParser(string $type, ?NodeParserInterface $nodeParser): RuleSetParserInterface
-    {
+    private function resolveRuleSetParser(
+        string $type,
+        ?NodeParserInterface $nodeParser,
+        ?NodeMapperInterface $nodeMapper,
+    ): RuleSetParserInterface {
         if (isset($this->customRuleSetParsers[$type])) {
             $ruleSetParser = $this->customRuleSetParsers[$type]($nodeParser);
             if (!$ruleSetParser instanceof RuleSetParserInterface) {
@@ -75,7 +85,8 @@ final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
         }
 
         return match ($type) {
-            RuleSetParser::DEFAULT->value => new DefaultRuleSetParser($nodeParser),
+            RuleSetParser::ARRAY->value => new ArrayRuleSetParser($nodeParser, $nodeMapper),
+            RuleSetParser::DEFAULT->value, RuleSetParser::REGEXP->value => new DefaultRuleSetParser($nodeParser),
             default => throw new UnknownRuleSetParserException(sprintf('Unknown rule set parser: "%s"', $type)),
         };
     }

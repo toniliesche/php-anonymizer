@@ -3,6 +3,7 @@
     "Composer\\InstalledVersions",
     "Faker\\Factory",
     "Faker\\Generator",
+    "Safe\\file_get_contents",
     "Safe\\json_encode",
     "Safe\\preg_match",
     "Safe\\yaml_parse",

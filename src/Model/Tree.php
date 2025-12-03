@@ -27,6 +27,19 @@ final class Tree implements ChildNodeAccessInterface
 
     public function addChildNode(Node $node): void
     {
+        foreach ($this->childNodes as $childNode) {
+            if (!$this->checkChildNodeConflict($node, $childNode)) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Node already contains a child node with name "%s".',
+                    $node->name,
+                ),
+            );
+        }
+
         $this->childNodes[] = $node;
     }
 }

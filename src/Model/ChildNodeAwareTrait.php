@@ -57,4 +57,21 @@ trait ChildNodeAwareTrait
 
         return $conflict;
     }
+
+    private function checkChildNodeConflict(Node $node, Node $childNode): bool
+    {
+        if ($childNode->name !== $node->name) {
+            return false;
+        }
+
+        if (!$node->isFilteredNode() || !$childNode->isFilteredNode()) {
+            return true;
+        }
+
+        if ($node->filterField === $childNode->filterField) {
+            return false;
+        }
+
+        return $node->filterValue !== $childNode->filterValue;
+    }
 }

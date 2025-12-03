@@ -35,6 +35,10 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DataProcessorFactoryInterface;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
+use PhpAnonymizer\Anonymizer\RuleLoader\ArrayRuleLoader;
+use PhpAnonymizer\Anonymizer\RuleLoader\JsonFileRuleLoader;
+use PhpAnonymizer\Anonymizer\RuleLoader\RuleLoaderInterface;
+use PhpAnonymizer\Anonymizer\RuleLoader\YamlFileRuleLoader;
 
 /**
  * @codeCoverageIgnoreStart
@@ -66,6 +70,8 @@ final class AnonymizerBuilder
     private Generator $faker;
 
     private string $fakerSeed;
+
+    private ?RuleLoaderInterface $ruleLoader = null;
 
     public function __construct(
         private readonly NodeParserFactoryInterface $nodeParserFactory = new DefaultNodeParserFactory(),
@@ -194,6 +200,45 @@ final class AnonymizerBuilder
         return $this;
     }
 
+    public function withRuleLoader(?RuleLoaderInterface $ruleLoader): self
+    {
+        $this->ruleLoader = $ruleLoader;
+
+        return $this;
+    }
+
+    public function withRulesFromJsonFile(string $filePath): self
+    {
+        if (!$this->dependencyChecker->extensionIsLoaded('json')) {
+            throw new MissingPlatformRequirementsException('The json extension is required for this encoder');
+        }
+
+        $this->ruleLoader = new JsonFileRuleLoader($filePath);
+
+        return $this;
+    }
+
+    public function withRulesFromYamlFile(string $filePath): self
+    {
+        if (!$this->dependencyChecker->extensionIsLoaded('yaml')) {
+            throw new MissingPlatformRequirementsException('The yaml extension is required for this encoder');
+        }
+
+        $this->ruleLoader = new YamlFileRuleLoader($filePath);
+
+        return $this;
+    }
+
+    /**
+     * @param array<string, array<mixed>|string> $rules
+     */
+    public function withRulesFromArray(array $rules): self
+    {
+        $this->ruleLoader = new ArrayRuleLoader($rules);
+
+        return $this;
+    }
+
     public function withFaker(bool $faker): self
     {
         unset($this->faker);
@@ -211,12 +256,13 @@ final class AnonymizerBuilder
 
     public function withDefaults(): self
     {
-        $this->withNodeParserType(NodeParser::SIMPLE->value);
+        $this->withNodeParserType(NodeParser::DEFAULT->value);
         $this->withRuleSetParserType(RuleSetParser::DEFAULT->value);
         $this->withDataProcessorType(DataProcessor::DEFAULT->value);
         $this->withDataAccessProviderType(DataAccessProvider::DEFAULT->value);
         $this->withDataGenerationProviderType(DataGenerationProvider::DEFAULT->value);
         $this->withFaker(false);
+        $this->withRuleLoader(null);
 
         return $this;
     }
@@ -224,57 +270,80 @@ final class AnonymizerBuilder
     public function build(): Anonymizer
     {
         if (!isset($this->ruleSetParser)) {
-            if (!isset($this->nodeParser)) {
-                $this->nodeParser = $this->nodeParserFactory->getNodeParser($this->nodeParserType ?? null);
-            }
-
-            $this->ruleSetParser = $this->ruleSetParserFactory->getRuleSetParser(
-                $this->ruleSetParserType ?? null,
-                $this->nodeParser,
-            );
+            $this->setupRuleSetParser();
         }
 
         if (!isset($this->dataProcessor)) {
-            $this->dataAccessProvider = $this->dataAccessProviderFactory->getDataAccessProvider(
-                $this->dataAccessProviderType ?? null,
-            );
-            $this->dataGenerationProvider = $this->dataGenerationProviderFactory->getDataGenerationProvider(
-                $this->dataGeneratorType ?? null,
-            );
-            $this->dataProcessor = $this->dataProcessorFactory->getDataProcessor(
-                $this->dataProcessorType ?? null,
-                $this->dataAccessProvider,
-                $this->dataGenerationProvider,
-                $this->dataEncodingProvider,
-            );
+            $this->setupDataProcessor();
         }
 
         if ($this->withFaker) {
-            if (!$this->dependencyChecker->libraryIsInstalled('fakerphp/faker')) {
-                throw new MissingPlatformRequirementsException('Faker library is required to inject faker');
-            }
-
-            if (!isset($this->dataGenerationProvider)) {
-                throw new InvalidArgumentException('Data generation provider is required to inject faker');
-            }
-
-            $faker = $this->faker ?? Factory::create();
-            $this->dataGenerationProvider->injectFaker($faker);
-
-            if ($this->dataGenerationProvider instanceof DefaultDataGeneratorProvider) {
-                $this->dataGenerationProvider->registerCustomDataGenerator(
-                    new FakerAwareStringGenerator(new StarMaskedStringGenerator()),
-                );
-            }
-
-            if (isset($this->fakerSeed)) {
-                $this->dataGenerationProvider->setSeed($this->fakerSeed);
-            }
+            $this->setupFaker();
         }
 
-        return new Anonymizer(
+        $anonymizer = new Anonymizer(
             ruleSetParser: $this->ruleSetParser,
             dataProcessor: $this->dataProcessor,
         );
+
+        if ($this->ruleLoader instanceof RuleLoaderInterface) {
+            foreach ($this->ruleLoader->loadRules() as $ruleName => $rule) {
+                $anonymizer->registerRuleSet($ruleName, $rule);
+            }
+        }
+
+        return $anonymizer;
+    }
+
+    private function setupRuleSetParser(): void
+    {
+        if (!isset($this->nodeParser)) {
+            $this->nodeParser = $this->nodeParserFactory->getNodeParser($this->nodeParserType ?? null);
+        }
+
+        $this->ruleSetParser = $this->ruleSetParserFactory->getRuleSetParser(
+            $this->ruleSetParserType ?? null,
+            $this->nodeParser,
+        );
+    }
+
+    private function setupDataProcessor(): void
+    {
+        $this->dataAccessProvider = $this->dataAccessProviderFactory->getDataAccessProvider(
+            $this->dataAccessProviderType ?? null,
+        );
+        $this->dataGenerationProvider = $this->dataGenerationProviderFactory->getDataGenerationProvider(
+            $this->dataGeneratorType ?? null,
+        );
+        $this->dataProcessor = $this->dataProcessorFactory->getDataProcessor(
+            $this->dataProcessorType ?? null,
+            $this->dataAccessProvider,
+            $this->dataGenerationProvider,
+            $this->dataEncodingProvider,
+        );
+    }
+
+    private function setupFaker(): void
+    {
+        if (!$this->dependencyChecker->libraryIsInstalled('fakerphp/faker')) {
+            throw new MissingPlatformRequirementsException('Faker library is required to inject faker');
+        }
+
+        if (!isset($this->dataGenerationProvider)) {
+            throw new InvalidArgumentException('Data generation provider is required to inject faker');
+        }
+
+        $faker = $this->faker ?? Factory::create();
+        $this->dataGenerationProvider->injectFaker($faker);
+
+        if ($this->dataGenerationProvider instanceof DefaultDataGeneratorProvider) {
+            $this->dataGenerationProvider->registerCustomDataGenerator(
+                new FakerAwareStringGenerator(new StarMaskedStringGenerator()),
+            );
+        }
+
+        if (isset($this->fakerSeed)) {
+            $this->dataGenerationProvider->setSeed($this->fakerSeed);
+        }
     }
 }

@@ -18,7 +18,7 @@ use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// 06.02.01 Creating AnonymizerBuilder
+// 05.02.01 Creating AnonymizerBuilder
 
 /**
  * AnonymizerBuilder:
@@ -53,7 +53,7 @@ $builder = new AnonymizerBuilder(
     dataEncodingProvider: new DefaultDataEncodingProvider(),
 );
 
-// 06.02.02 Setting Defaults
+// 05.02.02 Setting Defaults
 
 /**
  * Sets default values for the builder:
@@ -66,7 +66,7 @@ $builder = new AnonymizerBuilder(
  */
 $builder->withDefaults();
 
-// 06.02.03 Setting NodeParser
+// 05.02.03 Setting NodeParser
 
 /**
  * Two options to set node parser:
@@ -74,13 +74,13 @@ $builder->withDefaults();
  *   - must implement PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface
  * - via type:
  *   - must be a string
- *   - will be resolved from node parser factory (set in (06.02.01)[#060201-creating-anonymizerbuilder])
+ *   - will be resolved from node parser factory (set in (05.02.01)[#050201-creating-anonymizerbuilder])
  * - using one option will override the other
  */
 $builder->withNodeParser(new ComplexRegexpParser());
 $builder->withNodeParserType('simple');
 
-// 06.02.04 Setting RuleSetParser
+// 05.02.04 Setting RuleSetParser
 
 /**
  * Two options to set rule set parser:
@@ -89,14 +89,14 @@ $builder->withNodeParserType('simple');
  *   - will ignore dependencies set in builder
  * - via type:
  *   - must be a string
- *   - will be resolved from RuleSetParserFactory (set in (06.02.01)[#060201-creating-anonymizerbuilder])
- *   - will use NodeParser from (06.02.03)[#060203-setting-nodeparser]
+ *   - will be resolved from RuleSetParserFactory (set in (05.02.01)[#050201-creating-anonymizerbuilder])
+ *   - will use NodeParser from (05.02.03)[#050203-setting-nodeparser]
  * - using one option will override the other
  */
 $builder->withRuleSetParser(new DefaultRuleSetParser());
 $builder->withRuleSetParserType('default');
 
-// 06.02.05 Setting DataProcessor
+// 05.02.05 Setting DataProcessor
 
 /**
  * Two options to set data processor:
@@ -105,10 +105,10 @@ $builder->withRuleSetParserType('default');
  *   - will ignore dependencies set in builder
  * - via type:
  *   - must be a string
- *   - will be resolved from DataProcessorFactory (set in (06.02.01)[#060201-creating-anonymizerbuilder])
- *   - will use DataAccessProvider from (06.02.06)[#060206-setting-dataaccessprovider]
- *   - will use DataGenerationProvider from (06.02.07)[#060207-setting-datagenerationprovider]
- *   - will use DataEncodingProvider from (06.02.01)[#060201-creating-anonymizerbuilder]
+ *   - will be resolved from DataProcessorFactory (set in (05.02.01)[#050201-creating-anonymizerbuilder])
+ *   - will use DataAccessProvider from (05.02.06)[#050206-setting-dataaccessprovider]
+ *   - will use DataGenerationProvider from (05.02.07)[#050207-setting-datagenerationprovider]
+ *   - will use DataEncodingProvider from (05.02.01)[#050201-creating-anonymizerbuilder]
  * - using one option will override the other
  */
 $builder->withDataProcessor(

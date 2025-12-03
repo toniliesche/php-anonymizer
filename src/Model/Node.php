@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use function sprintf;
 
 final class Node implements ChildNodeAccessInterface
 {
@@ -65,6 +66,19 @@ final class Node implements ChildNodeAccessInterface
             throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
         }
 
+        foreach ($this->childNodes as $childNode) {
+            if (!$this->checkChildNodeConflict($node, $childNode)) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Node already contains a child node with name "%s".',
+                    $node->name,
+                ),
+            );
+        }
+
         $this->childNodes[] = $node;
     }
 
@@ -82,5 +96,10 @@ final class Node implements ChildNodeAccessInterface
     public function definitionConflict(NodeParsingResult $ruleResult): bool
     {
         return $this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue;
+    }
+
+    public function isFilteredNode(): bool
+    {
+        return $this->filterField !== null && $this->filterValue !== null;
     }
 }
