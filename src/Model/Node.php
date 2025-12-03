@@ -31,9 +31,9 @@ final class Node implements ChildNodeAccessInterface
             if (!$childNode instanceof self) {
                 throw new InvalidArgumentException('All child nodes must be of type Node');
             }
-        }
 
-        $this->childNodes = $childNodes;
+            $this->addChildNode($childNode);
+        }
 
         if (!is_null($this->nestedType) && $childNodes !== []) {
             throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');

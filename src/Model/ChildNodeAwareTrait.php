@@ -68,10 +68,10 @@ trait ChildNodeAwareTrait
             return true;
         }
 
-        if ($node->filterField === $childNode->filterField) {
+        if ($node->filterField !== $childNode->filterField) {
             return false;
         }
 
-        return $node->filterValue !== $childNode->filterValue;
+        return $node->filterValue === $childNode->filterValue;
     }
 }
