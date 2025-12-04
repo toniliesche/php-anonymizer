@@ -3,34 +3,44 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/includes/person_with_setters_class.php';
 
+use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 
+$faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
-    // set nodeParserType to complex here for use of advanced syntax
     ->withNodeParserType(NodeParser::COMPLEX->value)
+    ->withCustomFaker($faker)
+    ->withFakerSeed('codeword')
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        'order.person.firstName[setter]',
-        'order.person.lastName[setter]',
+    name: 'order',
+    definitions: [
+        'order.address[?json/address]',
     ],
 );
 
-$person = new PersonWithSetters('John', 'Doe');
+$anonymizer->registerRuleSet(
+    name: 'address',
+    definitions: [
+        'firstName',
+        'lastName',
+    ],
+);
 
 $data = [
     'order' => [
-        'person' => $person,
+        'address' => '{"firstName":"John","lastName":"Doe"}',
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

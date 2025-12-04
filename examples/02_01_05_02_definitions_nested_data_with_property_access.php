@@ -4,49 +4,56 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
+use PhpAnonymizer\Anonymizer\Examples\OrderWithJsonAddress;
 
+$faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
     ->withRuleSetParserType(RuleSetParser::ARRAY->value)
     ->withNodeParserType(NodeParser::ARRAY->value)
-    // set faker to true here to use the default faker instance
-    ->withFaker(true)
+    ->withCustomFaker($faker)
+    ->withFakerSeed('codeword')
     ->build();
 
 $anonymizer->registerRuleSet(
-    name: 'order',
-    definitions: [
+    'order',
+    [
         [
             'name' => 'order',
             'children' => [
                 [
-                    'name' => 'person',
-                    'children' => [
-                        [
-                            'name' => 'first_name',
-                            'value_type' => 'firstName',
-                        ],
-                        [
-                            'name' => 'last_name',
-                            'value_type' => 'lastName',
-                        ],
-                    ],
+                    'name' => 'address',
+                    'data_access' => 'property',
+                    'nested_rule' => 'address',
+                    'nested_type' => 'json',
                 ],
             ],
         ],
     ],
 );
 
-$data = [
-    'order' => [
-        'person' => [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+$anonymizer->registerRuleSet(
+    'address',
+    [
+        'nodes' => [
+            [
+                'name' => 'firstName',
+            ],
+            [
+                'name' => 'lastName',
+            ],
         ],
     ],
+);
+
+$data = [
+    'order' => new OrderWithJsonAddress(
+        address: '{"firstName":"John","lastName":"Doe"}',
+    ),
 ];
 
 $anonymizedData = $anonymizer->run(

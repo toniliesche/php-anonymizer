@@ -24,7 +24,7 @@ use function sprintf;
 readonly class RegexpRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
-        private NodeParserInterface $nodeParser = new SimpleRegexpParser(),
+        private ?NodeParserInterface $nodeParser = new SimpleRegexpParser(),
     ) {
         if (!$this->nodeParser instanceof AbstractRegexpParser) {
             throw new InvalidNodeParserException(sprintf('Node Parser must extend %s, %s given', AbstractRegexpParser::class, $this->nodeParser::class));

@@ -4,40 +4,39 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Examples\Person;
 
-$faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
+    // set nodeParserType to complex here for use of advanced syntax
     ->withNodeParserType(NodeParser::COMPLEX->value)
-    ->withCustomFaker($faker)
-    ->withFakerSeed('codeword')
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        'order.address[?json/address]',
+    name: 'order',
+    definitions: [
+        'order.person.firstName[reflection]',
+        'order.person.lastName[reflection]',
     ],
 );
 
-$anonymizer->registerRuleSet(
-    'address',
-    [
-        'firstName',
-        'lastName',
-    ],
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
 );
 
 $data = [
     'order' => [
-        'address' => '{"firstName":"John","lastName":"Doe"}',
+        'person' => $person,
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/person_class.php';
+namespace PhpAnonymizer\Anonymizer\Examples;
 
-class OrderWithSetters {
+class OrderWithSetters
+{
     public function __construct(
         private Person $person,
-    ) {}
+    ) {
+    }
 
     public function getPerson(): Person
     {

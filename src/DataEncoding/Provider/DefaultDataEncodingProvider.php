@@ -72,9 +72,6 @@ final class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         }
     }
 
-    /**
-     * @param NormalizerInterface $normalizer
-     */
     public function setNormalizer(mixed $normalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -88,9 +85,6 @@ final class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         $this->normalizer = $normalizer;
     }
 
-    /**
-     * @param DenormalizerInterface $denormalizer
-     */
     public function setDenormalizer(mixed $denormalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {

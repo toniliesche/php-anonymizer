@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 
+$faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
     ->withRuleSetParserType(RuleSetParser::ARRAY->value)
     ->withNodeParserType(NodeParser::ARRAY->value)
-    // set faker to true here to use the default faker instance
-    ->withFaker(true)
+    ->withCustomFaker($faker)
+    ->withFakerSeed('codeword')
     ->build();
 
 $anonymizer->registerRuleSet(
@@ -26,12 +28,12 @@ $anonymizer->registerRuleSet(
                     'name' => 'person',
                     'children' => [
                         [
-                            'name' => 'first_name',
-                            'value_type' => 'firstName',
+                            'name' => 'firstName',
+                            'value_type' => 'firstName', // add value_type option to define faker value to be used
                         ],
                         [
-                            'name' => 'last_name',
-                            'value_type' => 'lastName',
+                            'name' => 'lastName',
+                            'value_type' => 'lastName', // add value_type option to define faker value to be used
                         ],
                     ],
                 ],
@@ -43,8 +45,8 @@ $anonymizer->registerRuleSet(
 $data = [
     'order' => [
         'person' => [
-            'first_name' => 'John',
-            'last_name' => 'Doe',
+            'firstName' => 'John',
+            'lastName' => 'Doe',
         ],
     ],
 ];

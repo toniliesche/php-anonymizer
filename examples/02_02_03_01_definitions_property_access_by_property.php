@@ -3,11 +3,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/includes/person_class.php';
-require_once __DIR__ . '/includes/order_with_setters_class.php';
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Examples\Person;
 
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
@@ -16,27 +15,28 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        '[]orders[array].person[setter].firstName[property]',
-        '[]orders[array].person[setter].lastName[property]',
+    name: 'order',
+    definitions: [
+        'order.person.firstName[property]',
+        'order.person.lastName[property]',
     ],
 );
 
-$person1 = new Person('John', 'Doe');
-$order1 = new OrderWithSetters($person1);
-
-$person2 = new Person('John', 'Doe');
-$order2 = new OrderWithSetters($person2);
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
 
 $data = [
-    'orders' => [
-        $order1,
-        $order2,
+    'order' => [
+        'person' => $person,
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

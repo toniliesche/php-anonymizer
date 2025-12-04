@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
-class PersonWithSetters {
+namespace PhpAnonymizer\Anonymizer\Examples;
+
+class PersonWithSetters
+{
     public function __construct(
         private string $firstName,
         private string $lastName,
-    ) {}
+    ) {
+    }
 
     public function getFirstName(): string
     {

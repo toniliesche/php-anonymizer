@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/includes/person_class.php';
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Examples\PersonWithSetters;
 
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
@@ -15,14 +15,17 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        'order.person.firstName[reflection]',
-        'order.person.lastName[reflection]',
+    name: 'order',
+    definitions: [
+        'order.person.firstName[setter]',
+        'order.person.lastName[setter]',
     ],
 );
 
-$person = new Person('John', 'Doe');
+$person = new PersonWithSetters(
+    firstName: 'John',
+    lastName: 'Doe',
+);
 
 $data = [
     'order' => [

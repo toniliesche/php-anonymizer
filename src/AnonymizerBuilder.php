@@ -9,6 +9,7 @@ use Faker\Generator;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DataAccessProviderFactoryInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DefaultDataAccessProviderFactory;
+use PhpAnonymizer\Anonymizer\DataEncoding\NormalizerAwareDataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DataEncodingProviderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
@@ -24,6 +25,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Enum\DataProcessor;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
+use PhpAnonymizer\Anonymizer\Exception\AnonymizerBuilderException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
@@ -39,9 +41,13 @@ use PhpAnonymizer\Anonymizer\RuleLoader\ArrayRuleLoader;
 use PhpAnonymizer\Anonymizer\RuleLoader\JsonFileRuleLoader;
 use PhpAnonymizer\Anonymizer\RuleLoader\RuleLoaderInterface;
 use PhpAnonymizer\Anonymizer\RuleLoader\YamlFileRuleLoader;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * @codeCoverageIgnoreStart
+ *
+ * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
  */
 final class AnonymizerBuilder
 {
@@ -82,6 +88,28 @@ final class AnonymizerBuilder
         private readonly DataEncodingProviderInterface $dataEncodingProvider = new DefaultDataEncodingProvider(),
         private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
     ) {
+    }
+
+    public function withNormalizer(NormalizerInterface $normalizer): self
+    {
+        if (!$this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
+            throw new AnonymizerBuilderException('DataEncodingProvider must implement NormalizerAwareDataEncoderInterface to set Normalizer.');
+        }
+
+        $this->dataEncodingProvider->setNormalizer($normalizer);
+
+        return $this;
+    }
+
+    public function withDenormalizer(DenormalizerInterface $denormalizer): self
+    {
+        if (!$this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
+            throw new AnonymizerBuilderException('DataEncodingProvider must implement NormalizerAwareDataEncoderInterface to set Denormalizer.');
+        }
+
+        $this->dataEncodingProvider->setDenormalizer($denormalizer);
+
+        return $this;
     }
 
     public function withNodeParserType(string $nodeParserType): self

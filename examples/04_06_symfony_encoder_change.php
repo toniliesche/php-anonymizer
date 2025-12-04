@@ -10,11 +10,15 @@ use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use PhpAnonymizer\Anonymizer\Examples\Order;
 use PhpAnonymizer\Anonymizer\Examples\Person;
+use PhpAnonymizer\Anonymizer\Serializer\SerializerBuilder;
 
+$serializer = (new SerializerBuilder())->withDefaults()->build();
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
     ->withRuleSetParserType(RuleSetParser::ARRAY->value)
     ->withNodeParserType(NodeParser::ARRAY->value)
+    ->withNormalizer($serializer)
+    ->withDenormalizer($serializer)
     ->build();
 
 $anonymizer->registerRuleSet(
@@ -48,7 +52,7 @@ $anonymizedData = $anonymizer->run(
     ruleSetName: 'order',
     data: $data,
     // pass encoder to use here
-    encoding: 'clone',
+    encoding: 'symfony',
 );
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;

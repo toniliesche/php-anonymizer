@@ -7,7 +7,6 @@ namespace PhpAnonymizer\Anonymizer\Parser\RuleSet;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
-use PhpAnonymizer\Anonymizer\Exception\MissingNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
 use PhpAnonymizer\Anonymizer\Model\ChildNodeAccessInterface;
@@ -23,8 +22,8 @@ use function sprintf;
 final readonly class ArrayRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
-        private NodeParserInterface $nodeParser = new ArrayNodeParser(),
-        private NodeMapperInterface $nodeMapper = new DefaultNodeMapper(),
+        private ?NodeParserInterface $nodeParser = new ArrayNodeParser(),
+        private ?NodeMapperInterface $nodeMapper = new DefaultNodeMapper(),
     ) {
         if (!$this->nodeParser instanceof ArrayNodeParser) {
             throw new InvalidNodeParserException(sprintf('Node Parser must be of type %s, %s given', ArrayNodeParser::class, $this->nodeParser::class));
@@ -35,12 +34,10 @@ final readonly class ArrayRuleSetParser implements RuleSetParserInterface
     {
         $tree = new Tree();
 
-        if (!array_key_exists('nodes', $definition) || !is_array($definition['nodes'])) {
-            throw new MissingNodeDefinitionException('Node definition must have at least one node.');
-        }
-
-        foreach ($definition['nodes'] as $nodes) {
-            $this->parseNode($tree, $nodes, []);
+        if ($definition !== []) {
+            foreach ($definition as $nodes) {
+                $this->parseNode($tree, $nodes, []);
+            }
         }
 
         return $tree;

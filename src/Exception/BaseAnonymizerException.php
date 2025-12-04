@@ -6,6 +6,9 @@ namespace PhpAnonymizer\Anonymizer\Exception;
 
 use RuntimeException;
 
+/**
+ * @SuppressWarnings("PHPMD.NumberOfChildren")
+ */
 abstract class BaseAnonymizerException extends RuntimeException implements AnonymizerException
 {
 }

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/includes/order_with_json_address.php';
 
 use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Examples\OrderWithJsonAddress;
 
 $faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
@@ -18,15 +18,15 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.address[property?json/address]',
     ],
 );
 
 $anonymizer->registerRuleSet(
-    'address',
-    [
+    name: 'address',
+    definitions: [
         'firstName',
         'lastName',
     ],
@@ -34,11 +34,14 @@ $anonymizer->registerRuleSet(
 
 $data = [
     'order' => new OrderWithJsonAddress(
-        '{"firstName":"John","lastName":"Doe"}',
+        address: '{"firstName":"John","lastName":"Doe"}',
     ),
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);

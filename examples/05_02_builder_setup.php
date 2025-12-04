@@ -77,8 +77,12 @@ $builder->withDefaults();
  *   - will be resolved from node parser factory (set in (05.02.01)[#050201-creating-anonymizerbuilder])
  * - using one option will override the other
  */
-$builder->withNodeParser(new ComplexRegexpParser());
-$builder->withNodeParserType('simple');
+$builder->withNodeParser(
+    nodeParser: new ComplexRegexpParser(),
+);
+$builder->withNodeParserType(
+    nodeParserType: 'simple',
+);
 
 // 05.02.04 Setting RuleSetParser
 
@@ -93,8 +97,12 @@ $builder->withNodeParserType('simple');
  *   - will use NodeParser from (05.02.03)[#050203-setting-nodeparser]
  * - using one option will override the other
  */
-$builder->withRuleSetParser(new DefaultRuleSetParser());
-$builder->withRuleSetParserType('default');
+$builder->withRuleSetParser(
+    ruleSetParser: new DefaultRuleSetParser(),
+);
+$builder->withRuleSetParserType(
+    ruleSetParserType: 'default',
+);
 
 // 05.02.05 Setting DataProcessor
 

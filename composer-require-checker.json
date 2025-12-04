@@ -10,6 +10,16 @@
     "Symfony\\Component\\Serializer\\Exception\\ExceptionInterface",
     "Symfony\\Component\\Serializer\\Normalizer\\DenormalizerInterface",
     "Symfony\\Component\\Serializer\\Normalizer\\NormalizerInterface",
+    "Symfony\\Component\\PropertyAccess\\PropertyAccessor",
+    "Symfony\\Component\\PropertyInfo\\Extractor\\PhpDocExtractor",
+    "Symfony\\Component\\PropertyInfo\\Extractor\\ReflectionExtractor",
+    "Symfony\\Component\\PropertyInfo\\PropertyInfoExtractor",
+    "Symfony\\Component\\Serializer\\Encoder\\EncoderInterface",
+    "Symfony\\Component\\Serializer\\Encoder\\JsonEncoder",
+    "Symfony\\Component\\Serializer\\Encoder\\XmlEncoder",
+    "Symfony\\Component\\Serializer\\Encoder\\YamlEncoder",
+    "Symfony\\Component\\Serializer\\Normalizer\\ObjectNormalizer",
+    "Symfony\\Component\\Serializer\\Serializer",
     "yaml_emit"
   ]
 }

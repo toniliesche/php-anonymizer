@@ -18,20 +18,18 @@ final class ArrayRuleSetParserTest extends TestCase
         $parser = new ArrayRuleSetParser(new ArrayNodeParser());
         $tree = $parser->parseDefinition(
             [
-                'nodes' => [
-                    [
-                        'name' => 'data',
-                        'data_access' => 'array',
-                        'children' => [
-                            [
-                                'name' => 'address',
-                                'is_array' => true,
-                                'data_access' => 'property',
-                                'children' => [
-                                    [
-                                        'name' => 'name',
-                                        'data_access' => 'setter',
-                                    ],
+                [
+                    'name' => 'data',
+                    'data_access' => 'array',
+                    'children' => [
+                        [
+                            'name' => 'address',
+                            'is_array' => true,
+                            'data_access' => 'property',
+                            'children' => [
+                                [
+                                    'name' => 'name',
+                                    'data_access' => 'setter',
                                 ],
                             ],
                         ],
@@ -65,16 +63,14 @@ final class ArrayRuleSetParserTest extends TestCase
         $this->expectException(InvalidNodeNameException::class);
         $parser->parseDefinition(
             [
-                'nodes' => [
-                    [
-                        'name' => 'data',
-                        'children' => [
-                            [
-                                'name' => 'address',
-                                'children' => [
-                                    [
-                                        'name' => 'name!',
-                                    ],
+                [
+                    'name' => 'data',
+                    'children' => [
+                        [
+                            'name' => 'address',
+                            'children' => [
+                                [
+                                    'name' => 'name!',
                                 ],
                             ],
                         ],
@@ -90,18 +86,16 @@ final class ArrayRuleSetParserTest extends TestCase
         $this->expectException(InvalidNodeDefinitionException::class);
         $parser->parseDefinition(
             [
-                'nodes' => [
-                    [
-                        'name' => 'data',
-                        'children' => [
-                            [
-                                'name' => 'address',
-                                'children' => [
-                                    [
-                                        'name' => 'name',
-                                        'value_type' => 'person',
-                                        'children' => [],
-                                    ],
+                [
+                    'name' => 'data',
+                    'children' => [
+                        [
+                            'name' => 'address',
+                            'children' => [
+                                [
+                                    'name' => 'name',
+                                    'value_type' => 'person',
+                                    'children' => [],
                                 ],
                             ],
                         ],

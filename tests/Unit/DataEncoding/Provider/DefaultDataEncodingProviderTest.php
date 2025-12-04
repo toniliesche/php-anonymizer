@@ -97,7 +97,6 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
         $this->expectException(MissingPlatformRequirementsException::class);
 
-        /** @phpstan-ignore-next-line  */
         $provider->setNormalizer(new stdClass());
     }
 
@@ -107,7 +106,6 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        /** @phpstan-ignore-next-line  */
         $provider->setNormalizer(new stdClass());
     }
 
@@ -124,7 +122,6 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
         $this->expectException(MissingPlatformRequirementsException::class);
 
-        /** @phpstan-ignore-next-line  */
         $provider->setDenormalizer(new stdClass());
     }
 
@@ -134,7 +131,6 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
 
-        /** @phpstan-ignore-next-line  */
         $provider->setDenormalizer(new stdClass());
     }
 

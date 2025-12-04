@@ -81,7 +81,10 @@ $dependencyChecker = new DefaultDependencyChecker();
  * - can have custom data access implementations registered via registerCustomDataAccess method
  */
 $dataAccessProvider = new DefaultDataAccessProvider();
-$dataAccessProvider->registerCustomDataAccess('custom', new ArrayDataAccess());
+$dataAccessProvider->registerCustomDataAccess(
+    name: 'custom',
+    dataAccess: new ArrayDataAccess(),
+);
 
 /**
  * DataAccessProviderFactory:
@@ -92,8 +95,13 @@ $dataAccessProvider->registerCustomDataAccess('custom', new ArrayDataAccess());
  * - can have custom data access provider implementations registered via registerCustomDataAccessProvider method
  */
 $provider = new DefaultDataAccessProviderFactory();
-$provider->registerCustomDataAccessProvider('custom', $dataAccessProvider);
-$dataAccessProvider = $provider->getDataAccessProvider('custom');
+$provider->registerCustomDataAccessProvider(
+    name: 'custom',
+    definition: $dataAccessProvider,
+);
+$dataAccessProvider = $provider->getDataAccessProvider(
+    type: 'custom',
+);
 
 // 05.01.04 DataGenerationProvider
 
@@ -112,11 +120,15 @@ $dataAccessProvider = $provider->getDataAccessProvider('custom');
  */
 $dataGenerationProvider = new DefaultDataGeneratorProvider(
     generators: [
-        new FakerAwareStringGenerator(new StarMaskedStringGenerator()),
+        new FakerAwareStringGenerator(
+            fallbackDataGenerator: new StarMaskedStringGenerator(),
+        ),
     ],
     dependencyChecker: $dependencyChecker,
 );
-$dataGenerationProvider->registerCustomDataGenerator(new StarMaskedStringGenerator());
+$dataGenerationProvider->registerCustomDataGenerator(
+    generator: new StarMaskedStringGenerator(),
+);
 
 /**
  * DataGenerationProviderFactory:
@@ -127,8 +139,13 @@ $dataGenerationProvider->registerCustomDataGenerator(new StarMaskedStringGenerat
  * - can have custom data generation provider implementations registered via registerCustomDataGenerationProvider method
  */
 $dataGenerationProviderFactory = new DefaultDataGenerationProviderFactory();
-$dataGenerationProviderFactory->registerCustomDataGenerationProvider('custom', $dataGenerationProvider);
-$dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvider('custom');
+$dataGenerationProviderFactory->registerCustomDataGenerationProvider(
+    name: 'custom',
+    definition: $dataGenerationProvider,
+);
+$dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvider(
+    type: 'custom',
+);
 
 // 05.01.05 DataEncodingProvider
 
@@ -149,7 +166,10 @@ $dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvi
  * - can have custom data encoder implementations registered via registerCustomDataEncoder method
  */
 $dataEncodingProvider = new DefaultDataEncodingProvider();
-$dataEncodingProvider->registerCustomDataEncoder('custom', new JsonEncoder());
+$dataEncodingProvider->registerCustomDataEncoder(
+    name: 'custom',
+    encoder: new JsonEncoder(),
+);
 
 // 05.01.06 DataProcessor
 
@@ -181,8 +201,13 @@ $dataProcessor = new DefaultDataProcessor(
  * - can have custom data processor implementations registered via registerCustomDataProcessor method
  */
 $processorFactory = new DefaultDataProcessorFactory();
-$processorFactory->registerCustomDataProcessor('custom', $dataProcessor);
-$dataProcessor = $processorFactory->getDataProcessor('custom');
+$processorFactory->registerCustomDataProcessor(
+    name: 'custom',
+    definition: $dataProcessor,
+);
+$dataProcessor = $processorFactory->getDataProcessor(
+    type: 'custom',
+);
 
 // 05.01.07 Anonymizer
 

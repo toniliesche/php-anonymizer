@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/includes/person_class.php';
 
 use Faker\Factory;
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Examples\Person;
 
 $faker = Factory::create('de_DE');
 $anonymizer = (new AnonymizerBuilder())
@@ -18,16 +18,16 @@ $anonymizer = (new AnonymizerBuilder())
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[property#firstName]',
         'order.person.lastName[property#lastName]',
     ],
 );
 
 $person = new Person(
-    $faker->firstName,
-    $faker->lastName,
+    firstName: 'John',
+    lastName: 'Doe',
 );
 
 $data = [
@@ -36,7 +36,10 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);
