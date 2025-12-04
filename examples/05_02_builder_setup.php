@@ -197,7 +197,7 @@ $builder->withFakerSeed('my-faker-seed');
 $rules = [];
 
 $ruleLoader = new ArrayRuleLoader(
-    rules: $rules,
+    config: $rules,
 );
 $builder->withRuleLoader(
     ruleLoader: $ruleLoader,

@@ -15,6 +15,89 @@ use stdClass;
 
 final class AnonymizerTest extends TestCase
 {
+    public function testCanLoadRulesFromJsonAndSubstituteDataInArray(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withNodeParserType('array')
+            ->withRuleSetParserType('array')
+            ->withRulesFromJsonFile(sprintf('%s/Fixtures/rules.json', dirname(__DIR__)))
+            ->build();
+
+        $data = [
+            'address' => [
+                'name' => 'John Doe',
+                'city' => 'New York',
+            ],
+        ];
+
+        $processedData = $anonymizer->run('address', $data);
+
+        self::assertSame('********', $processedData['address']['name']);
+        self::assertSame('New York', $processedData['address']['city']);
+    }
+
+    public function testCanLoadRulesFromYamlAndSubstituteDataInArray(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withNodeParserType('array')
+            ->withRuleSetParserType('array')
+            ->withRulesFromYamlFile(sprintf('%s/Fixtures/rules.yaml', dirname(__DIR__)))
+            ->build();
+
+        $data = [
+            'address' => [
+                'name' => 'John Doe',
+                'city' => 'New York',
+            ],
+        ];
+
+        $processedData = $anonymizer->run('address', $data);
+
+        self::assertSame('********', $processedData['address']['name']);
+        self::assertSame('New York', $processedData['address']['city']);
+    }
+
+    public function testCanLoadRulesFromArrayAndSubstituteDataInArray(): void
+    {
+        $config = [
+            'rules' => [
+                'address' => [
+                    'nodes' => [
+                        [
+                            'name' => 'address',
+                            'children' => [
+                                [
+                                    'name' => 'name',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withNodeParserType('array')
+            ->withRuleSetParserType('array')
+            ->withRulesFromArray($config)
+            ->build();
+
+        $data = [
+            'address' => [
+                'name' => 'John Doe',
+                'city' => 'New York',
+            ],
+        ];
+
+        $processedData = $anonymizer->run('address', $data);
+
+        self::assertSame('********', $processedData['address']['name']);
+        self::assertSame('New York', $processedData['address']['city']);
+    }
+
     public function testCanSubstituteDataInArray(): void
     {
         $anonymizer = (new AnonymizerBuilder())
@@ -68,7 +151,7 @@ final class AnonymizerTest extends TestCase
         self::assertSame('New York', $processedData->address->city);
     }
 
-    public function testcanSubstituteDataInObjectViaPropertyWithFakerData(): void
+    public function testCanSubstituteDataInObjectViaPropertyWithFakerData(): void
     {
         $anonymizer = (new AnonymizerBuilder())
             ->withDefaults()
@@ -222,7 +305,7 @@ final class AnonymizerTest extends TestCase
         self::assertSame('Los Angeles', $processedData['addresses'][1]['city']);
     }
 
-    public function testCanSubstitueDataInMixedTypeHierarchy(): void
+    public function testCanSubstituteDataInMixedTypeHierarchy(): void
     {
         $anonymizer = (new AnonymizerBuilder())
             ->withDefaults()

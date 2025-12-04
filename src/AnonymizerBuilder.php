@@ -347,7 +347,11 @@ final class AnonymizerBuilder
 
         if ($this->ruleLoader instanceof RuleLoaderInterface) {
             foreach ($this->ruleLoader->loadRules() as $ruleName => $rule) {
-                $anonymizer->registerRuleSet($ruleName, $rule);
+                $anonymizer->registerRuleSet(
+                    name: $ruleName,
+                    definitions: $rule['nodes'],
+                    defaultDataAccess: $rule['default_access'] ?? 'array',
+                );
             }
         }
 
@@ -357,33 +361,37 @@ final class AnonymizerBuilder
     private function setupRuleSetParser(): void
     {
         if (!isset($this->nodeParser)) {
-            $this->nodeParser = $this->nodeParserFactory->getNodeParser($this->nodeParserType ?? null);
+            $this->nodeParser = $this->nodeParserFactory->getNodeParser(
+                type: $this->nodeParserType ?? null,
+            );
         }
 
         if (!isset($this->nodeMapper)) {
-            $this->nodeMapper = $this->nodeMapperFactory->getNodeMapper($this->nodeMapperType);
+            $this->nodeMapper = $this->nodeMapperFactory->getNodeMapper(
+                type: $this->nodeMapperType,
+            );
         }
 
         $this->ruleSetParser = $this->ruleSetParserFactory->getRuleSetParser(
-            $this->ruleSetParserType ?? null,
-            $this->nodeParser,
-            $this->nodeMapper,
+            type: $this->ruleSetParserType ?? null,
+            nodeParser: $this->nodeParser,
+            nodeMapper: $this->nodeMapper,
         );
     }
 
     private function setupDataProcessor(): void
     {
         $this->dataAccessProvider = $this->dataAccessProviderFactory->getDataAccessProvider(
-            $this->dataAccessProviderType ?? null,
+            type: $this->dataAccessProviderType ?? null,
         );
         $this->dataGenerationProvider = $this->dataGenerationProviderFactory->getDataGenerationProvider(
-            $this->dataGeneratorType ?? null,
+            type: $this->dataGeneratorType ?? null,
         );
         $this->dataProcessor = $this->dataProcessorFactory->getDataProcessor(
-            $this->dataProcessorType ?? null,
-            $this->dataAccessProvider,
-            $this->dataGenerationProvider,
-            $this->dataEncodingProvider,
+            type: $this->dataProcessorType ?? null,
+            dataAccessProvider: $this->dataAccessProvider,
+            dataGenerationProvider: $this->dataGenerationProvider,
+            dataEncodingProvider: $this->dataEncodingProvider,
         );
     }
 

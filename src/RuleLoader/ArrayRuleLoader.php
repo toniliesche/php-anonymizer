@@ -9,16 +9,16 @@ use Generator;
 final readonly class ArrayRuleLoader implements RuleLoaderInterface
 {
     /**
-     * @param array<string,array<mixed>|string> $rules
+     * @param array<string,array<mixed>|string> $config
      */
-    public function __construct(private array $rules)
+    public function __construct(private array $config)
     {
     }
 
     public function loadRules(): Generator
     {
-        foreach ($this->rules as $rule) {
-            yield $rule;
+        foreach ($this->config['rules'] as $ruleName => $rule) {
+            yield $ruleName => $rule;
         }
     }
 }

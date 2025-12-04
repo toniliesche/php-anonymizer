@@ -1,0 +1,6 @@
+rules:
+  address:
+    nodes:
+    - name: address
+      children:
+      - name: name
