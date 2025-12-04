@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-class Foobar
+final class Foobar
 {
     public function __construct(
-        private string $foo,
+        private readonly string $foo,
         /** @phpstan-ignore-next-line */
         private string $bar,
         private string $baz,

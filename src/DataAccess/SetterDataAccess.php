@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataAccess;
 
+use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use function array_slice;
 use function method_exists;
 use function ucfirst;
 
-class SetterDataAccess extends AbstractObjectDataAccess
+final class SetterDataAccess extends AbstractObjectDataAccess
 {
     public function hasChild(array $path, mixed $parent, string $name): bool
     {
@@ -21,7 +23,14 @@ class SetterDataAccess extends AbstractObjectDataAccess
         $getter = 'get' . ucfirst($name);
         $setter = 'set' . ucfirst($name);
 
-        return method_exists($parent, $getter) && method_exists($parent, $setter);
+        try {
+            return method_exists($parent, $getter)
+                // @phpstan-ignore-next-line
+                && $parent->{$getter}() !== null
+                && method_exists($parent, $setter);
+        } catch (Error) {
+            return false;
+        }
     }
 
     public function getChild(array $path, mixed $parent, string $name): mixed
@@ -36,7 +45,12 @@ class SetterDataAccess extends AbstractObjectDataAccess
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
         }
 
-        return $parent->{$getter}();
+        try {
+            // @phpstan-ignore-next-line
+            return $parent->{$getter}();
+        } catch (Error) {
+            throw FieldIsNotInitializedException::fromPath($path);
+        }
     }
 
     public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
@@ -51,6 +65,7 @@ class SetterDataAccess extends AbstractObjectDataAccess
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
         }
 
+        // @phpstan-ignore-next-line
         $parent->{$setter}($newValue);
     }
 }

@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\DataEncoding;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use function DeepCopy\deep_copy;
 
-class CloneEncoder implements DataEncoderInterface
+final class CloneEncoder implements DataEncoderInterface
 {
     public function decode(mixed $data, TempStorage $tempStorage): mixed
     {

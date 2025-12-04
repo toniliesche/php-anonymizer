@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding\Provider;
 
+use PhpAnonymizer\Anonymizer\DataEncoding\ArrayToJsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\CloneEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\NoOpEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyEncoder;
+use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyToArrayEncoder;
+use PhpAnonymizer\Anonymizer\DataEncoding\SymfonyToJsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\YamlEncoder;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
@@ -23,7 +26,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use function in_array;
 use function sprintf;
 
-class DefaultDataEncodingProvider implements DataEncodingProviderInterface
+final class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 {
     private const ENCODERS = [
         DataEncoder::CLONE->value,
@@ -46,7 +49,7 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
     public function __construct(
         private mixed $normalizer = null,
         private mixed $denormalizer = null,
-        private DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
     ) {
         if ($normalizer !== null) {
             if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -69,9 +72,6 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         }
     }
 
-    /**
-     * @param NormalizerInterface $normalizer
-     */
     public function setNormalizer(mixed $normalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -85,9 +85,6 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         $this->normalizer = $normalizer;
     }
 
-    /**
-     * @param DenormalizerInterface $denormalizer
-     */
     public function setDenormalizer(mixed $denormalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -124,12 +121,19 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
     private function resolveEncoder(string $type): DataEncoderInterface
     {
         return match ($type) {
+            DataEncoder::ARRAY_TO_JSON->value => new ArrayToJsonEncoder(),
             DataEncoder::CLONE->value => new CloneEncoder(),
             DataEncoder::JSON->value => new JsonEncoder(),
             DataEncoder::NOOP->value => new NoOpEncoder(),
             DataEncoder::SYMFONY->value => new SymfonyEncoder(
                 $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyEncoder needs an instance of NormalizerInterface to be instantiated'),
                 $this->denormalizer ?? throw new MissingProviderRequirementException('SymfonyEncoder needs an instance of DenormalizerInterface to be instantiated'),
+            ),
+            DataEncoder::SYMFONY_TO_ARRAY->value => new SymfonyToArrayEncoder(
+                $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyToArrayEncoder needs an instance of NormalizerInterface to be instantiated'),
+            ),
+            DataEncoder::SYMFONY_TO_JSON->value => new SymfonyToJsonEncoder(
+                $this->normalizer ?? throw new MissingProviderRequirementException('SymfonyToJsonEncoder needs an instance of NormalizerInterface to be instantiated'),
             ),
             DataEncoder::YAML->value => new YamlEncoder(),
             default => throw new UnknownDataEncoderException(sprintf('Unknown data encoder: "%s"', $type)),

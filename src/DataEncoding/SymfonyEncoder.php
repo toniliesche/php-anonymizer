@@ -14,11 +14,10 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use function get_class;
 use function is_array;
 use function is_object;
 
-readonly class SymfonyEncoder implements DataEncoderInterface
+final readonly class SymfonyEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
@@ -51,7 +50,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
             throw new DataEncodingException('SymfonyEncoder can only decode objects');
         }
 
-        $tempStorage->store('symfony-encoder-type', get_class($data));
+        $tempStorage->store('symfony-encoder-type', $data::class);
 
         try {
             return $this->normalizer->normalize($data);
@@ -65,9 +64,6 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): object
     {
         if (!is_array($data)) {
@@ -77,6 +73,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         $type = $tempStorage->retrieve('symfony-encoder-type');
 
         try {
+            /** @var array<int|string,mixed> $data */
             return $this->denormalizer->denormalize($data, $type);
             // @codeCoverageIgnoreStart
         } catch (ExceptionInterface $ex) {
@@ -88,7 +85,7 @@ readonly class SymfonyEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

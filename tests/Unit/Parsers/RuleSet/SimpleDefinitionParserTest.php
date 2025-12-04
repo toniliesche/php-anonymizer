@@ -8,12 +8,10 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
 use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PHPUnit\Framework\TestCase;
 
-class SimpleDefinitionParserTest extends TestCase
+final class SimpleDefinitionParserTest extends TestCase
 {
     public function testCanParseMultiLevelTreeDefinition(): void
     {
@@ -24,31 +22,26 @@ class SimpleDefinitionParserTest extends TestCase
             ],
         );
 
-        $this->assertInstanceOf(Tree::class, $tree);
-
         $dataLevel = $tree->getChildNode('data');
-        $this->assertInstanceOf(Node::class, $dataLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $dataLevel->dataAccess);
-        $this->assertSame('data', $dataLevel->name);
-        $this->assertSame(NodeType::NODE, $dataLevel->nodeType);
-        $this->assertCount(1, $dataLevel->childNodes);
-        $this->assertFalse($dataLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $dataLevel->dataAccess);
+        self::assertSame('data', $dataLevel->name);
+        self::assertSame(NodeType::NODE, $dataLevel->nodeType);
+        self::assertCount(1, $dataLevel->childNodes);
+        self::assertFalse($dataLevel->isArray);
 
         $addressLevel = $dataLevel->getChildNode('address');
-        $this->assertInstanceOf(Node::class, $addressLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
-        $this->assertSame('address', $addressLevel->name);
-        $this->assertSame(NodeType::NODE, $addressLevel->nodeType);
-        $this->assertCount(1, $addressLevel->childNodes);
-        $this->assertFalse($dataLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
+        self::assertSame('address', $addressLevel->name);
+        self::assertSame(NodeType::NODE, $addressLevel->nodeType);
+        self::assertCount(1, $addressLevel->childNodes);
+        self::assertFalse($dataLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertInstanceOf(Node::class, $nameLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
-        $this->assertSame('name', $nameLevel->name);
-        $this->assertSame(NodeType::LEAF, $nameLevel->nodeType);
-        $this->assertCount(0, $nameLevel->childNodes);
-        $this->assertFalse($dataLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
+        self::assertSame('name', $nameLevel->name);
+        self::assertSame(NodeType::LEAF, $nameLevel->nodeType);
+        self::assertCount(0, $nameLevel->childNodes);
+        self::assertFalse($dataLevel->isArray);
     }
 
     public function testCanParseMultipleChildNodesDefinition(): void
@@ -61,31 +54,26 @@ class SimpleDefinitionParserTest extends TestCase
             ],
         );
 
-        $this->assertInstanceOf(Tree::class, $tree);
-
         $addressLevel = $tree->getChildNode('address');
-        $this->assertInstanceOf(Node::class, $addressLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
-        $this->assertSame('address', $addressLevel->name);
-        $this->assertSame(NodeType::NODE, $addressLevel->nodeType);
-        $this->assertCount(2, $addressLevel->childNodes);
-        $this->assertTrue($addressLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $addressLevel->dataAccess);
+        self::assertSame('address', $addressLevel->name);
+        self::assertSame(NodeType::NODE, $addressLevel->nodeType);
+        self::assertCount(2, $addressLevel->childNodes);
+        self::assertTrue($addressLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        $this->assertInstanceOf(Node::class, $nameLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
-        $this->assertSame('name', $nameLevel->name);
-        $this->assertSame(NodeType::LEAF, $nameLevel->nodeType);
-        $this->assertCount(0, $nameLevel->childNodes);
-        $this->assertFalse($nameLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $nameLevel->dataAccess);
+        self::assertSame('name', $nameLevel->name);
+        self::assertSame(NodeType::LEAF, $nameLevel->nodeType);
+        self::assertCount(0, $nameLevel->childNodes);
+        self::assertFalse($nameLevel->isArray);
 
         $streetLevel = $addressLevel->getChildNode('street');
-        $this->assertInstanceOf(Node::class, $streetLevel);
-        $this->assertSame(DataAccess::DEFAULT->value, $streetLevel->dataAccess);
-        $this->assertSame('street', $streetLevel->name);
-        $this->assertSame(NodeType::LEAF, $streetLevel->nodeType);
-        $this->assertCount(0, $streetLevel->childNodes);
-        $this->assertFalse($streetLevel->isArray);
+        self::assertSame(DataAccess::DEFAULT->value, $streetLevel->dataAccess);
+        self::assertSame('street', $streetLevel->name);
+        self::assertSame(NodeType::LEAF, $streetLevel->nodeType);
+        self::assertCount(0, $streetLevel->childNodes);
+        self::assertFalse($streetLevel->isArray);
     }
 
     public function testWillFailOnParseDefinitionWithInvalidNodeName(): void

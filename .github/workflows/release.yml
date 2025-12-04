@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - release/*
+
+jobs:
+  checks:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Build
+        uses: ./.github/actions/php-build
+        with:
+          php_version: 8.2
+          php_extensions: yaml
+      - name: Check
+        uses: ./.github/actions/php-check
+
+  release:
+    runs-on: ubuntu-latest
+    needs: checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Increase Version
+        id: increase_version
+        uses: ./.github/actions/increase-version
+        with:
+          base_ref: ${{ github.event.pull_request.base.ref }}
+          merge_commit_sha: ${{ github.event.pull_request.merge_commit_sha }}
+          allow_bugfix: true
+          allow_minor: false
+          allow_major: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Parse Version
+        if: steps.increase_version.outputs.new_version == 'true'
+        id: next_version
+        uses: ./.github/actions/parse-version
+      - name: Release
+        if: steps.increase_version.outputs.new_version == 'true'
+        uses: ./.github/actions/release
+        with:
+          new_release_branch: ${{ steps.increase_version.outputs.new_branch }}
+          release_branch: ${{ steps.next_version.outputs.release_branch }}
+          release_version: ${{ steps.next_version.outputs.release_version }}

@@ -4,43 +4,42 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Model;
 
-use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
-use function sprintf;
+use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 
-class Tree implements ChildNodeAccessInterface
+final class Tree implements ChildNodeAccessInterface
 {
+    use ChildNodeAwareTrait;
+
     /**
      * @param Node[] $childNodes
      */
     public function __construct(
-        public array $childNodes = [],
+        array $childNodes = [],
     ) {
+        foreach ($childNodes as $childNode) {
+            if (!$childNode instanceof Node) {
+                throw new InvalidArgumentException('All child nodes must be of type Node');
+            }
+        }
+
+        $this->childNodes = $childNodes;
     }
 
     public function addChildNode(Node $node): void
     {
+        foreach ($this->childNodes as $childNode) {
+            if (!$this->checkChildNodeConflict($node, $childNode)) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Node already contains a child node with name "%s".',
+                    $node->name,
+                ),
+            );
+        }
+
         $this->childNodes[] = $node;
-    }
-
-    public function getChildNode(string $name): Node
-    {
-        foreach ($this->childNodes as $node) {
-            if ($node->name === $name) {
-                return $node;
-            }
-        }
-
-        throw new ChildNodeNotFoundException(sprintf('Child node with name "%s" not found.', $name));
-    }
-
-    public function hasChildNode(string $name): bool
-    {
-        foreach ($this->childNodes as $node) {
-            if ($node->name === $name) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

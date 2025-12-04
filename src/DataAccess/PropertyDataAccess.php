@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
+use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use ReflectionClass;
 use ReflectionException;
@@ -13,7 +14,7 @@ use stdClass;
 use function array_slice;
 use function property_exists;
 
-class PropertyDataAccess extends AbstractObjectDataAccess
+final class PropertyDataAccess extends AbstractObjectDataAccess
 {
     /**
      * @throws ReflectionException
@@ -30,7 +31,10 @@ class PropertyDataAccess extends AbstractObjectDataAccess
 
         $reflection = new ReflectionClass($parent);
 
-        return $reflection->hasProperty($name) && $reflection->getProperty($name)->isPublic();
+        return $reflection->hasProperty($name)
+            && $reflection->getProperty($name)->isPublic()
+            && $reflection->getProperty($name)->isInitialized($parent)
+            && $reflection->getProperty($name)->getValue($parent) !== null;
     }
 
     public function getChild(array $path, mixed $parent, string $name): mixed
@@ -39,6 +43,13 @@ class PropertyDataAccess extends AbstractObjectDataAccess
             throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
 
+        $reflection = new ReflectionClass($parent);
+
+        if ($reflection->hasProperty($name) && !$reflection->getProperty($name)->isInitialized($parent)) {
+            throw FieldIsNotInitializedException::fromPath($path);
+        }
+
+        // @phpstan-ignore-next-line
         return $parent->{$name} ?? throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
     }
 
@@ -49,6 +60,7 @@ class PropertyDataAccess extends AbstractObjectDataAccess
         }
 
         try {
+            // @phpstan-ignore-next-line
             $parent->{$name} = $newValue;
         } catch (Error) {
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);

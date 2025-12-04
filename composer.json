@@ -12,22 +12,30 @@
   "require": {
     "php": "^8.2",
     "myclabs/deep-copy": "^1.12",
-    "thecodingmachine/safe": "^2.5"
+    "thecodingmachine/safe": "^2.5 || ^3.3"
   },
   "require-dev": {
     "ext-json": "*",
     "ext-yaml": "*",
-    "ergebnis/composer-normalize": "^2.43",
-    "fakerphp/faker": "^1.23",
-    "friendsofphp/php-cs-fixer": "^3.62",
+    "ergebnis/composer-normalize": "^2.48",
+    "fakerphp/faker": "^1.24",
+    "friendsofphp/php-cs-fixer": "^3.91",
     "icanhazstring/composer-unused": "dev-main",
-    "infection/infection": "^0.29.6",
+    "infection/infection": "^0.31",
     "phpmd/phpmd": "^2.15",
-    "phpstan/phpstan": "^1.11",
-    "phpstan/phpstan-phpunit": "^1.4",
-    "phpunit/phpunit": "^11",
-    "rector/rector": "^1.2",
-    "symfony/serializer": "^7.1",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-phpunit": "^2.0",
+    "phpstan/phpstan-strict-rules": "^2.0",
+    "phpstan/phpstan-symfony": "^2.0",
+    "phpunit/phpunit": "^11.5",
+    "rector/jack": "^0.4.0",
+    "rector/rector": "^2.2",
+    "rector/swiss-knife": "^2.3",
+    "rector/type-perfect": "^2.1",
+    "spaze/phpstan-disallowed-calls": "^4.7",
+    "symfony/serializer": "^7.4",
+    "symfony/serializer-pack": "^1.3",
     "thecodingmachine/phpstan-safe-rule": "^1.2"
   },
   "suggest": {
@@ -45,13 +53,15 @@
   },
   "autoload-dev": {
     "psr-4": {
+      "PhpAnonymizer\\Anonymizer\\Examples\\": "examples/includes/",
       "PhpAnonymizer\\Anonymizer\\Test\\": "tests/"
     }
   },
   "config": {
     "allow-plugins": {
       "ergebnis/composer-normalize": true,
-      "infection/extension-installer": true
+      "infection/extension-installer": true,
+      "phpstan/extension-installer": true
     }
   },
   "extra": {

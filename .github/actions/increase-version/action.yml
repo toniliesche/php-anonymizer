@@ -1,0 +1,123 @@
+name: Increase Version
+description: Increase version number and create release branches
+
+inputs:
+  base_ref:
+    description: The base sha to compare against
+    required: true
+    default: ${{ github.event.pull_request.base.sha }}
+  merge_commit_sha:
+    description: The sha to compare against
+    required: true
+    default: ${{ github.sha }}
+  allow_major:
+    description: Allow major version increase
+    required: false
+    default: true
+  allow_minor:
+    description: Allow minor version increase
+    required: false
+    default: true
+  allow_bugfix:
+    description: Allow bugfix version increase
+    required: false
+    default: true
+  github_token:
+    description: The github token
+    required: true
+
+outputs:
+  new_version:
+    description: Whether a new version was created
+  new_branch:
+    description: Whether a new branch was created
+  target_version:
+    description: The target version to increase
+
+runs:
+  using: composite
+  steps:
+    - name: Parse commits
+      id: get_commits
+      shell: bash
+      run: |
+        echo "allow_major: ${{ inputs.allow_major }}"
+        echo "allow_minor: ${{ inputs.allow_minor }}"
+        echo "allow_bugfix: ${{ inputs.allow_bugfix }}"
+        
+        commits=$(git log --pretty=format:"%s" ${{ inputs.base_ref }}..${{ inputs.merge_commit_sha }})
+        echo "commits: $commits"
+        
+        major_commits="false"
+        minor_commits="false"
+        bugfix_commits="false"
+        
+        while read -r commit; do
+          echo "commit: $commit"
+        
+          if [[ ${{ inputs.allow_major }} ]] && [[ "$commit" == major* ]]; then
+            echo found major commit message: $commit
+            major_commits="true"
+            minor_commits="false"
+            bugfix_commits="false"
+            break
+          fi
+        
+          if [[ ${{ inputs.allow_minor }} ]] && ([[ "$commit" == minor* ]] || [[ "$commit" == feat* ]]); then
+            if [[ $major_commits == "false" ]] && [[ $minor_commits == "false" ]]; then
+              echo found minor commit message: $commit
+              minor_commits="true"
+              bugfix_commits="false"
+            fi
+          fi
+        
+          if [[ ${{ inputs.allow_bugfix }} ]] && ([[ "$commit" == bugfix* ]] || [[ "$commit" == chore* ]]); then
+            if [[ $minor_commits == "false" ]] && [[ $bugfix_commits == "false" ]]; then
+              echo found bugfix commit message: $commit
+              bugfix_commits="true"
+            fi
+          fi
+        done <<< "$commits"
+
+        if [[ "$major_commits" == "true" ]]; then
+          echo "target_version=major" >> $GITHUB_ENV
+        elif [[ "$minor_commits" == "true" ]]; then
+          echo "target_version=minor" >> $GITHUB_ENV
+        elif [[ "$bugfix_commits" == "true" ]]; then
+          echo "target_version=bugfix" >> $GITHUB_ENV
+        fi
+
+    - name: Increase version
+      shell: bash
+      id: increase_version
+      run: |
+        if [ ! -z "${{ steps.get_commits.outputs.target_version }}" ]; then
+          make increase-${{ steps.get_commits.outputs.target_version }}
+          echo "new_version=true" >> $GITHUB_ENV
+        
+          if [ ${{ steps.get_commits.outputs.target_version }} != "bugfix" ]; then
+            echo "new_branch=false" >> $GITHUB_ENV
+          else
+            echo "new_branch=true" >> $GITHUB_ENV
+          fi
+        else
+          echo "new_version=false" >> $GITHUB_ENV
+          echo "new_branch=false" >> $GITHUB_ENV
+        fi
+
+    - name: Setup git
+      if: steps.increase_version.new_version == 'true'
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit new version
+      if: steps.increase_version.new_version == 'true'
+      shell: bash
+      run: |
+        git add build.properties
+        git commit -m "chore: new release version"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}

@@ -8,5 +8,8 @@ use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
 
 interface NodeParserInterface
 {
-    public function parseNodeName(string $nodeName): NodeParsingResult;
+    /**
+     * @param array<mixed>|string $node
+     */
+    public function parseNode(array|string $node, string $path): NodeParsingResult;
 }

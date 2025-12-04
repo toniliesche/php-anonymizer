@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-class Data
+final class Data
 {
     public function __construct(
         private Address $address,
