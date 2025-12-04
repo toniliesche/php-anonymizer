@@ -1730,7 +1730,7 @@ $anonymizer = new Anonymizer(
 );
 ```
 
-### 05.02 Builder setup of Anonymizer
+### 05.02 Builder-based Setup of Anonymizer
 
 #### 05.02.01 Creating AnonymizerBuilder
 
@@ -1966,7 +1966,7 @@ Two options to set rule set parser:
 - via type:
   - must be a string
   - will be resolved from RuleSetParserFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
-  - will use NodeParser from [05.02.03 Setting NodeParser](#050203-setting-nodeparser)
+  - will use NodeParser from (set in [05.02.03 Setting NodeParser](#050203-setting-nodeparser))
 - using one option will override the other
 
 ```php
@@ -1989,9 +1989,9 @@ Two options to set data processor:
 - via type:
   - must be a string
   - will be resolved from DataProcessorFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
-  - will use DataAccessProvider from (set in [05.02.05](#050205-setting-dataaccessprovider)
-  - will use DataGenerationProvider from [05.02.06](#050206-setting-datagenerationprovider)
-  - will use DataEncodingProvider from [05.02.01](#050201-creating-anonymizerbuilder)
+  - will use DataAccessProvider from (set in [05.02.05 Setting DataAccessProvider](#050205-setting-dataaccessprovider))
+  - will use DataGenerationProvider from (set in [05.02.06 Setting DataGenerationProvider](#050206-setting-datagenerationprovider))
+  - will use DataEncodingProvider from (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
 - using one option will override the other
 
 ```php
