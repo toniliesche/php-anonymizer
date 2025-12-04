@@ -83,16 +83,34 @@ data you want to modify.
 declare(strict_types=1);
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
+use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
     ->build();
 
 $anonymizer->registerRuleSet(
     name: 'order',
     definitions: [
-        'order.person.first_name',
-        'order.person.last_name',
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
     ],
 );
 
