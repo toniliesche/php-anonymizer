@@ -14,14 +14,14 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionEx
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataGenerationProviderFactoryTest extends TestCase
+final class DefaultDataGenerationProviderFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataGenerationProvider(): void
     {
         $factory = new DefaultDataGenerationProviderFactory();
         $provider = $factory->getDataGenerationProvider(DataGenerationProvider::DEFAULT->value);
 
-        $this->assertInstanceOf(DefaultDataGeneratorProvider::class, $provider);
+        self::assertInstanceOf(DefaultDataGeneratorProvider::class, $provider);
     }
 
     public function testCanProvideNull(): void
@@ -29,7 +29,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory = new DefaultDataGenerationProviderFactory();
         $provider = $factory->getDataGenerationProvider(null);
 
-        $this->assertNull($provider);
+        self::assertNull($provider);
     }
 
     public function testWillFailOnProvideUnknownDataGenerationProvider(): void
@@ -47,7 +47,7 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory->registerCustomDataGenerationProvider('custom', $callable);
 
         $provider = $factory->getDataGenerationProvider('custom');
-        $this->assertInstanceOf(DataGenerationProviderInterface::class, $provider);
+        self::assertInstanceOf(DataGenerationProviderInterface::class, $provider);
     }
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
@@ -56,8 +56,8 @@ class DefaultDataGenerationProviderFactoryTest extends TestCase
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $provider);
 
-        $provider = $factory->getDataGenerationProvider('custom');
-        $this->assertSame($provider, $provider);
+        $generatedProvider = $factory->getDataGenerationProvider('custom');
+        self::assertSame($provider, $generatedProvider);
     }
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void

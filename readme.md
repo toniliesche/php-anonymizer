@@ -12,10 +12,13 @@
     - [Creating an Anonymizer instance](#creating-an-anonymizer-instance)
     - [Example Output](#example-output)
 - [02 Writing definition rules](#02-writing-definition-rules)
-    - [02.01 Basic rule syntax](#0201-basic-rule-syntax)
-    - [02.02 Array rule syntax](#0202-array-rule-syntax)
-    - [02.03 Property access syntax](#0203-property-access-syntax-complex-rule-parser-only)
-    - [02.04 Fake data type annotation](#0204-fake-data-type-annotation-complex-rule-parser-only)
+    - [02.01 Array based syntax](#0201-array-based-syntax)
+    - [02.02 Regular Expression Based Syntax (deprecated)](#0202-regular-expression-based-syntax-deprecated)
+        - [02.02.01 Basic rule syntax](#020201-basic-rule-syntax)
+        - [02.02.02 Array rule syntax](#020202-array-rule-syntax)
+        - [02.02.03 Property access syntax](#020203-property-access-syntax-complex-rule-parser-only)
+        - [02.02.04 Fake data type annotation](#020204-fake-data-type-annotation-complex-rule-parser-only)
+        - [02.02.05 Nested data type annotation](#020205-nested-data-type-annotation-complex-rule-parser-only)
 - [03 Using Faker as a data provider](#03-using-faker-as-a-data-provider)
     - [03.01 Use default Faker instance of builder](#0301-use-default-faker-instance-of-builder)
     - [03.02 Use custom Faker instance](#0302-use-custom-faker-instance)
@@ -25,17 +28,32 @@
     - [04.02 CloneEncoder](#0402-cloneencoder)
     - [04.03 JsonEncoder](#0403-jsonencoder)
     - [04.04 YamlEncoder](#0404-yamlencoder)
-    - [04.05 SymfonyEncoder](#0405-symfonyencoder)
-- [06 Extended Information](#06-extended-information)
-    - [06.01 Manual setup of Anonymizer](#0601-manual-setup-of-anonymizer)
-        - [06.01.01 RuleSet parser](#060101-ruleset-parser)
-        - [06.01.02 DependencyChecker](#060102-dependencychecker)
-        - [06.01.03 DataAccessProvider](#060103-dataaccessprovider)
-        - [06.01.04 DataGenerationProvider](#060104-datagenerationprovider)
-        - [06.01.05 DataEncodingProvider](#060105-dataencodingprovider)
-        - [06.01.06 DataProcessor](#060106-dataprocessor)
-        - [06.01.07 Anonymizer](#060107-anonymizer)
-    - [06.02 Builder setup of Anonymizer](#0602-builder-setup-of-anonymizer)
+    - [04.05 Array2JsonEncoder](#0405-array2jsonencoder)
+    - [04.06 SymfonyEncoder](#0406-symfonyencoder)
+    - [04.07 Symfony2JsonEncoder](#0407-symfony2jsonencoder)
+    - [04.08 Symfony2ArrayEncoder](#0408-symfony2arrayencoder)
+- [05 Extended Information](#06-extended-information)
+    - [05.01 Manual setup of Anonymizer](#0501-manual-setup-of-anonymizer)
+        - [05.01.01 RuleSet parser](#050101-ruleset-parser)
+        - [05.01.02 DependencyChecker](#050102-dependencychecker)
+        - [05.01.03 DataAccessProvider](#050103-dataaccessprovider)
+        - [05.01.04 DataGenerationProvider](#050104-datagenerationprovider)
+        - [05.01.05 DataEncodingProvider](#050105-dataencodingprovider)
+        - [05.01.06 DataProcessor](#050106-dataprocessor)
+        - [05.01.07 Anonymizer](#050107-anonymizer)
+    - [05.02 Builder setup of Anonymizer](#0502-builder-setup-of-anonymizer)
+      - [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder)
+      - [05.02.02 Setting Defaults](#050202-setting-defaults)
+      - [05.02.03 Setting NodeParser](#050203-setting-nodeparser)
+      - [05.02.04 Setting NodeMapper](#050204-setting-nodemapper)
+      - [05.02.05 Setting DataAccessProvider](#050205-setting-dataccessprovider)
+      - [05.02.06 Setting DataGenerationProvider](#050206-setting-datagenerationprovider)
+      - [05.02.07 Enabling Faker](#050207-enabling-faker)
+      - [05.02.08 Setting Custom Faker](#050208-setting-custom-faker)
+      - [05.02.09 Setting Faker Seed](#050209-setting-faker-seed)
+      - [05.02.10 Setting Rule Loader](#050210-setting-rule-loader)
+      - [05.02.11 Setting RuleSetParser](#050211-setting-rulesetparser)
+      - [05.02.12 Setting DataProcessor](#050212-setting-dataprocessor)
 
 ### Purpose
 
@@ -47,7 +65,7 @@ range of use cases. It also ships with support of `fakerphp/faker` as a provider
 ### Getting started
 
 ```bash
-composer require toniliesche/anonymizer
+composer require php-anonymizer/anonymizer
 ```
 
 ## 01 Basic usage
@@ -65,16 +83,34 @@ data you want to modify.
 declare(strict_types=1);
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
+use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 
 $anonymizer = (new AnonymizerBuilder())
     ->withDefaults()
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
     ->build();
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        'order.person.first_name',
-        'order.person.last_name',
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
     ],
 );
 
@@ -87,7 +123,11 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data);
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+);
+
 
 echo PHP_EOL . 'Original data:' . PHP_EOL;
 print_r($data);
@@ -132,42 +172,395 @@ Array
 
 ## 02 Writing definition rules
 
-### 02.01 Basic rule syntax
+### 02.01 Array based syntax
+
+This syntax is defining the anonymization data structure in an array tree. This makes it easy to extend and also allows
+the use of json / yaml inputs without much overhead.
+
+*This is the new default syntax. If you are still using the old regular expression based syntax, it is highly advisable
+to start migrating to this new syntax as the old version will not receive any updates and may lack the latest features.*
+
+#### 02.01.01 Basic rule syntax
+
+A node only needs one mandatory field which is `name` to define the property name of our to be anonymized data. On top
+it is possible to define `children` within this tree. Only the leafs will be anonymized as these are the only scalar
+values. The following example shows how to write a rule for anonymizing the `first_name` and `last_name` fields in the
+`order.person` structure.
+
+```php
+// examples/02_01_01_definitions_basic_rules.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+#### 02.01.02 Array rule syntax
+
+Additionally it is possible to make use of array notation to tell the anonymizer engine that there is a list of items at
+a certain level. This can be realized by setting the option `is_array` to true.
+
+```php
+// examples/02_01_02_definitions_array_rules.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'orders',
+            'is_array' => true, // mark this layer to be a list of person objects
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+#### 02.01.03 Property access syntax
+
+The previous examples all assumed that the data structure to be passed is an array. Apart from that this library also
+supports different ways of accessing object properties. This can be passed to any layer directly by setting the option
+`data_access`.
+
+Note: The definition of the access method is optional. If omitted, the anonymizer will fall back to the configured
+default access method.
+
+Example with direct property access on object. This methods requires the properties to be *public* and *not readonly*.
+
+```php
+// examples/02_01_03_01_definitions_property_access_by_property.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'data_access' => 'property', // add data_access setting here to define access method
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'data_access' => 'property', // add data_access setting here to define access method
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+Example with property access via getter and setter method. This method requires the properties to have a matching
+*getPropertyName* and *setPropertyName* method.
+
+```php
+// examples/02_02_03_02_definitions_property_access_by_setter.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'data_access' => 'setter', // add data_access setting here to define access method
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'data_access' => 'setter', // add data_access setting here to define access method
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+The safest way to access properties on objects, is to use reflection.
+
+```php
+// examples/02_02_03_03_definitions_property_access_via_reflection.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'data_access' => 'reflection', // add data_access setting here to define access method
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'data_access' => 'reflection', // add data_access setting here to define access method
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+Of course it is also possible to mix these access methods in one rule set and make the array property access more
+verbose.
+
+```php
+// examples/02_02_03_04_definitions_property_access_mixed.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'orders',
+            'is_array' => true,
+            'children' => [
+                [
+                    'name' => 'person',
+                    'data_access' => 'setter', // add data_access setting here to define access method
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'data_access' => 'property', // add data_access setting here to define access method
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'data_access' => 'property', // add data_access setting here to define access method
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+In case there are any more specific requirements for accessing object properties, it is possible to implement a custom
+data accessor by implementing the `PhpAnonymizer\Anonymizer\DataAccess\DataAccessorInterface`.
+
+Supported access methods as of now are:
+
+| Access Method | Description                                           |
+|---------------|-------------------------------------------------------|
+| `autodetect`  | Access object properties via autodetection method     |
+| `array`       | Access array elements by key name                     |
+| `property`    | Access object properties by name                      |
+| `reflection`  | Access object properties via reflection classes       |
+| `setter`      | Access object properties by getter and setter methods |
+
+### 02.01.04 Fake data type annotation *[complex rule parser only]*
+
+! Notice: This feature CANNOT be combined with the nested data type annotation.
+
+Until now all that we have achieved, is to replace the data with starred out place holders that have the same length as
+the original data. As sometimes it is more desirable to replace the data with more real world-like fake data, it is
+possible to tell the Anonymizer which kind of data we want to set as a field's replacement.
+
+Note: to get this feature working, the `fakerphp/faker` library must be installed. See section
+`03 Using Faker as a data provider` for more information.
+
+To introduce the use of fake data, you can add an `value_type` option to any leaf node within the tree.
+
+```php
+// examples/02_01_04_01_definitions_fake_data.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'value_type' => 'firstName', // add value_type option to define faker value to be used
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'value_type' => 'lastName', // add value_type option to define faker value to be used
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+Of course, also in this case it is possible to mix the fake data type annotations with the other access methods.
+
+```php
+// examples/02_01_04_02_definitions_fake_data_with_property_access.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'firstName',
+                            'data_access' => 'property',
+                            'value_type' => 'firstName',
+                        ],
+                        [
+                            'name' => 'lastName',
+                            'data_access' => 'property',
+                            'value_type' => 'lastName',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+### 02.01.05 Nested data type annotation
+
+! Notice: This feature CANNOT be combined with the fake data type annotation.
+
+In some cases it can be necessary to define a way of anonymizing data that have been stored in a nested data type. This can happen when a string formatted field contains a complete json document for example. In this case we need two information to be defined: The type of the nested data (e.g. json) and the rule set that should handle the nested data (as this data is handled as a separate object).
+
+To use this function, you need to add both a `nested_type` and a `nested_rule` option to a leaf node.
+
+```php
+// examples/02_01_05_01_definitions_nested_data.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'address',
+                    'nested_rule' => 'address', // add rule name here
+                    'nested_type' => 'json',    // add info on how to resolve child data
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+And again, also in this case it is possible to mix the nested data type annotations with the other access methods.
+
+```php
+// examples/02_01_05_02_definitions_nested_data_with_property_access.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'address',
+                    'data_access' => 'property',
+                    'nested_rule' => 'address',
+                    'nested_type' => 'json',
+                ],
+            ],
+        ],
+    ],
+);
+```
+
+
+### 02.02 Regular expression based syntax (deprecated)
+
+The regular expression based syntax is the old default. In this case every line contains a complete path to a node that
+is defined to be anonymized. It is important that multiple definitions of a node may not conflict.
+
+*This syntax is deprecated and will not receive any new features. It is suggested to migrate to the new default
+array-syntax instead as this version will be removed in an upcoming stable release.*
+
+#### 02.02.01 Basic rule syntax
 
 The default syntax when navigating the data to be anonymized is using dot notation. Every word separated by a dot
 represents a level in the data structure. The following example shows how to write a rule for anonymizing the
 `first_name` and `last_name` fields in the `order.person` structure.
 
 ```php
-// examples/02_01_definitions_basic_rules.php
+// examples/02_02_01_definitions_basic_rules.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.first_name',
         'order.person.last_name',
     ],
 );
 ```
 
-### 02.02 Array rule syntax
+#### 02.02.02 Array rule syntax
 
 Additionally it is possible to make use of array notation to tell the anonymizer engine that there is a list of items at
 a certain level. This can be realized by putting `[]` in front of a keyword.
 
 ```php
-// examples/02_02_definitions_array_rules.php
+// examples/02_02_02_definitions_array_rules.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
+        // the [] in front of orders mark this layer to be a list of person objects
         '[]orders.person.first_name',
         '[]orders.person.last_name',
     ],
 );
 ```
 
-### 02.03 Property access syntax *[complex rule parser only]*
+#### 02.02.03 Property access syntax *[complex rule parser only]*
 
 The previous examples all assumed that the data structure to be passed is an array. Apart from that this library also
 supports different ways of accessing object properties. This can be passed to any layer directly *after* the name of the
@@ -179,11 +572,11 @@ default access method.
 Example with direct property access on object. This methods requires the properties to be *public* and *not readonly*.
 
 ```php
-// examples/02_03_01_definitions_property_access_by_property.php
+// examples/02_02_03_01_definitions_property_access_by_property.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[property]',
         'order.person.lastName[property]',
     ],
@@ -194,11 +587,11 @@ Example with property access via getter and setter method. This method requires 
 *getPropertyName* and *setPropertyName* method.
 
 ```php
-// examples/02_03_02_definitions_property_access_by_setter.php
+// examples/02_02_03_02_definitions_property_access_by_setter.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[setter]',
         'order.person.lastName[setter]',
     ],
@@ -208,11 +601,11 @@ $anonymizer->registerRuleSet(
 The safest way to access properties on objects, is to use reflection.
 
 ```php
-// examples/02_03_03_definitions_property_access_via_reflection.php
+// examples/02_02_03_03_definitions_property_access_via_reflection.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[reflection]',
         'order.person.lastName[reflection]',
     ],
@@ -223,11 +616,11 @@ Of course it is also possible to mix these access methods in one rule set and ma
 verbose.
 
 ```php
-// 02_03_04_definitions_property_access_mixed.php
+// examples/02_02_03_04_definitions_property_access_mixed.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         '[]orders[array].person[setter].firstName[property]',
         '[]orders[array].person[setter].lastName[property]',
     ],
@@ -246,7 +639,7 @@ Supported access methods as of now are:
 | `reflection`  | Access object properties via reflection classes       |
 | `setter`      | Access object properties by getter and setter methods |
 
-### 02.04 Fake data type annotation *[complex rule parser only]*
+### 02.02.04 Fake data type annotation *[complex rule parser only]*
 
 ! Notice: This feature CANNOT be combined with the nested data type annotation.
 
@@ -261,11 +654,11 @@ To introduce the use of fake data, you can add a type annotation to the property
 within the square brackets, e.g. `order.person.firstName[#firstName]`.
 
 ```php
-// examples/02_04_01_definitions_fake_data.php
+// examples/02_02_04_01_definitions_fake_data.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[#firstName]',
         'order.person.lastName[#lastName]',
     ],
@@ -276,18 +669,18 @@ Of course, also in this case it is possible to mix the fake data type annotation
 case, the fake data type must be preceded by the access method, e.g. `order.person.firstName[property#firstName]`.
 
 ```php
-// examples/02_04_02_definitions_fake_data_with_property_access.php
+// examples/02_02_04_02_definitions_fake_data_with_property_access.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.person.firstName[property#firstName]',
         'order.person.lastName[property#lastName]',
     ],
 );
 ```
 
-### 02.05 Nested data type annotation *[complex rule parser only]*
+### 02.02.05 Nested data type annotation *[complex rule parser only]*
 
 ! Notice: This feature CANNOT be combined with the fake data type annotation.
 
@@ -296,11 +689,11 @@ In some cases it can be necessary to define a way of anonymizing data that have 
 The data type will be annotated after a leading `?` symbol, followed by a `/` separated rule name, e.g. `order.address[?json/address]`.
 
 ```php
-// examples/02_05_01_definitions_nested_data.php
+// examples/02_02_05_01_definitions_nested_data.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.address[?json/address]',
     ],
 );
@@ -309,11 +702,11 @@ $anonymizer->registerRuleSet(
 And again, also in this case it is possible to mix the nested data type annotations with the other access methods. In this case, the fake data type must be preceded by the access method, e.g. `order.address[property?json/address]`.
 
 ```php
-// examples/02_05_02_definitions_nested_data_with_property_access.php
+// examples/02_02_05_02_definitions_nested_data_with_property_access.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
+    name: 'order',
+    definitions: [
         'order.address[property?json/address]',
     ],
 );
@@ -341,10 +734,13 @@ created with the default locale `en_US` and all default providers.
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 
 $builder = (new AnonymizerBuilder())
     ->withDefaults()
-    ->withNodeParserType(NodeParser::COMPLEX->value)
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
+    // set faker to true here to use the default faker instance
     ->withFaker(true)
     ->build();
 ```
@@ -359,13 +755,16 @@ directly to the AnonymizerBuilder.
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use Faker\Factory;
 
 $faker = Factory::create('de_DE');
 
 $builder = (new AnonymizerBuilder())
     ->withDefaults()
-    ->withNodeParserType(NodeParser::COMPLEX->value)
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
+    // pass custom Faker instance here
     ->withCustomFaker($faker)
     ->build();
 ```
@@ -380,11 +779,14 @@ In our case we use a string as a keyword that will be hashed to an integer value
 
 use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 
 $builder = (new AnonymizerBuilder())
     ->withDefaults()
-    ->withNodeParserType(NodeParser::COMPLEX->value)
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
     ->withFaker(true)
+    // pass custom faker random seed here
     ->withFakerSeed('my_seed')
     ->build();
 ```
@@ -425,12 +827,47 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data, 'noop');
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'noop',
+);
 ```
 
 Example output for the noop encoder on an array.
 
 ```
+Original data:
+Array
+(
+    [order] => Array
+        (
+            [person] => Array
+                (
+                    [first_name] => John
+                    [last_name] => Doe
+                )
+
+        )
+
+)
+
+Anonymized data:
+Array
+(
+    [order] => Array
+        (
+            [person] => Array
+                (
+                    [first_name] => ****
+                    [last_name] => ***
+                )
+
+        )
+
+)
+
 Check $data == $anonymizedData
 bool(false)
 
@@ -442,8 +879,8 @@ bool(false)
 // examples/04_01_02_noop_encoder_object.php
 
 $person = new Person(
-    'John',
-    'Doe'
+    firstName: 'John',
+    lastName: 'Doe',
 );
 
 $data = [
@@ -452,12 +889,47 @@ $data = [
     ],
 ];
 
-$anonymizedData = $anonymizer->run('order', $data, 'noop');
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'noop',
+);
 ```
 
 Example output for the noop encoder on an object.
 
 ```
+Original data:
+Array
+(
+    [order] => Array
+        (
+            [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+                (
+                    [firstName] => ****
+                    [lastName] => ***
+                )
+
+        )
+
+)
+
+Anonymized data:
+Array
+(
+    [order] => Array
+        (
+            [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+                (
+                    [firstName] => ****
+                    [lastName] => ***
+                )
+
+        )
+
+)
+
 Check $data == $anonymizedData
 bool(true)
 
@@ -479,20 +951,65 @@ As the `clone` keyword only creates a shallow copy of the top level object, we u
 // examples/04_02_01_clone_encoder_change.php
 
 $anonymizer->registerRuleSet(
-    'order',
-    [
-        'person.firstName',
-        'person.lastName',
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'person',
+            'children' => [
+                [
+                    'name' => 'firstName',
+                ],
+                [
+                    'name' => 'lastName',
+                ],
+            ],
+        ],
     ],
-    DataAccess::AUTODETECT->value,
+    defaultDataAccess: DataAccess::AUTODETECT->value,
 );
 
-$anonymizedData = $anonymizer->run('order', $data, 'clone');
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
+
+$data = new Order(
+    person: $person,
+);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'clone',
+);
 ```
 
 Example output for the clone encoder after data has been changed.
 
 ```
+Original data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
+Anonymized data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => ****
+            [lastName] => ***
+        )
+
+)
+
 Check $data == $anonymizedData
 bool(false)
 
@@ -505,18 +1022,61 @@ In the next step, we change our rule set to not modify any data within the clone
 ```php
 // examples/04_02_02_clone_encoder_no_change.php
 
+$anonymizer = (new AnonymizerBuilder())
+    ->withDefaults()
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
+    ->build();
+
 $anonymizer->registerRuleSet(
-    'order',
-    [],
-    DataAccess::AUTODETECT->value,
+    name: 'order',
+    definitions: [
+    ],
+    defaultDataAccess: DataAccess::AUTODETECT->value,
 );
 
-$anonymizedData = $anonymizer->run('order', $data, 'clone');
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
+
+$data = new Order(
+    $person,
+);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'clone',
+);
 ```
 
 Example output for the clone encoder after data hasn't been changed.
 
 ```
+Original data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
+Anonymized data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
 Check $data == $anonymizedData
 bool(true)
 
@@ -534,6 +1094,58 @@ For the encoder to work, the `json` php extension is required (which is part of 
 The `decode` method will transform a json `string` into an `array`, the `encode` method will transform an `array` back
 into json `string` notation (single line without PRETTY_PRINT).
 
+```php
+// examples/04_03_json_encoder.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+
+$data = json_encode([
+    'order' => [
+        'person' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ],
+    ],
+], JSON_THROW_ON_ERROR);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'json',
+);
+```
+
+Example output for the json encoder after data has been changed.
+
+```
+Original data:
+{"order":{"person":{"first_name":"John","last_name":"Doe"}}}
+
+Anonymized data:
+{"order":{"person":{"first_name":"****","last_name":"***"}}}
+```
+
 ### 04.04 YamlEncoder
 
 The `YamlEncoder` is an encoder that can help you handle yaml data. With this encoder it is possible to modify sensitive
@@ -545,7 +1157,114 @@ distributions also offer pre-compiled packages as an alternative to manual build
 The `decode` method will transform a yaml `string` into an `array`, the `encode` method will transform an `array` back
 into yaml `string` notation.
 
-### 04.05 SymfonyEncoder
+```php
+// examples/04_04_yaml_encoder.php
+
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'order',
+            'children' => [
+                [
+                    'name' => 'person',
+                    'children' => [
+                        [
+                            'name' => 'first_name',
+                        ],
+                        [
+                            'name' => 'last_name',
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+);
+
+$data = yaml_emit([
+    'order' => [
+        'person' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ],
+    ],
+]);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'yaml',
+);
+```
+
+Example output for the yaml encoder after data has been changed.
+
+```
+Original data:
+---
+order:
+  person:
+    first_name: John
+    last_name: Doe
+...
+
+
+Anonymized data:
+---
+order:
+  person:
+    first_name: '****'
+    last_name: '***'
+...
+
+```
+
+### 04.05 Array2JsonEncoder
+
+```php
+// examples/04_05_array2json_encoder.php
+
+$data = [
+    'order' => [
+        'person' => [
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+        ],
+    ],
+];
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'array2json',
+);
+```
+
+```
+Original data:
+Array
+(
+    [order] => Array
+        (
+            [person] => Array
+                (
+                    [first_name] => John
+                    [last_name] => Doe
+                )
+
+        )
+
+)
+
+
+Anonymized data:
+{"order":{"person":{"first_name":"****","last_name":"***"}}}
+```
+
+### 04.06 SymfonyEncoder
 
 The last encoder is the `SymfonyEncoder`. This encoder is a bit more complex than the others, as it is able to transform
 objects into arrays and vice versa.
@@ -560,22 +1279,243 @@ these Normalizer and Denormalizer objects.
 You can install the `symfony/serializer` package via composer:
 
 ```bash
-composer require symfony/serializer
+composer require symfony/serializer-pack
 ```
 
-## 06 Extended Information
+```php
+// examples/04_06_symfony_encoder.php
 
-### 06.01 Manual setup of Anonymizer
+$serializer = (new SerializerBuilder())->withDefaults()->build();
+$anonymizer = (new AnonymizerBuilder())
+    ->withDefaults()
+    ->withRuleSetParserType(RuleSetParser::ARRAY->value)
+    ->withNodeParserType(NodeParser::ARRAY->value)
+    ->withNormalizer($serializer)
+    ->withDenormalizer($serializer)
+    ->build();
 
-#### 06.01.01 RuleSet parser
+$anonymizer->registerRuleSet(
+    name: 'order',
+    definitions: [
+        [
+            'name' => 'person',
+            'children' => [
+                [
+                    'name' => 'firstName',
+                ],
+                [
+                    'name' => 'lastName',
+                ],
+            ],
+        ],
+    ],
+    defaultDataAccess: DataAccess::AUTODETECT->value,
+);
+
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
+
+$data = new Order(
+    person: $person,
+);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'symfony',
+);
+```
+
+```
+Original data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
+
+Anonymized data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => ****
+            [lastName] => ***
+        )
+
+)
+
+
+Check $data == $anonymizedData
+bool(false)
+
+
+Check $data === $anonymizedData
+bool(false)
+```
+
+### 04.07 Symfony2JsonEncoder
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/04_07_symfony2json_encoder.php
 
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
+
+$data = new Order(
+    person: $person,
+);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'symfony2json',
+);
+```
+
+```
+Original data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
+
+Anonymized data:
+{"person":{"firstName":"****","lastName":"***"}}
+
+Check $data == $anonymizedData
+bool(false)
+
+
+Check $data === $anonymizedData
+bool(false)
+```
+
+### 04.08 Symfony2ArrayEncoder
+
+```php
+// examples/04_08_symfony2array_encoder.php
+
+$person = new Person(
+    firstName: 'John',
+    lastName: 'Doe',
+);
+
+$data = new Order(
+    person: $person,
+);
+
+$anonymizedData = $anonymizer->run(
+    ruleSetName: 'order',
+    data: $data,
+    // pass encoder to use here
+    encoding: 'symfony2array',
+);
+```
+
+```
+Original data:
+PhpAnonymizer\Anonymizer\Examples\Order Object
+(
+    [person] => PhpAnonymizer\Anonymizer\Examples\Person Object
+        (
+            [firstName] => John
+            [lastName] => Doe
+        )
+
+)
+
+
+Anonymized data:
+Array
+(
+    [person] => Array
+        (
+            [firstName] => ****
+            [lastName] => ***
+        )
+
+)
+
+
+Check $data == $anonymizedData
+bool(false)
+
+
+Check $data === $anonymizedData
+bool(false)
+```
+
+## 05 Extended Information
+
+In this section you will learn about possibilities on how to setup the anonymizing toolkit for your own application.
+Currently there are two main options:
+
+- manual setup by wiring everything together by hand
+- using the builder toolkit for assisted setup
+
+### 05.01 Manual setup of Anonymizer
+
+#### 05.01.01 RuleSet parser
+
+The ruleset parser is the central part of the rule setup engine. It defines in which way the rules are parsed from the
+input array. In general, it is possible to define the rules in multiple ways. Currently there are two default supported
+syntaxes:
+
+- array based rules
+- string based rules (using the old, deprecated regular expression parser)
+
+```php
+// examples/05_01_manual_setup.php
+
+use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
+use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
+use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
+
+// 05.01.01.01 RuleSet parser (New default)
+
+/**
+ * RuleSetParser:
+ * - must implement PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface
+ *
+ * ArrayRuleSetParser:
+ * - takes optional argument $nodeParser:
+ *   - must implement PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface
+ *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser
+ *  - takes optional argument $nodeMapper:
+ *    - must implement PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapperInterface
+ *    - defaults to PhpAnonymizer\Anonymizer\Parser\Node\Mapper\NodeMapper
+ */
+$ruleSetParser = new ArrayRuleSetParser(
+    nodeParser: new ArrayNodeParser(),
+    nodeMapper: new DefaultNodeMapper(),
+);
+```
+
+```php
+// examples/05_01_manual_setup.php
+
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 
-// 06.01.01 RuleSet parser
+// 05.01.01.02 RuleSet parser (Old default / deprecated)
 
 /**
  * RuleSetParser:
@@ -587,18 +1527,21 @@ use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
  *   - defaults to PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser
  */
 $ruleSetParser = new DefaultRuleSetParser(
-    nodeParser: new ComplexRegexParser(),
+    nodeParser: new ComplexRegexpParser(),
 );
 ```
 
-#### 06.01.02 DependencyChecker
+#### 05.01.02 DependencyChecker
+
+The DependencyChecker is a small utility that helps you identifying the support of optional parts of the software. It
+comes with support for installed php extensions as well as loaded composer dependencies.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 
-// 06.01.02 DependencyChecker
+// 05.01.02 DependencyChecker
 
 /**
  * DependencyChecker:
@@ -611,16 +1554,19 @@ use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 $dependencyChecker = new DefaultDependencyChecker();
 ```
 
-#### 06.01.03 DataAccessProvider
+#### 05.01.03 DataAccessProvider
+
+DataAccessProviders provide access classes to iterate through the data tree of to be anonymized data. It contains
+different DataAccess implementations to access array keys, getters, object variables etc. depending on your ruleset.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataAccess\ArrayDataAccess;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DefaultDataAccessProviderFactory;
 
-// 06.01.03 DataAccessProvider
+// 05.01.03 DataAccessProvider
 
 /**
  * DataAccessProvider:
@@ -647,17 +1593,20 @@ $provider->registerCustomDataAccessProvider('custom', $dataAccessProvider);
 $dataAccessProvider = $provider->getDataAccessProvider('custom');
 ```
 
-#### 06.01.04 DataGenerationProvider
+#### 05.01.04 DataGenerationProvider
+
+Setting up a DataGenerationProvider is necessary to determine, how you want to replace the anonymized data. It offers
+different strategies based on your setup, such as * replacements or Faker-based fake data.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DefaultDataGenerationProviderFactory;
 
-// 06.01.04 DataGenerationProvider
+// 05.01.04 DataGenerationProvider
 
 /**
  * DataGenerationProvider:
@@ -693,15 +1642,18 @@ $dataGenerationProviderFactory->registerCustomDataGenerationProvider('custom', $
 $dataGenerationProvider = $dataGenerationProviderFactory->getDataGenerationProvider('custom');
 ```
 
-#### 06.01.05 DataEncodingProvider
+#### 05.01.05 DataEncodingProvider
+
+A DataEncodingProvider is needed to transform the input and output of the anonymization by using the desired data
+formats. This way it is possible to change the output into of your desired data format.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\DataEncoding\JsonEncoder;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 
-// 06.01.05 DataEncodingProvider
+// 05.01.05 DataEncodingProvider
 
 /**
  * DataEncodingProvider:
@@ -723,15 +1675,18 @@ $dataEncodingProvider = new DefaultDataEncodingProvider();
 $dataEncodingProvider->registerCustomDataEncoder('custom', new JsonEncoder());
 ```
 
-#### 06.01.06 DataProcessor
+#### 05.01.06 DataProcessor
+
+The DataProcessor is the actual processing part that glues together all parts of the anonymization engine. It's the core
+interface between data access, data encoding and data generation.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 
-// 06.01.06 DataProcessor
+// 05.01.06 DataProcessor
 
 /**
  * DataProcessor:
@@ -765,14 +1720,17 @@ $processorFactory->registerCustomDataProcessor('custom', $dataProcessor);
 $dataProcessor = $processorFactory->getDataProcessor('custom');
 ```
 
-#### 06.01.07 Anonymizer
+#### 05.01.07 Anonymizer
+
+Once, all dependencies have been set up, we can wire together the Anonymizer and pass ruleset parser and data processor
+to make it a working service.
 
 ```php
-// examples/06_01_manual_setup.php
+// examples/05_01_manual_setup.php
 
 use PhpAnonymizer\Anonymizer\Anonymizer;
 
-// 06.01.07 Anonymizer
+// 05.01.07 Anonymizer
 
 /**
  * Anonymizer:
@@ -790,5 +1748,282 @@ $anonymizer = new Anonymizer(
 );
 ```
 
-### 06.02 Builder setup of Anonymizer
+### 05.02 Builder-based Setup of Anonymizer
 
+#### 05.02.01 Creating AnonymizerBuilder
+
+AnonymizerBuilder:
+- takes optional argument `$nodeParserFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\Node\Factory\NodeParserFactoryInterface`
+  - defaults to `DefaultNodeParserFactory`
+- takes optional argument `$ruleSetParserFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\RuleSetParserFactoryInterface`
+  - defaults to `DefaultRuleSetParserFactory`
+- takes optional argument `$dataProcessorFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Processor\Factory\DataProcessorFactoryInterface`
+  - defaults to `DefaultDataProcessorFactory`
+- takes optional argument `$dataAccessProviderFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DataAccessProviderFactoryInterface`
+  - defaults to `DefaultDataAccessProviderFactory`
+- takes optional argument `$dataGenerationProviderFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DataGenerationProviderFactoryInterface`
+  - defaults to `DefaultDataGenerationProviderFactory`
+- takes optional argument `$dataEncodingProvider`:
+  - must implement `PhpAnonymizer\Anonymizer\DataEncoding\Provider\DataEncodingProviderInterface`
+  - defaults to `DefaultDataEncodingProvider`
+- takes optional argument `$dependencyChecker`:
+  - must implement `PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface`
+  - defaults to `DefaultDependencyChecker`
+ - takes optional argument `$nodeMapperFactory`:
+   - must implement `PhpAnonymizer\Anonymizer\Mapper\Node\Factory\NodeMapperFactoryInterface`
+   - defaults to `DefaultNodeMapperFactory`
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder = new AnonymizerBuilder(
+    nodeParserFactory: new DefaultNodeParserFactory(),
+    ruleSetParserFactory: new DefaultRuleSetParserFactory(),
+    dataProcessorFactory: new DefaultDataProcessorFactory(),
+    dataAccessProviderFactory: new DefaultDataAccessProviderFactory(),
+    dataGenerationProviderFactory: new DefaultDataGenerationProviderFactory(),
+    dataEncodingProvider: new DefaultDataEncodingProvider(),
+    nodeMapperFactory: new DefaultNodeMapperFactory(),
+);
+```
+
+#### 05.02.02 Setting Defaults
+
+Sets default values for the builder:
+- nodeParserType: `simple`
+- nodeMapperType: `default`
+- ruleSetParserType: `default`
+- dataProcessorType: `default`
+- dataAccessProviderType: `default`
+- dataGenerationProviderType: `default`
+- faker: `false`
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withDefaults();
+```
+
+#### 05.02.03 Setting NodeParser
+
+Two options to set node parser:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface`
+- via type:
+  - must be a string
+  - will be resolved from node parser factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withNodeParser(
+    nodeParser: new ArrayNodeParser(),
+);
+$builder->withNodeParserType(
+    nodeParserType: 'array',
+);
+```
+
+#### 05.02.04 Setting NodeMapper
+
+Two options to set node mapper:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface`
+- via type:
+  - must be a string
+  - will be resolved from node mapper factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withNodeMapper(
+    nodeMapper: new DefaultNodeMapper(),
+);
+$builder->withNodeMapperType(
+    nodeMapperType: 'default',
+);
+```
+
+#### 05.02.05 Setting DataAccessProvider
+
+Two options to set data access provider:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface`
+- via type:
+  - must be a string
+  - will be resolved from data access provider factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withRuleSetParser(
+    ruleSetParser: new ArrayRuleSetParser(),
+);
+
+$builder->withRuleSetParserType(
+    ruleSetParserType: 'default',
+);
+```
+
+#### 05.02.06 Setting DataGenerationProvider
+
+Two options to set data access provider:
+- via instance:
+    - must implement `PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInterface`
+- via type:
+    - must be a string
+    - will be resolved from data access provider factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+    - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$dataGeneratorProvider = new DefaultDataGeneratorProvider(
+    [
+        new StarMaskedStringGenerator(),
+    ],
+);
+
+$builder->withDataGenerationProvider(
+    dataGenerator: $dataGeneratorProvider,
+);
+
+$builder->withDataGenerationProviderType(
+    dataGeneratorType: 'default',
+);
+```
+
+#### 05.02.07 Enabling Faker
+
+Enable or disable via `bool` value.
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withFaker(true);
+```
+
+#### 05.02.08 Setting Custom Faker
+
+Build custom `Faker` instance and inject into builder.
+
+```php
+// examples/05_02_builder_setup.php
+
+$faker = Factory::create('de_DE');
+$builder->withCustomFaker(
+    faker: $faker,
+);
+```
+
+#### 05.02.09 Setting Faker Seed
+
+Set seed as `string`.
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withFakerSeed('my-faker-seed');
+```
+
+#### 05.02.10 Setting Rule Loader
+
+Four options to set rules:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\RuleLoader\RuleLoaderInterface`
+- via `array` directly:
+  - must be `string` to existing file
+- via json file path:
+  - must be string to existing file
+  - for the loader to work, the json php extension is required
+- via yaml file path:
+  - must be string to existing file
+  - for the loader to work, the yaml php extension is required
+
+In any case the given rule format must match the configured ruleset parser's input format.
+
+```php
+// examples/05_02_builder_setup.php
+
+$rules = [];
+
+$ruleLoader = new ArrayRuleLoader(
+    rules: $rules,
+);
+$builder->withRuleLoader(
+    ruleLoader: $ruleLoader,
+);
+
+$builder->withRulesFromArray(
+    rules: $rules,
+);
+
+$builder->withRulesFromJsonFile(
+    filePath: 'rules.json',
+);
+
+$builder->withRulesFromYamlFile(
+    filePath: 'rules.yml',
+);
+```
+
+#### 05.02.11 Setting RuleSetParser
+
+Two options to set rule set parser:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface`
+  - will ignore dependencies set in builder
+- via type:
+  - must be a string
+  - will be resolved from RuleSetParserFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - will use NodeParser from (set in [05.02.03 Setting NodeParser](#050203-setting-nodeparser))
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withRuleSetParser(
+    ruleSetParser: new ArrayRuleSetParser(),
+);
+$builder->withRuleSetParserType(
+    ruleSetParserType: 'array',
+);
+```
+
+#### 05.02.12 Setting DataProcessor
+
+Two options to set data processor:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface`
+  - will ignore dependencies set in builder
+- via type:
+  - must be a string
+  - will be resolved from DataProcessorFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - will use DataAccessProvider from (set in [05.02.05 Setting DataAccessProvider](#050205-setting-dataaccessprovider))
+  - will use DataGenerationProvider from (set in [05.02.06 Setting DataGenerationProvider](#050206-setting-datagenerationprovider))
+  - will use DataEncodingProvider from (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withDataProcessor(
+    new DefaultDataProcessor(
+        dataAccessProvider: new DefaultDataAccessProvider(),
+        dataGenerationProvider: new DefaultDataGeneratorProvider(
+            [
+                new StarMaskedStringGenerator(),
+            ],
+        ),
+        dataEncodingProvider: new DefaultDataEncodingProvider(),
+    ),
+);
+```

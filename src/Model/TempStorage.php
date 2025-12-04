@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Model;
 
-class TempStorage
+final class TempStorage
 {
     /** @var array<string,mixed> */
     private array $data = [];

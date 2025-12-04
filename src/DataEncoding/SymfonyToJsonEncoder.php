@@ -15,7 +15,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-readonly class SymfonyToJsonEncoder implements DataEncoderInterface
+final readonly class SymfonyToJsonEncoder implements DataEncoderInterface
 {
     /**
      * @param NormalizerInterface $normalizer
@@ -46,7 +46,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
             throw new DataEncodingException('SymfonyEncoder can only decode objects');
         }
 
-        $tempStorage->store('symfony-encoder-type', get_class($data));
+        $tempStorage->store('symfony-encoder-type', $data::class);
 
         try {
             return $this->normalizer->normalize($data);
@@ -60,9 +60,6 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
         if (!is_array($data)) {
@@ -70,6 +67,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
 
         try {
+            /** @var array<int|string,mixed> $data */
             return json_encode($data, JSON_THROW_ON_ERROR);
         } catch (JsonException $ex) {
             throw new DataEncodingException(
@@ -79,7 +77,7 @@ readonly class SymfonyToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

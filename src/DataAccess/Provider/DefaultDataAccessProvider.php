@@ -16,7 +16,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessException;
 use function in_array;
 use function sprintf;
 
-class DefaultDataAccessProvider implements DataAccessProviderInterface
+final class DefaultDataAccessProvider implements DataAccessProviderInterface
 {
     private const DATA_ACCESSES = [
         DataAccess::ARRAY->value,

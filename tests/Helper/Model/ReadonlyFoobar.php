@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-readonly class ReadonlyFoobar
+final readonly class ReadonlyFoobar
 {
     public function __construct(
         public string $foo,

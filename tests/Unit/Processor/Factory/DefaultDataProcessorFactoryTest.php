@@ -17,7 +17,7 @@ use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataProcessorFactoryTest extends TestCase
+final class DefaultDataProcessorFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataProcessor(): void
     {
@@ -29,7 +29,7 @@ class DefaultDataProcessorFactoryTest extends TestCase
             new DefaultDataEncodingProvider(),
         );
 
-        $this->assertInstanceOf(DefaultDataProcessor::class, $processor);
+        self::assertInstanceOf(DefaultDataProcessor::class, $processor);
     }
 
     public function testCanProvideNull(): void
@@ -60,11 +60,11 @@ class DefaultDataProcessorFactoryTest extends TestCase
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $callable);
 
-        $processor = $factory->getDataProcessor(
+        $this->expectNotToPerformAssertions();
+        $factory->getDataProcessor(
             type: 'custom',
             dataEncodingProvider: new DefaultDataEncodingProvider(),
         );
-        $this->assertInstanceOf(DataProcessorInterface::class, $processor);
     }
 
     public function testCanRegisterAndProvideCustomDataProcessorWithInstance(): void
@@ -77,7 +77,7 @@ class DefaultDataProcessorFactoryTest extends TestCase
             type: 'custom',
             dataEncodingProvider: new DefaultDataEncodingProvider(),
         );
-        $this->assertSame($processor, $provider);
+        self::assertSame($processor, $provider);
     }
 
     public function testWillFailOnRegisterCustomDataProcessorOnNameConflict(): void

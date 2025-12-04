@@ -12,10 +12,10 @@ use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use function is_array;
-use function json_encode;
+use function Safe\json_encode;
 use const JSON_THROW_ON_ERROR;
 
-class ArrayToJsonEncoder implements DataEncoderInterface
+final readonly class ArrayToJsonEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {
@@ -36,9 +36,6 @@ class ArrayToJsonEncoder implements DataEncoderInterface
         return $data;
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
         if (!is_array($data)) {
@@ -46,6 +43,7 @@ class ArrayToJsonEncoder implements DataEncoderInterface
         }
 
         try {
+            /** @var array<int|string,mixed> $data */
             return json_encode($data, JSON_THROW_ON_ERROR);
         } catch (JsonException $ex) {
             throw new DataEncodingException(
@@ -55,7 +53,7 @@ class ArrayToJsonEncoder implements DataEncoderInterface
         }
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

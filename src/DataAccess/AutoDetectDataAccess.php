@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 
-readonly class AutoDetectDataAccess implements DataAccessInterface
+final readonly class AutoDetectDataAccess implements DataAccessInterface
 {
     /**
      * @param DataAccessInterface[] $dataAccesses

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Exception;
 
-class FieldIsNotInitializedException extends NotFoundException
+final class FieldIsNotInitializedException extends NotFoundException
 {
     /**
      * @param string[] $path

@@ -17,7 +17,7 @@ use function in_array;
 use function is_callable;
 use function sprintf;
 
-class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
+final class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
 {
     private const DATA_PROCESSORS = [
         DataProcessor::DEFAULT->value,

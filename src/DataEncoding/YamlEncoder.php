@@ -16,7 +16,7 @@ use function is_string;
 use function Safe\yaml_parse;
 use function yaml_emit;
 
-class YamlEncoder implements DataEncoderInterface
+final readonly class YamlEncoder implements DataEncoderInterface
 {
     public function __construct(DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker())
     {
@@ -44,19 +44,17 @@ class YamlEncoder implements DataEncoderInterface
         }
     }
 
-    /**
-     * @param array<int|string,mixed> $data
-     */
     public function encode(mixed $data, TempStorage $tempStorage): string
     {
         if (!is_array($data)) {
             throw new DataEncodingException('YamlEncoder can only encode arrays');
         }
 
+        /** @var array<int|string,mixed> $data */
         return yaml_emit($data);
     }
 
-    public function getOverrideDataAccess(): ?string
+    public function getOverrideDataAccess(): string
     {
         return DataAccess::ARRAY->value;
     }

@@ -12,7 +12,7 @@ use ReflectionClass;
 use ReflectionException;
 use function array_slice;
 
-class ReflectionDataAccess extends AbstractObjectDataAccess
+final class ReflectionDataAccess extends AbstractObjectDataAccess
 {
     /**
      * @throws ReflectionException

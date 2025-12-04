@@ -12,7 +12,7 @@ use function strlen;
 /**
  * @template-implements DataGeneratorInterface<string>
  */
-class StarMaskedStringGenerator implements DataGeneratorInterface
+final class StarMaskedStringGenerator implements DataGeneratorInterface
 {
     public function supports(mixed $value, ?string $valueType): bool
     {

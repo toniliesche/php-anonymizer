@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\DataEncoding;
 
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
 
-class NoOpEncoder implements DataEncoderInterface
+final class NoOpEncoder implements DataEncoderInterface
 {
     public function decode(mixed $data, TempStorage $tempStorage): mixed
     {

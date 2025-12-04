@@ -14,14 +14,14 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessProviderException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultDataAccessProviderFactoryTest extends TestCase
+final class DefaultDataAccessProviderFactoryTest extends TestCase
 {
     public function testCanProvideDefaultDataAccessProvider(): void
     {
         $factory = new DefaultDataAccessProviderFactory();
         $provider = $factory->getDataAccessProvider(DataAccess::DEFAULT->value);
 
-        $this->assertInstanceOf(DefaultDataAccessProvider::class, $provider);
+        self::assertInstanceOf(DefaultDataAccessProvider::class, $provider);
     }
 
     public function testCanProvideNull(): void
@@ -29,7 +29,7 @@ class DefaultDataAccessProviderFactoryTest extends TestCase
         $factory = new DefaultDataAccessProviderFactory();
         $provider = $factory->getDataAccessProvider(null);
 
-        $this->assertNull($provider);
+        self::assertNull($provider);
     }
 
     public function testWillFailOnProvideUnknownDataAccessProvider(): void
@@ -47,7 +47,7 @@ class DefaultDataAccessProviderFactoryTest extends TestCase
         $factory->registerCustomDataAccessProvider('custom', $callable);
 
         $provider = $factory->getDataAccessProvider('custom');
-        $this->assertInstanceOf(DataAccessProviderInterface::class, $provider);
+        self::assertInstanceOf(DataAccessProviderInterface::class, $provider);
     }
 
     public function testCanRegisterAndProvideCustomDataAccessProviderWithInstance(): void
@@ -57,7 +57,7 @@ class DefaultDataAccessProviderFactoryTest extends TestCase
         $factory->registerCustomDataAccessProvider('custom', $provider);
 
         $resolvedProvider = $factory->getDataAccessProvider('custom');
-        $this->assertInstanceOf(DataAccessProviderInterface::class, $resolvedProvider);
+        self::assertInstanceOf(DataAccessProviderInterface::class, $resolvedProvider);
     }
 
     public function testWillFailOnRegisteringCustomDataAccessProviderOnNameConflict(): void

@@ -26,7 +26,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use function in_array;
 use function sprintf;
 
-class DefaultDataEncodingProvider implements DataEncodingProviderInterface
+final class DefaultDataEncodingProvider implements DataEncodingProviderInterface
 {
     private const ENCODERS = [
         DataEncoder::CLONE->value,
@@ -49,7 +49,7 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
     public function __construct(
         private mixed $normalizer = null,
         private mixed $denormalizer = null,
-        private DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
     ) {
         if ($normalizer !== null) {
             if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -72,9 +72,6 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         }
     }
 
-    /**
-     * @param NormalizerInterface $normalizer
-     */
     public function setNormalizer(mixed $normalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
@@ -88,9 +85,6 @@ class DefaultDataEncodingProvider implements DataEncodingProviderInterface
         $this->normalizer = $normalizer;
     }
 
-    /**
-     * @param DenormalizerInterface $denormalizer
-     */
     public function setDenormalizer(mixed $denormalizer): void
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {

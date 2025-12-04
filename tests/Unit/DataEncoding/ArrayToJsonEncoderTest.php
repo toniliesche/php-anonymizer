@@ -12,7 +12,7 @@ use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class ArrayToJsonEncoderTest extends TestCase
+final class ArrayToJsonEncoderTest extends TestCase
 {
     public function testWillFailOnInitializationWhenJsonExceptionIsMissing(): void
     {
@@ -29,7 +29,7 @@ class ArrayToJsonEncoderTest extends TestCase
         $data = ['firstName' => 'John', 'lastName' => 'Doe'];
 
         $decodedData = $encoder->decode($data, new TempStorage());
-        $this->assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
+        self::assertSame(['firstName' => 'John', 'lastName' => 'Doe'], $decodedData);
     }
 
     public function testWillFailOnDecodeOnNonArray(): void
@@ -47,7 +47,7 @@ class ArrayToJsonEncoderTest extends TestCase
         $data = ['firstName' => 'John', 'lastName' => 'Doe'];
 
         $encodedData = $encoder->encode($data, new TempStorage());
-        $this->assertSame('{"firstName":"John","lastName":"Doe"}', $encodedData);
+        self::assertSame('{"firstName":"John","lastName":"Doe"}', $encodedData);
     }
 
     public function testWillFailOnEncodeOnNonArray(): void
@@ -57,7 +57,6 @@ class ArrayToJsonEncoderTest extends TestCase
 
         $this->expectException(DataEncodingException::class);
 
-        /** @phpstan-ignore-next-line */
         $encoder->encode($data, new TempStorage());
     }
 
@@ -73,7 +72,7 @@ class ArrayToJsonEncoderTest extends TestCase
     public function testCanProvideArrayOverrideDataAccess(): void
     {
         $encoder = new ArrayToJsonEncoder();
-        $this->assertSame('array', $encoder->getOverrideDataAccess());
+        self::assertSame('array', $encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfArray(): void
@@ -81,7 +80,7 @@ class ArrayToJsonEncoderTest extends TestCase
         $encoder = new ArrayToJsonEncoder();
         $data = ['firstName' => 'John', 'lastName' => 'Doe'];
 
-        $this->assertTrue($encoder->supports($data));
+        self::assertTrue($encoder->supports($data));
     }
 
     public function testCanVerifyNonSupportOfNonArray(): void
@@ -90,7 +89,7 @@ class ArrayToJsonEncoderTest extends TestCase
         $encoder = new ArrayToJsonEncoder();
 
         foreach ($dataArray as $data) {
-            $this->assertFalse($encoder->supports($data));
+            self::assertFalse($encoder->supports($data));
         }
     }
 }

@@ -6,8 +6,9 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use function sprintf;
 
-class Node implements ChildNodeAccessInterface
+final class Node implements ChildNodeAccessInterface
 {
     use ChildNodeAwareTrait;
 
@@ -30,11 +31,11 @@ class Node implements ChildNodeAccessInterface
             if (!$childNode instanceof self) {
                 throw new InvalidArgumentException('All child nodes must be of type Node');
             }
+
+            $this->addChildNode($childNode);
         }
 
-        $this->childNodes = $childNodes;
-
-        if (!is_null($this->nestedType) && !empty($childNodes)) {
+        if (!is_null($this->nestedType) && $childNodes !== []) {
             throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
         }
 
@@ -65,6 +66,19 @@ class Node implements ChildNodeAccessInterface
             throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
         }
 
+        foreach ($this->childNodes as $childNode) {
+            if (!$this->checkChildNodeConflict($node, $childNode)) {
+                continue;
+            }
+
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Node already contains a child node with name "%s".',
+                    $node->name,
+                ),
+            );
+        }
+
         $this->childNodes[] = $node;
     }
 
@@ -81,6 +95,11 @@ class Node implements ChildNodeAccessInterface
 
     public function definitionConflict(NodeParsingResult $ruleResult): bool
     {
-        return (bool) ($this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue);
+        return $this->filterField === $ruleResult->filterField && $this->filterValue === $ruleResult->filterValue;
+    }
+
+    public function isFilteredNode(): bool
+    {
+        return $this->filterField !== null && $this->filterValue !== null;
     }
 }

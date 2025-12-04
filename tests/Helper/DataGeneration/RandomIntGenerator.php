@@ -11,7 +11,7 @@ use Random\RandomException;
 /**
  * @template-implements DataGeneratorInterface<int>
  */
-class RandomIntGenerator implements DataGeneratorInterface
+final class RandomIntGenerator implements DataGeneratorInterface
 {
     public function supports(mixed $value, ?string $valueType): bool
     {

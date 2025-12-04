@@ -11,8 +11,236 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PHPUnit\Framework\TestCase;
 
-class NodeTest extends TestCase
+final class NodeTest extends TestCase
 {
+    public function testCanAddChildNode(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+    }
+
+    public function testCanAddMultipleChildNodes(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf2',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+    }
+
+    public function testWillFailOnAddingConflictingChildNodeWithSameName(): void
+    {
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+    }
+
+    public function testWillFailOnAddingConflictingChildNodeIfOnlyOneIsFiltered(): void
+    {
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'firstName',
+            ),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
+    }
+
+    public function testWillFailOnAddingConflictingChildNodeIfFiltersConflict(): void
+    {
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'firstName',
+            ),
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'firstName',
+            ),
+        );
+    }
+
+    public function testCanAddMultipleChildNodesWithDifferentFilterFields(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'firstName',
+            ),
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'type',
+                filterValue: 'firstName',
+            ),
+        );
+    }
+
+    public function testCanAddMultipleChildNodesWithDifferentFilterValues(): void
+    {
+        $this->expectNotToPerformAssertions();
+        $node = new Node(
+            name: 'root',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'firstName',
+            ),
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'leaf',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+                filterField: 'name',
+                filterValue: 'lastName',
+            ),
+        );
+    }
+
     public function testWillFailOnInitializationWithInvalidChildNodes(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -48,8 +276,8 @@ class NodeTest extends TestCase
             ],
         );
 
-        $this->assertTrue($node->hasChildNode('foo'));
-        $this->assertFalse($node->hasChildNode('baz'));
+        self::assertTrue($node->hasChildNode('foo'));
+        self::assertFalse($node->hasChildNode('baz'));
     }
 
     public function testCanGetChildNodes(): void
@@ -74,7 +302,7 @@ class NodeTest extends TestCase
         );
 
         $foo = $node->getChildNode('foo');
-        $this->assertSame($childNode, $foo);
+        self::assertSame($childNode, $foo);
 
         $this->expectException(ChildNodeNotFoundException::class);
         $node->getChildNode('baz');

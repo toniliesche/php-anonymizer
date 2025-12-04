@@ -12,7 +12,7 @@ use function array_slice;
 use function method_exists;
 use function ucfirst;
 
-class SetterDataAccess extends AbstractObjectDataAccess
+final class SetterDataAccess extends AbstractObjectDataAccess
 {
     public function hasChild(array $path, mixed $parent, string $name): bool
     {
@@ -25,6 +25,7 @@ class SetterDataAccess extends AbstractObjectDataAccess
 
         try {
             return method_exists($parent, $getter)
+                // @phpstan-ignore-next-line
                 && $parent->{$getter}() !== null
                 && method_exists($parent, $setter);
         } catch (Error) {
@@ -45,6 +46,7 @@ class SetterDataAccess extends AbstractObjectDataAccess
         }
 
         try {
+            // @phpstan-ignore-next-line
             return $parent->{$getter}();
         } catch (Error) {
             throw FieldIsNotInitializedException::fromPath($path);
@@ -63,6 +65,7 @@ class SetterDataAccess extends AbstractObjectDataAccess
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
         }
 
+        // @phpstan-ignore-next-line
         $parent->{$setter}($newValue);
     }
 }

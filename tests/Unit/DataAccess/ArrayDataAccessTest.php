@@ -11,7 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class ArrayDataAccessTest extends TestCase
+final class ArrayDataAccessTest extends TestCase
 {
     public function testCanCheckIfChildPropertyExists(): void
     {
@@ -21,9 +21,9 @@ class ArrayDataAccessTest extends TestCase
             'foo' => 'bar',
         ];
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'FOO'));
+        self::assertTrue($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertFalse($access->hasChild(['test'], $data, 'FOO'));
     }
 
     public function testWillFailOnCheckForChildPropertyOfNonArray(): void
@@ -34,7 +34,6 @@ class ArrayDataAccessTest extends TestCase
 
         $this->expectException(InvalidObjectTypeException::class);
 
-        /** @phpstan-ignore-next-line */
         $access->hasChild(['test'], $data, 'foo');
     }
 
@@ -46,7 +45,7 @@ class ArrayDataAccessTest extends TestCase
             'foo' => 'bar',
         ];
 
-        $this->assertSame('bar', $access->getChild(['test'], $data, 'foo'));
+        self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnRetrieveValueOfChildPropertyOnNonArray(): void
@@ -57,7 +56,6 @@ class ArrayDataAccessTest extends TestCase
 
         $this->expectException(InvalidObjectTypeException::class);
 
-        /** @phpstan-ignore-next-line */
         $access->getChild(['test'], $data, 'foo');
     }
 
@@ -82,7 +80,7 @@ class ArrayDataAccessTest extends TestCase
         ];
 
         $access->setChildValue(['test'], $data, 'foo', 'baz');
-        $this->assertSame('baz', $data['foo']);
+        self::assertSame('baz', $data['foo']);
     }
 
     public function testWillFailOnSetValueOfNonExistantChildProperty(): void
@@ -111,9 +109,9 @@ class ArrayDataAccessTest extends TestCase
     {
         $access = new ArrayDataAccess();
 
-        $this->assertTrue($access->supports([]));
-        $this->assertTrue($access->supports(['foo' => 'bar']));
-        $this->assertFalse($access->supports(new ArrayObject()));
-        $this->assertFalse($access->supports('foo'));
+        self::assertTrue($access->supports([]));
+        self::assertTrue($access->supports(['foo' => 'bar']));
+        self::assertFalse($access->supports(new ArrayObject()));
+        self::assertFalse($access->supports('foo'));
     }
 }

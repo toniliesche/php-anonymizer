@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
-class SymfonyToArrayEncoderTest extends TestCase
+final class SymfonyToArrayEncoderTest extends TestCase
 {
     public function testWillFailOnInitializationWhenSymfonyPackageIsMissing(): void
     {
@@ -51,7 +51,7 @@ class SymfonyToArrayEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->decode($data, new TempStorage());
-        $this->assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
+        self::assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
     }
 
     public function testWillFailOnDecodeOnNonObject(): void
@@ -78,10 +78,10 @@ class SymfonyToArrayEncoderTest extends TestCase
         ];
 
         $encodedData = $encoder->encode($data, (new TempStorage())->store('symfony-encoder-type', Address::class));
-        $this->assertIsArray($encodedData);
+        self::assertIsArray($encodedData);
 
-        $this->assertSame('John Doe', $encodedData['name']);
-        $this->assertSame('New York', $encodedData['city']);
+        self::assertSame('John Doe', $encodedData['name']);
+        self::assertSame('New York', $encodedData['city']);
     }
 
     public function testWillFailOnEncodeOnNonArray(): void
@@ -97,7 +97,6 @@ class SymfonyToArrayEncoderTest extends TestCase
 
         $this->expectException(DataEncodingException::class);
 
-        /** @phpstan-ignore-next-line  */
         $encoder->encode($data, new TempStorage());
     }
 
@@ -107,7 +106,7 @@ class SymfonyToArrayEncoderTest extends TestCase
         $encoder = new SymfonyToArrayEncoder(
             $objectNormalizer,
         );
-        $this->assertSame('array', $encoder->getOverrideDataAccess());
+        self::assertSame('array', $encoder->getOverrideDataAccess());
     }
 
     public function testCanVerifySupportOfObject(): void
@@ -117,7 +116,7 @@ class SymfonyToArrayEncoderTest extends TestCase
         );
         $data = new stdClass();
 
-        $this->assertTrue($encoder->supports($data));
+        self::assertTrue($encoder->supports($data));
     }
 
     public function testCanVerifyNonSupportOfNonObjects(): void
@@ -128,7 +127,7 @@ class SymfonyToArrayEncoderTest extends TestCase
         );
 
         foreach ($dataArray as $data) {
-            $this->assertFalse($encoder->supports($data));
+            self::assertFalse($encoder->supports($data));
         }
     }
 }

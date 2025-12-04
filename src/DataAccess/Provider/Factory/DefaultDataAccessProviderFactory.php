@@ -14,7 +14,7 @@ use function in_array;
 use function is_callable;
 use function sprintf;
 
-class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInterface
+final class DefaultDataAccessProviderFactory implements DataAccessProviderFactoryInterface
 {
     private const DATA_ACCESS_PROVIDER = [
         DataAccessProvider::DEFAULT->value,

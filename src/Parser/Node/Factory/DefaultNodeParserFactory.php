@@ -8,16 +8,19 @@ use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\NodeParserExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownNodeParserException;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
-use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use function in_array;
 use function is_callable;
 use function sprintf;
 
-class DefaultNodeParserFactory implements NodeParserFactoryInterface
+final class DefaultNodeParserFactory implements NodeParserFactoryInterface
 {
     private const NODE_PARSERS = [
+        NodeParser::ARRAY->value,
+        NodeParser::DEFAULT->value,
         NodeParser::COMPLEX->value,
         NodeParser::SIMPLE->value,
     ];
@@ -75,8 +78,9 @@ class DefaultNodeParserFactory implements NodeParserFactoryInterface
         }
 
         return match ($type) {
-            NodeParser::SIMPLE->value => new SimpleRegexParser(),
-            NodeParser::COMPLEX->value => new ComplexRegexParser(),
+            NodeParser::ARRAY->value => new ArrayNodeParser(),
+            NodeParser::SIMPLE->value, NodeParser::DEFAULT->value => new SimpleRegexpParser(),
+            NodeParser::COMPLEX->value => new ComplexRegexpParser(),
             default => throw new UnknownNodeParserException(sprintf('Unknown node parser: "%s"', $type)),
         };
     }

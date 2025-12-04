@@ -8,21 +8,21 @@ use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\NodeParserExistsException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownNodeParserException;
-use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
-use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class DefaultNodeParserFactoryTest extends TestCase
+final class DefaultNodeParserFactoryTest extends TestCase
 {
     public function testCanProvideNodeParserWithSimpleRegularExpressionsParser(): void
     {
         $factory = new DefaultNodeParserFactory();
         $parser = $factory->getNodeParser(NodeParser::SIMPLE->value);
 
-        $this->assertInstanceOf(SimpleRegexParser::class, $parser);
+        self::assertInstanceOf(SimpleRegexpParser::class, $parser);
     }
 
     public function testCanProvideNodeParserWithComplexRegularExpressionsParser(): void
@@ -30,7 +30,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory = new DefaultNodeParserFactory();
         $parser = $factory->getNodeParser(NodeParser::COMPLEX->value);
 
-        $this->assertInstanceOf(ComplexRegexParser::class, $parser);
+        self::assertInstanceOf(ComplexRegexpParser::class, $parser);
     }
 
     public function testCanProvideNullNodeParser(): void
@@ -38,7 +38,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory = new DefaultNodeParserFactory();
         $parser = $factory->getNodeParser(null);
 
-        $this->assertNull($parser);
+        self::assertNull($parser);
     }
 
     public function testWillFailOnProvideUnknownNodeParser(): void
@@ -56,7 +56,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory->registerCustomNodeParser('custom', $callable);
 
         $parser = $factory->getNodeParser('custom');
-        $this->assertInstanceOf(NodeParserInterface::class, $parser);
+        self::assertInstanceOf(NodeParserInterface::class, $parser);
     }
 
     public function testCanRegisterCustomNodeParserWithInstance(): void
@@ -66,7 +66,7 @@ class DefaultNodeParserFactoryTest extends TestCase
         $factory->registerCustomNodeParser('custom', $parser);
 
         $resolvedParser = $factory->getNodeParser('custom');
-        $this->assertInstanceOf(NodeParserInterface::class, $resolvedParser);
+        self::assertInstanceOf(NodeParserInterface::class, $resolvedParser);
     }
 
     public function testWillFailOnRegisterCustomNodeParserOnNameConflict(): void

@@ -15,7 +15,7 @@ use function in_array;
 use function is_callable;
 use function sprintf;
 
-class DefaultDataGenerationProviderFactory implements DataGenerationProviderFactoryInterface
+final class DefaultDataGenerationProviderFactory implements DataGenerationProviderFactoryInterface
 {
     private const DATA_GENERATION_PROVIDERS = [
         DataGenerationProvider::DEFAULT->value,

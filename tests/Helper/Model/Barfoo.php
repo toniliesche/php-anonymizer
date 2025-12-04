@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-class Barfoo
+final class Barfoo
 {
     private string $foo;
 

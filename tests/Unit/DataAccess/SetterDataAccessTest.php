@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class SetterDataAccessTest extends TestCase
+final class SetterDataAccessTest extends TestCase
 {
     public function testCanCheckIfChildPropertyExists(): void
     {
@@ -25,9 +25,9 @@ class SetterDataAccessTest extends TestCase
             baz: 'baz',
         );
 
-        $this->assertTrue($access->hasChild(['test'], $data, 'baz'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
-        $this->assertFalse($access->hasChild(['test'], $data, 'bar'));
+        self::assertTrue($access->hasChild(['test'], $data, 'baz'));
+        self::assertFalse($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'bar'));
     }
 
     public function testCanCheckIfUnitializedChildPropertyDoesNotExist(): void
@@ -35,7 +35,7 @@ class SetterDataAccessTest extends TestCase
         $access = new SetterDataAccess();
 
         $data = new Barfoo();
-        $this->assertFalse($access->hasChild(['test'], $data, 'foo'));
+        self::assertFalse($access->hasChild(['test'], $data, 'foo'));
     }
 
     public function testWillFailOnCheckForChildPropertyOfNonObject(): void
@@ -60,7 +60,7 @@ class SetterDataAccessTest extends TestCase
             baz: 'baz',
         );
 
-        $this->assertSame('baz', $access->getChild(['test'], $data, 'baz'));
+        self::assertSame('baz', $access->getChild(['test'], $data, 'baz'));
     }
 
     public function testWillFailOnRetrieveValueOfChildPropertyOnNonObject(): void
@@ -124,7 +124,7 @@ class SetterDataAccessTest extends TestCase
         );
 
         $access->setChildValue(['test'], $data, 'baz', 'new baz');
-        $this->assertSame('new baz', $data->getBaz());
+        self::assertSame('new baz', $data->getBaz());
     }
 
     public function testWillFailOnSetValueOfChildPropertyOfInvalidType(): void
@@ -171,13 +171,13 @@ class SetterDataAccessTest extends TestCase
     {
         $access = new SetterDataAccess();
 
-        $this->assertTrue($access->supports(new stdClass()));
-        $this->assertTrue($access->supports(new Foobar(
+        self::assertTrue($access->supports(new stdClass()));
+        self::assertTrue($access->supports(new Foobar(
             foo: 'foo',
             bar: 'bar',
             baz: 'baz',
         )));
-        $this->assertFalse($access->supports([]));
-        $this->assertFalse($access->supports('foobar'));
+        self::assertFalse($access->supports([]));
+        self::assertFalse($access->supports('foobar'));
     }
 }

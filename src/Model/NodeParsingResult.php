@@ -6,7 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
 
-readonly class NodeParsingResult
+final readonly class NodeParsingResult
 {
     public function __construct(
         public bool $isValid,
@@ -29,8 +29,8 @@ readonly class NodeParsingResult
             }
         }
 
-        if (!is_null($this->filterField) && is_null($this->filterValue)) {
-            throw new RuleDefinitionException('Filter value must not be null if filter field is not null');
+        if (is_null($this->filterField) xor is_null($this->filterValue)) {
+            throw new RuleDefinitionException('Filter value must not be null if filter field is not null or vice-versa');
         }
     }
 }
