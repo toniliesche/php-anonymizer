@@ -42,6 +42,18 @@
         - [05.01.06 DataProcessor](#050106-dataprocessor)
         - [05.01.07 Anonymizer](#050107-anonymizer)
     - [05.02 Builder setup of Anonymizer](#0502-builder-setup-of-anonymizer)
+      - [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder)
+      - [05.02.02 Setting Defaults](#050202-setting-defaults)
+      - [05.02.03 Setting NodeParser](#050203-setting-nodeparser)
+      - [05.02.04 Setting NodeMapper](#050204-setting-nodemapper)
+      - [05.02.05 Setting DataAccessProvider](#050205-setting-dataccessprovider)
+      - [05.02.06 Setting DataGenerationProvider](#050206-setting-datagenerationprovider)
+      - [05.02.07 Enabling Faker](#050207-enabling-faker)
+      - [05.02.08 Setting Custom Faker](#050208-setting-custom-faker)
+      - [05.02.09 Setting Faker Seed](#050209-setting-faker-seed)
+      - [05.02.10 Setting Rule Loader](#050210-setting-rule-loader)
+      - [05.02.11 Setting RuleSetParser](#050211-setting-rulesetparser)
+      - [05.02.12 Setting DataProcessor](#050212-setting-dataprocessor)
 
 ### Purpose
 
@@ -1720,3 +1732,280 @@ $anonymizer = new Anonymizer(
 
 ### 05.02 Builder setup of Anonymizer
 
+#### 05.02.01 Creating AnonymizerBuilder
+
+AnonymizerBuilder:
+- takes optional argument `$nodeParserFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\Node\Factory\NodeParserFactoryInterface`
+  - defaults to `DefaultNodeParserFactory`
+- takes optional argument `$ruleSetParserFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\RuleSetParserFactoryInterface`
+  - defaults to `DefaultRuleSetParserFactory`
+- takes optional argument `$dataProcessorFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\Processor\Factory\DataProcessorFactoryInterface`
+  - defaults to `DefaultDataProcessorFactory`
+- takes optional argument `$dataAccessProviderFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DataAccessProviderFactoryInterface`
+  - defaults to `DefaultDataAccessProviderFactory`
+- takes optional argument `$dataGenerationProviderFactory`:
+  - must implement `PhpAnonymizer\Anonymizer\DataGeneration\Provider\Factory\DataGenerationProviderFactoryInterface`
+  - defaults to `DefaultDataGenerationProviderFactory`
+- takes optional argument `$dataEncodingProvider`:
+  - must implement `PhpAnonymizer\Anonymizer\DataEncoding\Provider\DataEncodingProviderInterface`
+  - defaults to `DefaultDataEncodingProvider`
+- takes optional argument `$dependencyChecker`:
+  - must implement `PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface`
+  - defaults to `DefaultDependencyChecker`
+ - takes optional argument `$nodeMapperFactory`:
+   - must implement `PhpAnonymizer\Anonymizer\Mapper\Node\Factory\NodeMapperFactoryInterface`
+   - defaults to `DefaultNodeMapperFactory`
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder = new AnonymizerBuilder(
+    nodeParserFactory: new DefaultNodeParserFactory(),
+    ruleSetParserFactory: new DefaultRuleSetParserFactory(),
+    dataProcessorFactory: new DefaultDataProcessorFactory(),
+    dataAccessProviderFactory: new DefaultDataAccessProviderFactory(),
+    dataGenerationProviderFactory: new DefaultDataGenerationProviderFactory(),
+    dataEncodingProvider: new DefaultDataEncodingProvider(),
+    nodeMapperFactory: new DefaultNodeMapperFactory(),
+);
+```
+
+#### 05.02.02 Setting Defaults
+
+Sets default values for the builder:
+- nodeParserType: `simple`
+- nodeMapperType: `default`
+- ruleSetParserType: `default`
+- dataProcessorType: `default`
+- dataAccessProviderType: `default`
+- dataGenerationProviderType: `default`
+- faker: `false`
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withDefaults();
+```
+
+#### 05.02.03 Setting NodeParser
+
+Two options to set node parser:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface`
+- via type:
+  - must be a string
+  - will be resolved from node parser factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withNodeParser(
+    nodeParser: new ArrayNodeParser(),
+);
+$builder->withNodeParserType(
+    nodeParserType: 'array',
+);
+```
+
+#### 05.02.04 Setting NodeMapper
+
+Two options to set node mapper:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface`
+- via type:
+  - must be a string
+  - will be resolved from node mapper factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withNodeMapper(
+    nodeMapper: new DefaultNodeMapper(),
+);
+$builder->withNodeMapperType(
+    nodeMapperType: 'default',
+);
+```
+
+#### 05.02.05 Setting DataAccessProvider
+
+Two options to set data access provider:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface`
+- via type:
+  - must be a string
+  - will be resolved from data access provider factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withRuleSetParser(
+    ruleSetParser: new ArrayRuleSetParser(),
+);
+
+$builder->withRuleSetParserType(
+    ruleSetParserType: 'default',
+);
+```
+
+#### 05.02.06 Setting DataGenerationProvider
+
+Two options to set data access provider:
+- via instance:
+    - must implement `PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInterface`
+- via type:
+    - must be a string
+    - will be resolved from data access provider factory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+    - using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$dataGeneratorProvider = new DefaultDataGeneratorProvider(
+    [
+        new StarMaskedStringGenerator(),
+    ],
+);
+
+$builder->withDataGenerationProvider(
+    dataGenerator: $dataGeneratorProvider,
+);
+
+$builder->withDataGenerationProviderType(
+    dataGeneratorType: 'default',
+);
+```
+
+#### 05.02.07 Enabling Faker
+
+Enable or disable via `bool` value.
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withFaker(true);
+```
+
+#### 05.02.08 Setting Custom Faker
+
+Build custom `Faker` instance and inject into builder.
+
+```php
+// examples/05_02_builder_setup.php
+
+$faker = Factory::create('de_DE');
+$builder->withCustomFaker(
+    faker: $faker,
+);
+```
+
+#### 05.02.09 Setting Faker Seed
+
+Set seed as `string`.
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withFakerSeed('my-faker-seed');
+```
+
+#### 05.02.10 Setting Rule Loader
+
+Four options to set rules:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\RuleLoader\RuleLoaderInterface`
+- via `array` directly:
+  - must be `string` to existing file
+- via json file path:
+  - must be string to existing file
+  - for the loader to work, the json php extension is required
+- via yaml file path:
+  - must be string to existing file
+  - for the loader to work, the yaml php extension is required
+
+In any case the given rule format must match the configured ruleset parser's input format.
+
+```php
+// examples/05_02_builder_setup.php
+
+$rules = [];
+
+$ruleLoader = new ArrayRuleLoader(
+    rules: $rules,
+);
+$builder->withRuleLoader(
+    ruleLoader: $ruleLoader,
+);
+
+$builder->withRulesFromArray(
+    rules: $rules,
+);
+
+$builder->withRulesFromJsonFile(
+    filePath: 'rules.json',
+);
+
+$builder->withRulesFromYamlFile(
+    filePath: 'rules.yml',
+);
+```
+
+#### 05.02.11 Setting RuleSetParser
+
+Two options to set rule set parser:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface`
+  - will ignore dependencies set in builder
+- via type:
+  - must be a string
+  - will be resolved from RuleSetParserFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - will use NodeParser from [05.02.03 Setting NodeParser](#050203-setting-nodeparser)
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withRuleSetParser(
+    ruleSetParser: new ArrayRuleSetParser(),
+);
+$builder->withRuleSetParserType(
+    ruleSetParserType: 'array',
+);
+```
+
+#### 05.02.12 Setting DataProcessor
+
+Two options to set data processor:
+- via instance:
+  - must implement `PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface`
+  - will ignore dependencies set in builder
+- via type:
+  - must be a string
+  - will be resolved from DataProcessorFactory (set in [05.02.01 Creating AnonymizerBuilder](#050201-creating-anonymizerbuilder))
+  - will use DataAccessProvider from (set in [05.02.05](#050205-setting-dataaccessprovider)
+  - will use DataGenerationProvider from [05.02.06](#050206-setting-datagenerationprovider)
+  - will use DataEncodingProvider from [05.02.01](#050201-creating-anonymizerbuilder)
+- using one option will override the other
+
+```php
+// examples/05_02_builder_setup.php
+
+$builder->withDataProcessor(
+    new DefaultDataProcessor(
+        dataAccessProvider: new DefaultDataAccessProvider(),
+        dataGenerationProvider: new DefaultDataGeneratorProvider(
+            [
+                new StarMaskedStringGenerator(),
+            ],
+        ),
+        dataEncodingProvider: new DefaultDataEncodingProvider(),
+    ),
+);
+```

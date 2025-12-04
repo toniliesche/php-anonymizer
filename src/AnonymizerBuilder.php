@@ -23,11 +23,15 @@ use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Enum\DataAccessProvider;
 use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Enum\DataProcessor;
+use PhpAnonymizer\Anonymizer\Enum\NodeMapper;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
 use PhpAnonymizer\Anonymizer\Exception\AnonymizerBuilderException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
+use PhpAnonymizer\Anonymizer\Mapper\Node\Factory\DefaultNodeMapperFactory;
+use PhpAnonymizer\Anonymizer\Mapper\Node\Factory\NodeMapperFactoryInterface;
+use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\NodeParserFactoryInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
@@ -48,12 +52,17 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  * @codeCoverageIgnoreStart
  *
  * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
+ * @SuppressWarnings("PHPMD.TooManyFields")
  */
 final class AnonymizerBuilder
 {
     private string $nodeParserType;
 
     private ?NodeParserInterface $nodeParser = null;
+
+    private string $nodeMapperType;
+
+    private ?NodeMapperInterface $nodeMapper = null;
 
     private string $ruleSetParserType;
 
@@ -87,6 +96,7 @@ final class AnonymizerBuilder
         private readonly DataGenerationProviderFactoryInterface $dataGenerationProviderFactory = new DefaultDataGenerationProviderFactory(),
         private readonly DataEncodingProviderInterface $dataEncodingProvider = new DefaultDataEncodingProvider(),
         private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        private readonly NodeMapperFactoryInterface $nodeMapperFactory = new DefaultNodeMapperFactory(),
     ) {
     }
 
@@ -108,6 +118,26 @@ final class AnonymizerBuilder
         }
 
         $this->dataEncodingProvider->setDenormalizer($denormalizer);
+
+        return $this;
+    }
+
+    public function withNodeMapperType(string $nodeMapperType): self
+    {
+        $this->nodeMapperType = $nodeMapperType;
+        if (isset($this->nodeMapper)) {
+            unset($this->nodeMapper);
+        }
+
+        return $this;
+    }
+
+    public function withNodeMapper(NodeMapperInterface $nodeMapper): self
+    {
+        $this->nodeMapper = $nodeMapper;
+        if (isset($this->nodeMapperType)) {
+            unset($this->nodeMapperType);
+        }
 
         return $this;
     }
@@ -285,6 +315,7 @@ final class AnonymizerBuilder
     public function withDefaults(): self
     {
         $this->withNodeParserType(NodeParser::DEFAULT->value);
+        $this->withNodeMapperType(NodeMapper::DEFAULT->value);
         $this->withRuleSetParserType(RuleSetParser::DEFAULT->value);
         $this->withDataProcessorType(DataProcessor::DEFAULT->value);
         $this->withDataAccessProviderType(DataAccessProvider::DEFAULT->value);
@@ -329,9 +360,14 @@ final class AnonymizerBuilder
             $this->nodeParser = $this->nodeParserFactory->getNodeParser($this->nodeParserType ?? null);
         }
 
+        if (!isset($this->nodeMapper)) {
+            $this->nodeMapper = $this->nodeMapperFactory->getNodeMapper($this->nodeMapperType);
+        }
+
         $this->ruleSetParser = $this->ruleSetParserFactory->getRuleSetParser(
             $this->ruleSetParserType ?? null,
             $this->nodeParser,
+            $this->nodeMapper,
         );
     }
 

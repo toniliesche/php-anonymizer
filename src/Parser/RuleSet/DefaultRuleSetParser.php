@@ -7,6 +7,6 @@ namespace PhpAnonymizer\Anonymizer\Parser\RuleSet;
 /**
  * @deprecated - switch to ArrayRuleSetParser to receive new features
  */
-readonly class DefaultRuleSetParser extends RegexpRuleSetParser
+class DefaultRuleSetParser extends RegexpRuleSetParser
 {
 }

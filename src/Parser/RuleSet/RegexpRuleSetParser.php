@@ -9,7 +9,8 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
-use PhpAnonymizer\Anonymizer\Model\Node;
+use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
+use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
 use PhpAnonymizer\Anonymizer\Model\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\AbstractRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
@@ -21,11 +22,14 @@ use function implode;
 use function is_string;
 use function sprintf;
 
-readonly class RegexpRuleSetParser implements RuleSetParserInterface
+class RegexpRuleSetParser implements RuleSetParserInterface
 {
     public function __construct(
         private ?NodeParserInterface $nodeParser = new SimpleRegexpParser(),
+        private ?NodeMapperInterface $nodeMapper = new DefaultNodeMapper(),
     ) {
+        $this->nodeParser ??= new SimpleRegexpParser();
+        $this->nodeMapper ??= new DefaultNodeMapper();
         if (!$this->nodeParser instanceof AbstractRegexpParser) {
             throw new InvalidNodeParserException(sprintf('Node Parser must extend %s, %s given', AbstractRegexpParser::class, $this->nodeParser::class));
         }
@@ -66,17 +70,7 @@ readonly class RegexpRuleSetParser implements RuleSetParserInterface
                     continue;
                 }
 
-                $childNode = new Node(
-                    name: $ruleResult->property,
-                    dataAccess: $dataAccess,
-                    nodeType: $nodeType,
-                    valueType: $ruleResult->valueType,
-                    isArray: $ruleResult->isArray,
-                    nestedType: $ruleResult->nestedType,
-                    nestedRule: $ruleResult->nestedRule,
-                    filterField: $ruleResult->filterField,
-                    filterValue: $ruleResult->filterValue,
-                );
+                $childNode = $this->nodeMapper->mapNodeParsingResult($ruleResult, $nodeType, $dataAccess);
                 $parentNode->addChildNode($childNode);
             }
         }

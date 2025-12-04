@@ -86,7 +86,7 @@ final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
 
         return match ($type) {
             RuleSetParser::ARRAY->value => new ArrayRuleSetParser($nodeParser, $nodeMapper),
-            RuleSetParser::DEFAULT->value, RuleSetParser::REGEXP->value => new DefaultRuleSetParser($nodeParser),
+            RuleSetParser::DEFAULT->value, RuleSetParser::REGEXP->value => new DefaultRuleSetParser($nodeParser, $nodeMapper),
             default => throw new UnknownRuleSetParserException(sprintf('Unknown rule set parser: "%s"', $type)),
         };
     }
