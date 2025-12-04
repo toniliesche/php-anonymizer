@@ -19,9 +19,6 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
-/**
- * @SuppressWarnings("PHPMD.CouplingBetweenObjects")
- */
 final class SerializerBuilder
 {
     private bool $usePhpDoc = false;

@@ -50,9 +50,6 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 /**
  * @codeCoverageIgnoreStart
- *
- * @SuppressWarnings("PHPMD.ExcessiveClassComplexity")
- * @SuppressWarnings("PHPMD.TooManyFields")
  */
 final class AnonymizerBuilder
 {
