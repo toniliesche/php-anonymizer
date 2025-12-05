@@ -79,13 +79,32 @@
       "indent-style": "space"
     },
     "hooks": {
+      "config": {
+        "stop-on-failure": [
+          "pre-commit",
+          "commit-msg",
+          "pre-push"
+        ]
+      },
+      "post-checkout": [
+        "composer install"
+      ],
+      "post-merge": [
+        "composer install"
+      ],
+      "post-pull": [
+        "composer install"
+      ],
       "pre-commit": [
         "make commit-checks"
       ],
-      "commit-msg": "grep -q '(feat|fix|major):.*' $1",
       "pre-push": [
         "make push-checks"
       ]
     }
+  },
+  "scripts": {
+    "post-install-cmd": "cghooks add --ignore-lock",
+    "post-update-cmd": "cghooks update"
   }
 }
