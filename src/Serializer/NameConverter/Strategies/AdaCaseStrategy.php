@@ -38,6 +38,11 @@ final class AdaCaseStrategy implements NameConverterStrategyInterface
         return $convert->toAda();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[A-Z][a-z]*[0-9]*';

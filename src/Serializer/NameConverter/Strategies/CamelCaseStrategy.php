@@ -38,6 +38,11 @@ final class CamelCaseStrategy implements NameConverterStrategyInterface
         return $convert->toCamel();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return '[a-z]+[0-9]*';
+    }
+
     public function getGroupMatch(): string
     {
         return '[A-Z][a-z]*[0-9]*';

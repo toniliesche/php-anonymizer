@@ -141,8 +141,8 @@ final readonly class MethodToVariableNameConverter implements MethodToVariableNa
     private function buildVarMatchExpression(): string
     {
         return sprintf(
-            '/^%s(:?%s%s)+$/',
-            $this->varNameStrategy->getGroupMatch(),
+            '/^%s(:?%s%s)*$/',
+            $this->varNameStrategy->getFirstGroupMatch(),
             $this->varNameStrategy->getSeparator(),
             $this->varNameStrategy->getGroupMatch(),
         );

@@ -329,6 +329,32 @@ final class MethodToVariableNameConverterTest extends TestCase
         );
     }
 
+    #[DataProvider('provideVarsForSupportTests')]
+    public function testSupportedVars(string $namingSchema, string $varName, bool $isValid): void
+    {
+        $converter = new MethodToVariableNameConverter(
+            methodNamingSchema: $namingSchema,
+            varNamingSchema: $namingSchema,
+            isserPrefix: true,
+        );
+
+        if (!$isValid) {
+            self::assertFalse(
+                $converter->isSupportedVariableName(
+                    $varName,
+                ),
+            );
+
+            return;
+        }
+
+        self::assertTrue(
+            $converter->isSupportedVariableName(
+                $varName,
+            ),
+        );
+    }
+
     #[DataProvider('provideMethodsAndVarsForVarToMethodConversionTests')]
     public function testVarToMethodConversion(string $varNamingSchema, string $methodNamingSchema, string $varName, string $methodName): void
     {
@@ -357,6 +383,21 @@ final class MethodToVariableNameConverterTest extends TestCase
                         'isValid' => $checkedTypeConfig['supportsMethods'] && ($type === $checkedType) && $methodConfig['valid'],
                     ];
                 }
+            }
+        }
+    }
+
+    public static function provideVarsForSupportTests(): Generator
+    {
+        foreach (self::METHODS as $type => $typeConfig) {
+            $namingSchema = $typeConfig['namingSchema'];
+
+            foreach (self::METHODS as $checkedType => $checkedTypeConfig) {
+                yield sprintf('%s-%s', $type, $checkedType) => [
+                    'namingSchema' => $namingSchema,
+                    'varName' => $checkedTypeConfig['methods']['GETTER']['var'],
+                    'isValid' => $type === $checkedType,
+                ];
             }
         }
     }

@@ -38,6 +38,11 @@ final class MacroCaseStrategy implements NameConverterStrategyInterface
         return $convert->toMacro();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[A-Z]+[0-9]*';

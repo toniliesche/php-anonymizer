@@ -38,6 +38,11 @@ final class CobolCaseStrategy implements NameConverterStrategyInterface
         return $convert->toCobol();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[A-Z]+[0-9]*';

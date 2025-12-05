@@ -38,6 +38,11 @@ final class TrainCaseStrategy implements NameConverterStrategyInterface
         return $convert->toTrain();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[A-Z][a-z]*[0-9]*';

@@ -22,6 +22,8 @@ interface NameConverterStrategyInterface
 
     public function join(Convert $convert): string;
 
+    public function getFirstGroupMatch(): string;
+
     public function getGroupMatch(): string;
 
     public function isMixedCase(): bool;

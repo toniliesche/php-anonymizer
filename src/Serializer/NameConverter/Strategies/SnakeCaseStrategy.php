@@ -38,6 +38,11 @@ final class SnakeCaseStrategy implements NameConverterStrategyInterface
         return $convert->toSnake();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[a-z]+[0-9]*';

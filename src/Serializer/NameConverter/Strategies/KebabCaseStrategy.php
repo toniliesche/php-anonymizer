@@ -38,6 +38,11 @@ final class KebabCaseStrategy implements NameConverterStrategyInterface
         return $convert->toKebab();
     }
 
+    public function getFirstGroupMatch(): string
+    {
+        return $this->getGroupMatch();
+    }
+
     public function getGroupMatch(): string
     {
         return '[a-z]+[0-9]*';
