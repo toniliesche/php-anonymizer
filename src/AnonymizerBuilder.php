@@ -81,7 +81,7 @@ final class AnonymizerBuilder
 
     private Generator $faker;
 
-    private string $fakerSeed;
+    private ?string $fakerSeed = null;
 
     private ?RuleLoaderInterface $ruleLoader = null;
 
@@ -302,7 +302,7 @@ final class AnonymizerBuilder
         return $this;
     }
 
-    public function withFakerSeed(string $fakerSeed): self
+    public function withFakerSeed(?string $fakerSeed): self
     {
         $this->fakerSeed = $fakerSeed;
 

@@ -1,0 +1,10 @@
+services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+
+  PhpAnonymizer\Anonymizer\Anonymizer:
+    factory: [ '@PhpAnonymizer\Anonymizer\AnonymizerFactory', 'create' ]
+
+  PhpAnonymizer\Anonymizer\AnonymizerFactory:
+    arguments:

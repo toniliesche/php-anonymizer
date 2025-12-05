@@ -8,7 +8,7 @@ use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
 use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PHPUnit\Framework\TestCase;
 
-class ArrayNodeParserTest extends TestCase
+final class ArrayNodeParserTest extends TestCase
 {
     public function testCanParseSimpleNode(): void
     {

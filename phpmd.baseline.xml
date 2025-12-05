@@ -28,5 +28,20 @@
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/DefaultDataProcessor.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DataProcessorFactoryInterface.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Processor/Factory/DefaultDataProcessorFactory.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Serializer/MethodAwareMetadataFactory.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Serializer/SerializerBuilder.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Serializer/SerializerBuilder.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Helper/DataGeneration/RandomIntGenerator.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Integration/AnonymizerTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/ReflectionDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/SetterDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataEncoding/Provider/DefaultDataEncodingProviderTest.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataGeneration/FakerAwareStringGeneratorTest.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/FakerAwareStringGeneratorTest.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/Model/ProcessingUnitTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Parsers/Node/ComplexRegexParserTest.php"/>
 </phpmd-baseline>

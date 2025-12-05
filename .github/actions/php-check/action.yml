@@ -7,14 +7,17 @@ runs:
     - name: Run style check
       shell: bash
       run: |
-        vendor/bin/php-cs-fixer check src 
+        vendor/bin/php-cs-fixer check src
         vendor/bin/php-cs-fixer check tests
     - name: Run code check
       shell: bash
-      run: vendor/bin/rector process src --dry-run
-    - name: Run composer.json check
+      run: vendor/bin/rector process src tests --dry-run
+    - name: Run composer.json normalization check
       shell: bash
       run: composer normalize --dry-run
+    - name: Run composer.json validation check
+      shell: bash
+      run: composer validate
     - name: Run missing dependencies check
       shell: bash
       run: composer-require-checker
@@ -26,7 +29,7 @@ runs:
       run: composer audit
     - name: Run mess detection
       shell: bash
-      run: vendor/bin/phpmd src text phpmd.xml
+      run: vendor/bin/phpmd src,tests text phpmd.xml
     - name: Run static analysis
       shell: bash
       run: vendor/bin/phpstan

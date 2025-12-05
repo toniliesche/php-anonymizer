@@ -11,6 +11,8 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownRuleSetParserException;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
+use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -42,27 +44,27 @@ final class DefaultRuleSetParserFactoryTest extends TestCase
 
     public function testCanRegisterAndRetrieveCustomRuleSetParserWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DefaultRuleSetParser::class);
+        $callable = fn () => $this->createMock(RuleSetParserInterface::class);
         $factory = new DefaultRuleSetParserFactory();
         $factory->registerCustomRuleSetParser('custom', $callable);
 
-        $parser = $factory->getRuleSetParser('custom');
-        self::assertInstanceOf(DefaultRuleSetParser::class, $parser);
+        $resolvedParser = $factory->getRuleSetParser('custom');
+        self::assertInstanceOf(MockObject::class, $resolvedParser);
     }
 
     public function testCanRegisterAndRetrieveCustomRuleSetParserWithInstance(): void
     {
-        $parser = $this->createMock(DefaultRuleSetParser::class);
+        $parser = $this->createMock(RuleSetParserInterface::class);
         $factory = new DefaultRuleSetParserFactory();
         $factory->registerCustomRuleSetParser('custom', $parser);
 
         $resolvedParser = $factory->getRuleSetParser('custom');
-        self::assertInstanceOf(DefaultRuleSetParser::class, $resolvedParser);
+        self::assertInstanceOf(MockObject::class, $resolvedParser);
     }
 
     public function testWillFailOnRegisterCustomRuleSetParserOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DefaultRuleSetParser::class);
+        $callable = fn () => $this->createMock(RuleSetParserInterface::class);
         $factory = new DefaultRuleSetParserFactory();
 
         $this->expectException(RulesetParserExistsException::class);
