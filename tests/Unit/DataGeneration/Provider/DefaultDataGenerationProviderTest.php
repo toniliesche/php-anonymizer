@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration\Provider;
 
 use Faker\Factory;
 use Faker\Generator;
+use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareDataGeneratorInterface;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
@@ -112,7 +113,7 @@ final class DefaultDataGenerationProviderTest extends TestCase
 
     public function testCanRegisterCustomDataGeneratorAndInjectFaker(): void
     {
-        $dataGenerator = $this->createMock(FakerAwareStringGenerator::class);
+        $dataGenerator = $this->createMock(FakerAwareDataGeneratorInterface::class);
         $dataGenerator->expects($this->once())
             ->method('setFaker');
 
@@ -127,7 +128,7 @@ final class DefaultDataGenerationProviderTest extends TestCase
 
     public function testCanInjectFakerAndProvideCustomDataGenerator(): void
     {
-        $dataGenerator = $this->createMock(FakerAwareStringGenerator::class);
+        $dataGenerator = $this->createMock(FakerAwareDataGeneratorInterface::class);
         $dataGenerator->expects($this->once())
             ->method('setFaker');
 

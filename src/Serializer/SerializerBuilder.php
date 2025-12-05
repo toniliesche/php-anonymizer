@@ -6,7 +6,9 @@ namespace PhpAnonymizer\Anonymizer\Serializer;
 
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
+use PhpAnonymizer\Anonymizer\Enum\NamingSchema;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
+use PhpAnonymizer\Anonymizer\Serializer\NameConverter\MethodToVariableNameConverter;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -15,15 +17,26 @@ use Symfony\Component\Serializer\Encoder\EncoderInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Encoder\YamlEncoder;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 final class SerializerBuilder
 {
-    private bool $usePhpDoc = false;
+    private string $methodNamingSchema = NamingSchema::CAMEL_CASE->value;
 
-    private bool $useReflection = false;
+    private string $variableNamingSchema = NamingSchema::CAMEL_CASE->value;
+
+    private bool $isserPrefixSupport = false;
+
+    private bool $useAttributeResolver = false;
+
+    private bool $usePhpDocsResolver = false;
+
+    private bool $useReflectionResolver = false;
 
     private bool $useJson = false;
 
@@ -52,113 +65,169 @@ final class SerializerBuilder
     public function withDefaults(): self
     {
         return $this
-            ->withJson()
-            ->withPhpDoc()
-            ->withReflection();
+            ->withJsonEncoder()
+            ->withoutXmlEncoder()
+            ->withoutYamlEncoder()
+            ->withAttributeResolver()
+            ->withPhpDocsResolver()
+            ->withReflectionResolver()
+            ->withoutExtraEncoders()
+            ->withoutExtraNormalizers()
+            ->withIsserPrefixSupport()
+            ->withMethodNameSchema(NamingSchema::CAMEL_CASE->value)
+            ->withVariableNameSchema(NamingSchema::CAMEL_CASE->value);
     }
 
-    public function withPhpDoc(): self
+    public function withMethodNameSchema(string $methodNameSchema): self
+    {
+        $this->methodNamingSchema = $methodNameSchema;
+
+        return $this;
+    }
+
+    public function withVariableNameSchema(string $variableNameSchema): self
+    {
+        $this->variableNamingSchema = $variableNameSchema;
+
+        return $this;
+    }
+
+    public function withIsserPrefixSupport(): self
+    {
+        $this->isserPrefixSupport = true;
+
+        return $this;
+    }
+
+    public function withoutIsserPrefixSupport(): self
+    {
+        $this->isserPrefixSupport = false;
+
+        return $this;
+    }
+
+    public function withAttributeResolver(): self
+    {
+        if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
+            throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the attribute extraction');
+        }
+
+        $this->useAttributeResolver = true;
+
+        return $this;
+    }
+
+    public function withoutAttributeResolver(): self
+    {
+        $this->useAttributeResolver = false;
+
+        return $this;
+    }
+
+    public function withPhpDocsResolver(): self
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
             throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the php doc extraction');
         }
 
-        $clone = clone $this;
-        $clone->usePhpDoc = true;
+        $this->usePhpDocsResolver = true;
 
-        return $clone;
+        return $this;
     }
 
-    public function withoutPhpDoc(): self
+    public function withoutPhpDocsResolver(): self
     {
-        $clone = clone $this;
-        $clone->usePhpDoc = false;
+        $this->usePhpDocsResolver = false;
 
-        return $clone;
+        return $this;
     }
 
-    public function withReflection(): self
+    public function withReflectionResolver(): self
     {
         if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
             throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the reflection extraction');
         }
 
-        $clone = clone $this;
-        $clone->useReflection = true;
+        $this->useReflectionResolver = true;
 
-        return $clone;
+        return $this;
     }
 
-    public function withoutReflection(): self
+    public function withoutReflectionResolver(): self
     {
-        $clone = clone $this;
-        $clone->useReflection = false;
+        $this->useReflectionResolver = false;
 
-        return $clone;
+        return $this;
     }
 
-    public function withJson(): self
+    public function withJsonEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useJson = true;
+        $this->useJson = true;
 
-        return $clone;
+        return $this;
     }
 
-    public function withoutJson(): self
+    public function withoutJsonEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useJson = false;
+        $this->useJson = false;
 
-        return $clone;
+        return $this;
     }
 
-    public function withXml(): self
+    public function withXmlEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useXml = true;
+        $this->useXml = true;
 
-        return $clone;
+        return $this;
     }
 
-    public function withoutXml(): self
+    public function withoutXmlEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useXml = false;
+        $this->useXml = false;
 
-        return $clone;
+        return $this;
     }
 
-    public function withYaml(): self
+    public function withYamlEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useYaml = true;
+        $this->useYaml = true;
 
-        return $clone;
+        return $this;
     }
 
-    public function withoutYaml(): self
+    public function withoutYamlEncoder(): self
     {
-        $clone = clone $this;
-        $clone->useYaml = false;
+        $this->useYaml = false;
 
-        return $clone;
+        return $this;
     }
 
-    public function addNormalizer(NormalizerInterface $normalizer): self
+    public function addExtraNormalizer(NormalizerInterface $normalizer): self
     {
-        $clone = clone $this;
-        $clone->extraNormalizers[] = $normalizer;
+        $this->extraNormalizers[] = $normalizer;
 
-        return $clone;
+        return $this;
     }
 
-    public function addEncoder(EncoderInterface $encoder): self
+    public function withoutExtraNormalizers(): self
     {
-        $clone = clone $this;
-        $clone->extraEncoders[] = $encoder;
+        $this->extraNormalizers = [];
 
-        return $clone;
+        return $this;
+    }
+
+    public function addExtraEncoder(EncoderInterface $encoder): self
+    {
+        $this->extraEncoders[] = $encoder;
+
+        return $this;
+    }
+
+    public function withoutExtraEncoders(): self
+    {
+        $this->extraEncoders = [];
+
+        return $this;
     }
 
     public function build(): Serializer
@@ -170,13 +239,13 @@ final class SerializerBuilder
         $accessExtractors = [];
         $initExtractors = [];
 
-        if ($this->usePhpDoc) {
+        if ($this->usePhpDocsResolver) {
             $phpDoc = new PhpDocExtractor();
             $typeExtractors[] = $phpDoc;
             $descExtractors[] = $phpDoc;
         }
 
-        if ($this->useReflection) {
+        if ($this->useReflectionResolver) {
             $reflection = new ReflectionExtractor();
             $typeExtractors[] = $reflection;
             $accessExtractors[] = $reflection;
@@ -190,8 +259,29 @@ final class SerializerBuilder
             initializableExtractors: $initExtractors,
         );
 
+        if ($this->useAttributeResolver) {
+            $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+
+            $varNameConverter = new MethodToVariableNameConverter(
+                methodNamingSchema: $this->methodNamingSchema,
+                varNamingSchema: $this->variableNamingSchema,
+                isserPrefix: $this->isserPrefixSupport,
+            );
+
+            $metaDataFactory = new MethodAwareMetadataFactory(
+                classMetadataFactory: $classMetadataFactory,
+                methodToVariableNameConverter: $varNameConverter,
+            );
+
+            $nameConverter = new MetadataAwareNameConverter(
+                $classMetadataFactory,
+            );
+        }
+
         $normalizers = [
             new ObjectNormalizer(
+                classMetadataFactory: $metaDataFactory ?? null,
+                nameConverter: $nameConverter ?? null,
                 propertyAccessor: $propertyAccessor,
                 propertyTypeExtractor: $propertyInfo,
             ),

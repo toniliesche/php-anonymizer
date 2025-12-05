@@ -69,11 +69,13 @@ write-properties:
 	@rm build.properties
 	@mv build.properties.tmp build.properties
 
-commit-checks: check-style rector-check static-analysis
+fix-code-style fc: rector-fix fix-style swiss-knife;
 
-push-checks: quality-of-code
+commit-checks cc: check-style rector-check static-analysis;
 
-quality-of-code: check-style rector-check require-checks security-check mess-detection static-analysis tests
+push-checks pc: quality-of-code;
+
+quality-of-code: check-style rector-check require-checks security-check mess-detection static-analysis tests;
 
 check-style:
 	vendor/bin/php-cs-fixer check src
@@ -89,7 +91,7 @@ fix-packages:
 static-analysis:
 	vendor/bin/phpstan
 
-tests: unit-tests integration-tests
+tests: unit-tests integration-tests;
 
 unit-tests:
 	vendor/bin/phpunit --testsuite Unit
@@ -97,31 +99,46 @@ unit-tests:
 integration-tests:
 	vendor/bin/phpunit --testsuite Integration
 
-test-coverage:
+test-coverage tc:
 	php -d zend_extension=xdebug.so vendor/bin/phpunit --coverage-html=.coverage
 
-test-coverage-xml:
+test-coverage-xml tcx:
 	php -d zend_extension=xdebug.so vendor/bin/phpunit --coverage-xml=.coverage/xml --coverage-html=.coverage/html --log-junit=.coverage/xml/anonymizer.junit.xml
 
-mutation-tests: test-coverage-xml
+mutation-tests mt: test-coverage-xml
 	vendor/bin/infection --show-mutations --coverage=.coverage/xml --logger-html=.coverage/infection.html
 
 require-checks:
 	composer-require-checker
 	vendor/bin/composer-unused --no-ansi
 	composer normalize --dry-run
+	composer validate
 
 security-check:
 	composer audit
 
 mess-detection:
-	vendor/bin/phpmd src text phpmd.xml
+	vendor/bin/phpmd src,tests text phpmd.xml
 
 md-baseline:
-	vendor/bin/phpmd src text phpmd.xml --generate-baseline
+	vendor/bin/phpmd src,tests text phpmd.xml --generate-baseline
 
 rector-check:
-	vendor/bin/rector process src --dry-run
+	vendor/bin/rector process src tests --dry-run
 
 rector-fix:
-	vendor/bin/rector process src
+	vendor/bin/rector process src tests
+
+swiss-knife sk: finalize-classes privatize-constants spot-lazy-traits check-commented-code;
+
+finalize-classes:
+	vendor/bin/swiss-knife finalize-classes src tests
+
+privatize-constants:
+	vendor/bin/swiss-knife privatize-constants src tests
+
+spot-lazy-traits:
+	vendor/bin/swiss-knife spot-lazy-traits src tests -q --max-used=1
+
+check-commented-code:
+	vendor/bin/swiss-knife check-commented-code src tests
