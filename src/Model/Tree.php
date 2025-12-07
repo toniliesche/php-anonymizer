@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use PhpAnonymizer\Anonymizer\Exception\NodeConflictException;
 
 final class Tree implements ChildNodeAccessInterface
 {
@@ -20,9 +21,9 @@ final class Tree implements ChildNodeAccessInterface
             if (!$childNode instanceof Node) {
                 throw new InvalidArgumentException('All child nodes must be of type Node');
             }
-        }
 
-        $this->childNodes = $childNodes;
+            $this->addChildNode($childNode);
+        }
     }
 
     public function addChildNode(Node $node): void
@@ -32,7 +33,7 @@ final class Tree implements ChildNodeAccessInterface
                 continue;
             }
 
-            throw new InvalidArgumentException(
+            throw new NodeConflictException(
                 sprintf(
                     'Node already contains a child node with name "%s".',
                     $node->name,

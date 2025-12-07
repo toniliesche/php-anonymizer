@@ -9,7 +9,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\DependencyInjection\Traits\ContainerBui
 use PHPUnit\Framework\TestCase;
 use function sprintf;
 
-class AnonymizerTest extends TestCase
+final class AnonymizerTest extends TestCase
 {
     use ContainerBuilderTrait;
 

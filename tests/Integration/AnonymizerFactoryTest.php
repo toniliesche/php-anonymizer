@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Finder\Finder;
 use function sprintf;
 
-class AnonymizerFactoryTest extends TestCase
+final class AnonymizerFactoryTest extends TestCase
 {
     use ContainerBuilderTrait;
 

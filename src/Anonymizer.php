@@ -36,7 +36,7 @@ final readonly class Anonymizer
     public function registerRuleSet(string $name, array $definitions, string $defaultDataAccess = DataAccess::ARRAY->value): void
     {
         if ($defaultDataAccess === DataAccess::DEFAULT->value) {
-            throw new InvalidArgumentException('Default data access cannot be DEFAULT');
+            throw new InvalidArgumentException('Default data access for rule set cannot be DEFAULT');
         }
 
         $tree = $this->ruleSetParser->parseDefinition($definitions);

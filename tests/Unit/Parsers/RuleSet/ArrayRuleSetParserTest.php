@@ -7,12 +7,20 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
 use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
+use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayRuleSetParserTest extends TestCase
 {
+    public function testCreateWillFailOnInvalidNodeParser(): void
+    {
+        $this->expectException(InvalidNodeParserException::class);
+        new ArrayRuleSetParser(new SimpleRegexpParser());
+    }
+
     public function testParseRules(): void
     {
         $parser = new ArrayRuleSetParser(new ArrayNodeParser());
