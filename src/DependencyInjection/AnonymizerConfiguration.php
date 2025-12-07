@@ -19,7 +19,6 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class AnonymizerConfiguration implements ConfigurationInterface
 {
-    // @phpstan-ignore-next-line
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('anonymizer');
