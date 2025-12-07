@@ -20,7 +20,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class DefaultDataEncodingProviderTest extends TestCase
 {
-    public function testWillFailOnInitializationWhenSymfonyPackageIsMissingAndNormalizerIsGiven(): void
+    public function testCreateWillFailOnSymfonyPackageIsMissingAndNormalizerIsGiven(): void
     {
         $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
         $dependencyChecker
@@ -36,7 +36,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenSymfonyPackageIsMissingAndDenormalizerIsGiven(): void
+    public function testCreateWillFailOnSymfonyPackageIsMissingAndDenormalizerIsGiven(): void
     {
         $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
         $dependencyChecker
@@ -52,7 +52,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenNormalizerDoesNotImplementInterface(): void
+    public function testCreateWillFailOnNormalizerDoesNotImplementInterface(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new DefaultDataEncodingProvider(
@@ -62,7 +62,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenDenormalizerDoesNotImplementInterface(): void
+    public function testCreateWillFailOnDenormalizerDoesNotImplementInterface(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new DefaultDataEncodingProvider(

@@ -15,6 +15,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Encoder\DecoderInterface;
 use Symfony\Component\Serializer\Encoder\EncoderInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -22,12 +23,15 @@ use Symfony\Component\Serializer\Encoder\YamlEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 final class SerializerBuilder
 {
+    private const PROPERTY_INFO_PACKAGE = 'symfony/property-info';
+
     private string $methodNamingSchema = NamingSchema::CAMEL_CASE->value;
 
     private string $variableNamingSchema = NamingSchema::CAMEL_CASE->value;
@@ -49,8 +53,14 @@ final class SerializerBuilder
     /** @var NormalizerInterface[] */
     private array $extraNormalizers = [];
 
+    /** @var DenormalizerInterface[] */
+    private array $extraDenormalizers = [];
+
     /** @var EncoderInterface[] */
     private array $extraEncoders = [];
+
+    /** @var DecoderInterface[] */
+    private array $extraDecoders = [];
 
     public function __construct(
         private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
@@ -74,7 +84,9 @@ final class SerializerBuilder
             ->withPhpDocsResolver()
             ->withReflectionResolver()
             ->withoutExtraEncoders()
+            ->withoutExtraDecoders()
             ->withoutExtraNormalizers()
+            ->withoutExtraDenormalizers()
             ->withIsserPrefixSupport()
             ->withMethodNameSchema(NamingSchema::CAMEL_CASE->value)
             ->withVariableNameSchema(NamingSchema::CAMEL_CASE->value);
@@ -110,7 +122,7 @@ final class SerializerBuilder
 
     public function withAttributeResolver(): self
     {
-        if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
+        if (!$this->dependencyChecker->libraryIsInstalled(self::PROPERTY_INFO_PACKAGE)) {
             throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the attribute extraction');
         }
 
@@ -128,7 +140,7 @@ final class SerializerBuilder
 
     public function withPhpDocsResolver(): self
     {
-        if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
+        if (!$this->dependencyChecker->libraryIsInstalled(self::PROPERTY_INFO_PACKAGE)) {
             throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the php doc extraction');
         }
 
@@ -146,7 +158,7 @@ final class SerializerBuilder
 
     public function withReflectionResolver(): self
     {
-        if (!$this->dependencyChecker->libraryIsInstalled('symfony/property-info')) {
+        if (!$this->dependencyChecker->libraryIsInstalled(self::PROPERTY_INFO_PACKAGE)) {
             throw new MissingPlatformRequirementsException('The symfony/property-info package is required for the reflection extraction');
         }
 
@@ -164,6 +176,10 @@ final class SerializerBuilder
 
     public function withJsonEncoder(): self
     {
+        if (!$this->dependencyChecker->extensionIsLoaded('json')) {
+            throw new MissingPlatformRequirementsException('The json extension is required for this encoder');
+        }
+
         $this->useJson = true;
 
         return $this;
@@ -178,6 +194,10 @@ final class SerializerBuilder
 
     public function withXmlEncoder(): self
     {
+        if (!$this->dependencyChecker->extensionIsLoaded('dom')) {
+            throw new MissingPlatformRequirementsException('The dom extension is required for this encoder');
+        }
+
         $this->useXml = true;
 
         return $this;
@@ -192,6 +212,10 @@ final class SerializerBuilder
 
     public function withYamlEncoder(): self
     {
+        if (!$this->dependencyChecker->extensionIsLoaded('yaml')) {
+            throw new MissingPlatformRequirementsException('The yaml extension is required for this encoder');
+        }
+
         $this->useYaml = true;
 
         return $this;
@@ -200,6 +224,34 @@ final class SerializerBuilder
     public function withoutYamlEncoder(): self
     {
         $this->useYaml = false;
+
+        return $this;
+    }
+
+    public function addExtraEncoder(EncoderInterface $encoder): self
+    {
+        $this->extraEncoders[] = $encoder;
+
+        return $this;
+    }
+
+    public function withoutExtraEncoders(): self
+    {
+        $this->extraEncoders = [];
+
+        return $this;
+    }
+
+    public function addExtraDecoder(DecoderInterface $decoder): self
+    {
+        $this->extraDecoders[] = $decoder;
+
+        return $this;
+    }
+
+    public function withoutExtraDecoders(): self
+    {
+        $this->extraDecoders = [];
 
         return $this;
     }
@@ -218,16 +270,16 @@ final class SerializerBuilder
         return $this;
     }
 
-    public function addExtraEncoder(EncoderInterface $encoder): self
+    public function addExtraDenormalizer(DenormalizerInterface $denormalizer): self
     {
-        $this->extraEncoders[] = $encoder;
+        $this->extraDenormalizers[] = $denormalizer;
 
         return $this;
     }
 
-    public function withoutExtraEncoders(): self
+    public function withoutExtraDenormalizers(): self
     {
-        $this->extraEncoders = [];
+        $this->extraDenormalizers = [];
 
         return $this;
     }
@@ -270,7 +322,7 @@ final class SerializerBuilder
                 isserPrefix: $this->isserPrefixSupport,
             );
 
-            $metaDataFactory = new MethodAwareMetadataFactory(
+            $metadataFactory = new MethodAwareMetadataFactory(
                 classMetadataFactory: $classMetadataFactory,
                 methodToVariableNameConverter: $varNameConverter,
             );
@@ -282,14 +334,14 @@ final class SerializerBuilder
 
         $normalizers = [
             new ObjectNormalizer(
-                classMetadataFactory: $metaDataFactory ?? null,
+                classMetadataFactory: $metadataFactory ?? null,
                 nameConverter: $nameConverter ?? null,
                 propertyAccessor: $propertyAccessor,
                 propertyTypeExtractor: $propertyInfo,
             ),
         ];
 
-        array_push($normalizers, ...$this->extraNormalizers);
+        array_push($normalizers, ...$this->extraNormalizers, ...$this->extraDenormalizers);
 
         $encoders = [];
 
@@ -305,7 +357,7 @@ final class SerializerBuilder
             $encoders[] = new YamlEncoder();
         }
 
-        array_push($encoders, ...$this->extraEncoders);
+        array_push($encoders, ...$this->extraEncoders, ...$this->extraDecoders);
 
         return new Serializer($normalizers, $encoders);
     }

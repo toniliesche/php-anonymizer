@@ -33,9 +33,9 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $this->configureSerializer($rootNode);
 
         $rootNode
-            ->arrayNode('rules')
-            ->useAttributeAsKey('name')
-            ->scalarPrototype()->end();
+            ->variableNode('rules')
+            ->defaultValue([])
+            ->end();
 
         return $treeBuilder;
     }

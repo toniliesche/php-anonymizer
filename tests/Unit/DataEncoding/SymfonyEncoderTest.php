@@ -17,7 +17,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class SymfonyEncoderTest extends TestCase
 {
-    public function testWillFailOnInitializationWhenSymfonyPackageIsMissing(): void
+    public function testCreateWillFailOnSymfonyPackageIsMissing(): void
     {
         $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
         $dependencyChecker->method('libraryIsInstalled')->willReturn(false);
@@ -32,7 +32,7 @@ final class SymfonyEncoderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenNormalizerDoesNotImplementInterface(): void
+    public function testCreateWillFailOnNormalizerDoesNotImplementInterface(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new SymfonyEncoder(
@@ -42,7 +42,7 @@ final class SymfonyEncoderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenDenormalizerDoesNotImplementInterface(): void
+    public function testCreateWillFailOnDenormalizerDoesNotImplementInterface(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new SymfonyEncoder(

@@ -16,6 +16,7 @@
     "Symfony\\Component\\DependencyInjection\\Loader\\YamlFileLoader",
     "Symfony\\Component\\HttpKernel\\Bundle\\AbstractBundle",
     "Symfony\\Component\\Serializer\\Attribute\\Ignore",
+    "Symfony\\Component\\Serializer\\Encoder\\DecoderInterface",
     "Symfony\\Component\\Serializer\\Encoder\\EncoderInterface",
     "Symfony\\Component\\Serializer\\Encoder\\JsonEncoder",
     "Symfony\\Component\\Serializer\\Encoder\\XmlEncoder",

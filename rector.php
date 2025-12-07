@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\Symfony\Set\SymfonySetList;
+use Rector\Renaming\Rector\Name\RenameClassRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -17,4 +17,9 @@ return RectorConfig::configure()
         phpunit: true,
         symfony: true,
     )
-    ->withTypeCoverageLevel(0);
+    ->withTypeCoverageLevel(0)
+    ->withSkip([
+        RenameClassRector::class => [
+            __DIR__ . '/tests/Unit/Serializer/SerializerBuilderTest.php',
+        ],
+    ]);

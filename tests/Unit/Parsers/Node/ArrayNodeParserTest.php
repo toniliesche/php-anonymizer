@@ -290,6 +290,20 @@ final class ArrayNodeParserTest extends TestCase
         );
     }
 
+    public function testWillFailOnMissingFilterField(): void
+    {
+        $parser = new ArrayNodeParser();
+
+        $this->expectException(RuleDefinitionException::class);
+        $parser->parseNode(
+            node: [
+                'name' => 'my-node',
+                'filter_value' => 'name',
+            ],
+            path: '',
+        );
+    }
+
     public function testWillFailOnInvalidFilterValue(): void
     {
         $parser = new ArrayNodeParser();
@@ -315,6 +329,20 @@ final class ArrayNodeParserTest extends TestCase
                 'name' => 'my-node',
                 'filter_field' => 'name',
                 'filter_value' => '',
+            ],
+            path: '',
+        );
+    }
+
+    public function testWillFailOnMissingFilterValue(): void
+    {
+        $parser = new ArrayNodeParser();
+
+        $this->expectException(RuleDefinitionException::class);
+        $parser->parseNode(
+            node: [
+                'name' => 'my-node',
+                'filter_field' => 'name',
             ],
             path: '',
         );
