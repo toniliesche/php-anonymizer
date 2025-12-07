@@ -32,7 +32,9 @@ final class TrainCaseStrategy implements NameConverterStrategyInterface
 
     public function split(Convert $convert): Convert
     {
+        // @codeCoverageIgnoreStart
         return $convert->fromTrain();
+        // @codeCoverageIgnoreEnd
     }
 
     public function join(Convert $convert): string

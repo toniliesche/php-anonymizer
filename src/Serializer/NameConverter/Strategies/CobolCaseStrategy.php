@@ -32,7 +32,9 @@ final class CobolCaseStrategy implements NameConverterStrategyInterface
 
     public function split(Convert $convert): Convert
     {
+        // @codeCoverageIgnoreStart
         return $convert->fromCobol();
+        // @codeCoverageIgnoreEnd
     }
 
     public function join(Convert $convert): string

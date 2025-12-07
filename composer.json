@@ -16,6 +16,7 @@
     "thecodingmachine/safe": "^2.5 || ^3.3"
   },
   "require-dev": {
+    "ext-dom": "*",
     "ext-json": "*",
     "ext-yaml": "*",
     "brainmaestro/composer-git-hooks": "^3.0",
@@ -45,6 +46,7 @@
     "thecodingmachine/phpstan-safe-rule": "^1.2"
   },
   "suggest": {
+    "ext-dom": "DOM extension is required to use the XML data encoder",
     "ext-json": "JSON extension is required to use the JSON data encoder",
     "ext-yaml": "YAML extension is required to use the YAML data encoder",
     "fakerphp/faker": "Data library for generation of fake data",
