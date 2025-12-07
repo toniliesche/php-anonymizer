@@ -7,7 +7,9 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
 use PhpAnonymizer\Anonymizer\Exception\NodeDefinitionMismatchException;
+use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PHPUnit\Framework\TestCase;
@@ -15,6 +17,12 @@ use stdClass;
 
 final class ComplexDefinitionParserTest extends TestCase
 {
+    public function testCreateWillFailOnInvalidNodeParser(): void
+    {
+        $this->expectException(InvalidNodeParserException::class);
+        new DefaultRuleSetParser(new ArrayNodeParser());
+    }
+
     public function testCanParseMultiLevelTreeDefinition(): void
     {
         $parser = new DefaultRuleSetParser(new ComplexRegexpParser());

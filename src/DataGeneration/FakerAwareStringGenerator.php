@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataGeneration;
 
+use Faker\Generator;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Enum\DataField;
 use PhpAnonymizer\Anonymizer\Exception\CannotResolveValueException;
-use PhpAnonymizer\Anonymizer\Interfaces\FakerAwareInterface;
-use PhpAnonymizer\Anonymizer\Traits\FakerAwareTrait;
+use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use function implode;
 use function in_array;
 use function is_string;
 use function sprintf;
 
 /**
- * @template-implements DataGeneratorInterface<string>
+ * @template-implements FakerAwareDataGeneratorInterface<string>
  */
-class FakerAwareStringGenerator implements DataGeneratorInterface, FakerAwareInterface
+final class FakerAwareStringGenerator implements FakerAwareDataGeneratorInterface
 {
-    use FakerAwareTrait;
-
     private const DATA_FIELDS = [
         DataField::BUILDING_NUMBER->value,
         DataField::CITY->value,
@@ -40,14 +39,31 @@ class FakerAwareStringGenerator implements DataGeneratorInterface, FakerAwareInt
         DataField::ZIP->value,
     ];
 
+    private Generator $faker;
+
     /**
      * @param null|DataGeneratorInterface<string> $fallbackDataGenerator
      */
     public function __construct(
         private readonly ?DataGeneratorInterface $fallbackDataGenerator = null,
-        DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        private readonly DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
     ) {
-        $this->dependencyChecker = $dependencyChecker;
+    }
+
+    /**
+     * @param Generator $faker
+     */
+    public function setFaker(mixed $faker): void
+    {
+        if (!$this->dependencyChecker->libraryIsInstalled('fakerphp/faker')) {
+            throw new MissingPlatformRequirementsException('Faker library is not installed');
+        }
+
+        if (!$faker instanceof Generator) {
+            throw new InvalidArgumentException('Faker object must be an instance of Faker Generator');
+        }
+
+        $this->faker = $faker;
     }
 
     public function supports(mixed $value, ?string $valueType): bool

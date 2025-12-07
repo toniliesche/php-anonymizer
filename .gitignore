@@ -4,3 +4,5 @@
 .php-cs-fixer.cache
 composer.lock
 vendor
+cghooks.lock
+

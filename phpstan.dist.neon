@@ -1,7 +1,9 @@
 includes:
 parameters:
-    treatPhpDocTypesAsCertain: false
-    level: 6
-    paths:
-        - src/
-        - tests/
+  bootstrapFiles:
+    - tests/bootstrap.php
+  treatPhpDocTypesAsCertain: false
+  level: 6
+  paths:
+    - src/
+    - tests/

@@ -21,7 +21,7 @@ final class AnonymizerTest extends TestCase
             ->withDefaults()
             ->withNodeParserType('array')
             ->withRuleSetParserType('array')
-            ->withRulesFromJsonFile(sprintf('%s/Fixtures/rules.json', dirname(__DIR__)))
+            ->withRulesFromJsonFile(sprintf('%s/Fixtures/rules/rules.json', dirname(__DIR__)))
             ->build();
 
         $data = [
@@ -43,7 +43,7 @@ final class AnonymizerTest extends TestCase
             ->withDefaults()
             ->withNodeParserType('array')
             ->withRuleSetParserType('array')
-            ->withRulesFromYamlFile(sprintf('%s/Fixtures/rules.yaml', dirname(__DIR__)))
+            ->withRulesFromYamlFile(sprintf('%s/Fixtures/rules/rules.yaml', dirname(__DIR__)))
             ->build();
 
         $data = [

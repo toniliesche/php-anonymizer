@@ -30,11 +30,6 @@ abstract class AbstractRegexpParser implements NodeParserInterface
         // @codeCoverageIgnoreEnd
     }
 
-    public function parseNodeName(string $nodeName, string $path): NodeParsingResult
-    {
-        return $this->parseNode($nodeName, $path);
-    }
-
     /**
      * @throws PcreException
      */
