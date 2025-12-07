@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
-use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Model\Node;
 use PHPUnit\Framework\TestCase;
 
@@ -87,7 +87,7 @@ final class NodeTest extends TestCase
             ),
         );
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidNodeDefinitionException::class);
         $node->addChildNode(
             new Node(
                 name: 'leaf',
@@ -121,7 +121,7 @@ final class NodeTest extends TestCase
             ),
         );
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidNodeDefinitionException::class);
         $node->addChildNode(
             new Node(
                 name: 'leaf',
@@ -155,7 +155,7 @@ final class NodeTest extends TestCase
             ),
         );
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidNodeDefinitionException::class);
         $node->addChildNode(
             new Node(
                 name: 'leaf',
@@ -243,7 +243,7 @@ final class NodeTest extends TestCase
 
     public function testWillFailOnInitializationWithInvalidChildNodes(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidNodeDefinitionException::class);
         new Node(
             name: 'foo',
             dataAccess: DataAccess::DEFAULT->value,
@@ -306,5 +306,93 @@ final class NodeTest extends TestCase
 
         $this->expectException(ChildNodeNotFoundException::class);
         $node->getChildNode('baz');
+    }
+
+    public function testWillFailOnNodeWithNestedRule(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::NODE,
+            valueType: null,
+            isArray: false,
+            nestedRule: 'address',
+        );
+    }
+
+    public function testWillFailOnNodeWithFilterField(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::NODE,
+            valueType: null,
+            isArray: false,
+            filterField: 'name',
+        );
+    }
+
+    public function testWillFailOnNodeWithFilterValue(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::NODE,
+            valueType: null,
+            isArray: false,
+            filterValue: 'name',
+        );
+    }
+
+    public function testWillFailOnNodeWithMissingFilterValue(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+            filterField: 'name',
+        );
+    }
+
+    public function testWillFailOnNodeWithMissingFilterField(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+            filterValue: 'name',
+        );
+    }
+
+    public function testAddingChildWillFailOnNodeWithNestedRule(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        $node = new Node(
+            name: 'foo',
+            dataAccess: DataAccess::DEFAULT->value,
+            nodeType: NodeType::LEAF,
+            valueType: null,
+            isArray: false,
+            nestedRule: 'address',
+        );
+
+        $node->addChildNode(
+            new Node(
+                name: 'bar',
+                dataAccess: DataAccess::DEFAULT->value,
+                nodeType: NodeType::LEAF,
+                valueType: null,
+                isArray: false,
+            ),
+        );
     }
 }

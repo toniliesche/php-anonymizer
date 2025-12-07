@@ -28,14 +28,6 @@ final class InvalidObjectTypeException extends InvalidArgumentException
     /**
      * @param string[] $path
      */
-    public static function notASimpleType(array $path): self
-    {
-        return new self(sprintf('Field is not a simple type : [%s]', implode('.', $path)));
-    }
-
-    /**
-     * @param string[] $path
-     */
     public static function notAString(array $path): self
     {
         return new self(sprintf('Field is not a string : [%s]', implode('.', $path)));

@@ -11,12 +11,14 @@
   ],
   "require": {
     "php": "^8.2",
+    "jawira/case-converter": "^3.6",
     "myclabs/deep-copy": "^1.12",
     "thecodingmachine/safe": "^2.5 || ^3.3"
   },
   "require-dev": {
     "ext-json": "*",
     "ext-yaml": "*",
+    "brainmaestro/composer-git-hooks": "^3.0",
     "ergebnis/composer-normalize": "^2.48",
     "fakerphp/faker": "^1.24",
     "friendsofphp/php-cs-fixer": "^3.91",
@@ -34,15 +36,23 @@
     "rector/swiss-knife": "^2.3",
     "rector/type-perfect": "^2.1",
     "spaze/phpstan-disallowed-calls": "^4.7",
+    "symfony/config": "^7.4",
+    "symfony/dependency-injection": "^7.4",
+    "symfony/http-kernel": "^7.4",
     "symfony/serializer": "^7.4",
     "symfony/serializer-pack": "^1.3",
+    "symfony/yaml": "^7.4",
     "thecodingmachine/phpstan-safe-rule": "^1.2"
   },
   "suggest": {
     "ext-json": "JSON extension is required to use the JSON data encoder",
     "ext-yaml": "YAML extension is required to use the YAML data encoder",
     "fakerphp/faker": "Data library for generation of fake data",
-    "symfony/serializer": "Serializer component to normalize and denormalize data objects"
+    "symfony/config": "Config component to setup anonymizer via Symfony application config",
+    "symfony/dependency-injection": "Dependency Injection component to inject anonymizer via Symfony DI container",
+    "symfony/http-kernel": "Kernel component to use Symfony bundle capabilities",
+    "symfony/serializer": "Serializer component to normalize and denormalize data objects",
+    "symfony/serializer-pack": "Serializer component to normalize and denormalize data objects"
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
@@ -68,6 +78,33 @@
     "composer-normalize": {
       "indent-size": 2,
       "indent-style": "space"
+    },
+    "hooks": {
+      "config": {
+        "stop-on-failure": [
+          "pre-commit",
+          "pre-push"
+        ]
+      },
+      "post-checkout": [
+        "composer install"
+      ],
+      "post-merge": [
+        "composer install"
+      ],
+      "post-pull": [
+        "composer install"
+      ],
+      "pre-commit": [
+        "make commit-checks"
+      ],
+      "pre-push": [
+        "make push-checks"
+      ]
     }
+  },
+  "scripts": {
+    "post-install-cmd": "cghooks add --ignore-lock",
+    "post-update-cmd": "cghooks update"
   }
 }

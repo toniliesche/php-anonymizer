@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Model;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
-use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
 use function sprintf;
 
 final class Node implements ChildNodeAccessInterface
@@ -29,30 +29,34 @@ final class Node implements ChildNodeAccessInterface
     ) {
         foreach ($childNodes as $childNode) {
             if (!$childNode instanceof self) {
-                throw new InvalidArgumentException('All child nodes must be of type Node');
+                throw new InvalidNodeDefinitionException('All child nodes must be of type Node');
             }
 
             $this->addChildNode($childNode);
         }
 
-        if (!is_null($this->nestedType) && $childNodes !== []) {
-            throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
-        }
-
         if ($this->nodeType !== NodeType::LEAF) {
-            if (!is_null($this->nestedType)) {
-                throw new InvalidArgumentException('Cannot define a nested type for a non-leaf node');
+            if (!is_null($this->nestedRule)) {
+                throw new InvalidNodeDefinitionException('Cannot define a nested rule for a non-leaf node');
             }
 
             if (!is_null($this->filterField)) {
-                throw new InvalidArgumentException('Cannot define a filter field for a non-leaf node');
+                throw new InvalidNodeDefinitionException('Cannot define a filter field for a non-leaf node');
             }
+
+            if (!is_null($this->filterValue)) {
+                throw new InvalidNodeDefinitionException('Cannot define a filter value for a non-leaf node');
+            }
+        }
+
+        if (is_null($this->filterField) xor is_null($this->filterValue)) {
+            throw new InvalidNodeDefinitionException('Filter value must not be null if filter field is not null or vice-versa');
         }
     }
 
     public function containsNestedData(): bool
     {
-        return !is_null($this->nestedType);
+        return !is_null($this->nestedRule);
     }
 
     public function hasFilterRule(): bool
@@ -62,8 +66,8 @@ final class Node implements ChildNodeAccessInterface
 
     public function addChildNode(Node $node): void
     {
-        if (!is_null($this->nestedType)) {
-            throw new InvalidArgumentException('Cannot add child nodes to a node that contains a nested type');
+        if (!is_null($this->nestedRule)) {
+            throw new InvalidNodeDefinitionException('Cannot add child nodes to a node that contains a nested rule');
         }
 
         foreach ($this->childNodes as $childNode) {
@@ -71,7 +75,7 @@ final class Node implements ChildNodeAccessInterface
                 continue;
             }
 
-            throw new InvalidArgumentException(
+            throw new InvalidNodeDefinitionException(
                 sprintf(
                     'Node already contains a child node with name "%s".',
                     $node->name,

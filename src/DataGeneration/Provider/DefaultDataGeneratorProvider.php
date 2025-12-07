@@ -6,12 +6,12 @@ namespace PhpAnonymizer\Anonymizer\DataGeneration\Provider;
 
 use Faker\Generator;
 use PhpAnonymizer\Anonymizer\DataGeneration\DataGeneratorInterface;
+use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareDataGeneratorInterface;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Exception\UnsupportedDataTypeException;
-use PhpAnonymizer\Anonymizer\Interfaces\FakerAwareInterface;
 use function gettype;
 use function in_array;
 use function is_object;
@@ -45,7 +45,7 @@ final class DefaultDataGeneratorProvider implements DataGenerationProviderInterf
     public function registerCustomDataGenerator(DataGeneratorInterface $generator): void
     {
         if (!in_array($generator, $this->customGenerators, true)) {
-            if (isset($this->faker) && $generator instanceof FakerAwareInterface) {
+            if (isset($this->faker) && $generator instanceof FakerAwareDataGeneratorInterface) {
                 $generator->setFaker($this->faker);
             }
 
@@ -69,13 +69,13 @@ final class DefaultDataGeneratorProvider implements DataGenerationProviderInterf
         $this->faker = $faker;
 
         foreach ($this->generators as $generator) {
-            if ($generator instanceof FakerAwareInterface) {
+            if ($generator instanceof FakerAwareDataGeneratorInterface) {
                 $generator->setFaker($faker);
             }
         }
 
         foreach ($this->customGenerators as $generator) {
-            if ($generator instanceof FakerAwareInterface) {
+            if ($generator instanceof FakerAwareDataGeneratorInterface) {
                 $generator->setFaker($faker);
             }
         }
