@@ -2,9 +2,26 @@
 
 ## 00 Preliminary
 
+### Project Status
+
+[![Tests](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/toniliesche/php-anonymizer/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer)
+
+### Project Info
+
+![PHP Version](https://img.shields.io/packagist/php-v/php-anonymizer/anonymizer) [![Latest Version](https://img.shields.io/packagist/v/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer) ![License](https://img.shields.io/github/license/toniliesche/php-anonymizer)
+
+### License
+
+This project is released under MIT license.
+
+See the [LICENSE](LICENSE.md) for more information.
+
 ### Table of Contents
 
 - [00 Preliminary](#00-preliminary)
+    - [Project Status](#project-status)
+    - [Project Info](#project-info)
+    - [License](#license)
     - [Table of Contents](#table-of-contents)
     - [Purpose](#purpose)
     - [Getting started](#getting-started)

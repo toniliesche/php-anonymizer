@@ -1,7 +1,7 @@
 {
   "name": "php-anonymizer/anonymizer",
   "description": "Library to remove confidential data from different data containers",
-  "license": "proprietary",
+  "license": "MIT",
   "type": "library",
   "authors": [
     {
