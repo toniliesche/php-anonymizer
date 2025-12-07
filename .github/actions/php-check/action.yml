@@ -35,4 +35,4 @@ runs:
       run: vendor/bin/phpstan
     - name: Run phpunit tests
       shell: bash
-      run: vendor/bin/phpunit --coverage-xml=.coverage
+      run: vendor/bin/phpunit --coverage-clover coverage.xml
