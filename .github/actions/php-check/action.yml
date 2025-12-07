@@ -35,4 +35,8 @@ runs:
       run: vendor/bin/phpstan
     - name: Run phpunit tests
       shell: bash
-      run: vendor/bin/phpunit --coverage-html=.coverage
+      run: vendor/bin/phpunit --coverage-xml=.coverage
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_ORG_TOKEN }}
