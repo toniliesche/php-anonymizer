@@ -26,7 +26,6 @@ use PhpAnonymizer\Anonymizer\Enum\DataProcessor;
 use PhpAnonymizer\Anonymizer\Enum\NodeMapper;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Enum\RuleSetParser;
-use PhpAnonymizer\Anonymizer\Exception\AnonymizerBuilderException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\Factory\DefaultNodeMapperFactory;
@@ -85,6 +84,10 @@ final class AnonymizerBuilder
 
     private ?RuleLoaderInterface $ruleLoader = null;
 
+    private ?NormalizerInterface $normalizer = null;
+
+    private ?DenormalizerInterface $denormalizer = null;
+
     public function __construct(
         private readonly NodeParserFactoryInterface $nodeParserFactory = new DefaultNodeParserFactory(),
         private readonly RuleSetParserFactoryInterface $ruleSetParserFactory = new DefaultRuleSetParserFactory(),
@@ -97,24 +100,16 @@ final class AnonymizerBuilder
     ) {
     }
 
-    public function withNormalizer(NormalizerInterface $normalizer): self
+    public function withNormalizer(?NormalizerInterface $normalizer): self
     {
-        if (!$this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
-            throw new AnonymizerBuilderException('DataEncodingProvider must implement NormalizerAwareDataEncoderInterface to set Normalizer.');
-        }
-
-        $this->dataEncodingProvider->setNormalizer($normalizer);
+        $this->normalizer = $normalizer;
 
         return $this;
     }
 
-    public function withDenormalizer(DenormalizerInterface $denormalizer): self
+    public function withDenormalizer(?DenormalizerInterface $denormalizer): self
     {
-        if (!$this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
-            throw new AnonymizerBuilderException('DataEncodingProvider must implement NormalizerAwareDataEncoderInterface to set Denormalizer.');
-        }
-
-        $this->dataEncodingProvider->setDenormalizer($denormalizer);
+        $this->denormalizer = $denormalizer;
 
         return $this;
     }
@@ -384,6 +379,16 @@ final class AnonymizerBuilder
         $this->dataGenerationProvider = $this->dataGenerationProviderFactory->getDataGenerationProvider(
             type: $this->dataGeneratorType ?? null,
         );
+
+        if ($this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
+            if ($this->normalizer instanceof NormalizerInterface) {
+                $this->dataEncodingProvider->setNormalizer($this->normalizer);
+            }
+            if ($this->denormalizer instanceof DenormalizerInterface) {
+                $this->dataEncodingProvider->setDenormalizer($this->denormalizer);
+            }
+        }
+
         $this->dataProcessor = $this->dataProcessorFactory->getDataProcessor(
             type: $this->dataProcessorType ?? null,
             dataAccessProvider: $this->dataAccessProvider,

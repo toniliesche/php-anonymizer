@@ -114,10 +114,10 @@ require-checks:
 	composer normalize --dry-run
 	composer validate
 
-security-check:
+security-check audit:
 	composer audit
 
-mess-detection:
+mess-detection md phpmd:
 	vendor/bin/phpmd src,tests text phpmd.xml
 
 md-baseline:
@@ -126,7 +126,7 @@ md-baseline:
 rector-check:
 	vendor/bin/rector process src tests --dry-run
 
-rector-fix:
+rector-fix rector:
 	vendor/bin/rector process src tests
 
 swiss-knife sk: finalize-classes privatize-constants spot-lazy-traits check-commented-code;

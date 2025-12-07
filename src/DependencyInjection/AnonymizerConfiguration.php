@@ -24,12 +24,17 @@ final class AnonymizerConfiguration implements ConfigurationInterface
 
         $rootNode = $treeBuilder
             ->getRootNode()
-            ->addDefaultChildrenIfNoneSet()
+            ->addDefaultsIfNotSet()
             ->children();
 
         $this->configureDataAccessors($rootNode);
         $this->configureParsers($rootNode);
         $this->configureSerializer($rootNode);
+
+        $rootNode
+            ->arrayNode('rules')
+            ->useAttributeAsKey('name')
+            ->scalarPrototype()->end();
 
         return $treeBuilder;
     }
@@ -126,7 +131,7 @@ final class AnonymizerConfiguration implements ConfigurationInterface
             ->booleanNode('reflection')
             ->defaultTrue();
 
-        $namingSchemasNode = $rootNode
+        $namingSchemasNode = $serializerNode
             ->arrayNode('naming_schemas')
             ->addDefaultsIfNotSet()
             ->children();

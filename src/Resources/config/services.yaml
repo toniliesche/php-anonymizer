@@ -8,3 +8,7 @@ services:
 
   PhpAnonymizer\Anonymizer\AnonymizerFactory:
     arguments:
+      $dataOptions: '%anonymizer.data_options%'
+      $parserOptions: '%anonymizer.parser_options%'
+      $rules: '%anonymizer.rules%'
+      $serializerOptions: '%anonymizer.serializer_options%'

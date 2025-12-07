@@ -67,6 +67,6 @@ final class AnonymizerExtension extends Extension
             container: $container,
             locator: new FileLocator(sprintf('%s/Resources/config', dirname(__DIR__))),
         );
-        $loader->load('./services.yml');
+        $loader->load('./services.yaml');
     }
 }
