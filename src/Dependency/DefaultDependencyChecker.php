@@ -16,7 +16,9 @@ final class DefaultDependencyChecker implements DependencyCheckerInterface
     public function __construct()
     {
         if (!class_exists(InstalledVersions::class)) {
+            // @codeCoverageIgnoreStart
             throw new MissingPlatformRequirementsException('Composer is required to check for library dependencies');
+            // @codeCoverageIgnoreEnd
         }
     }
 
