@@ -6,7 +6,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding;
 
-use JsonException;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
@@ -14,8 +13,10 @@ use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
+use Safe\Exceptions\JsonException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use function Safe\json_encode;
 
 final readonly class SymfonyToJsonEncoder implements DataEncoderInterface
 {
@@ -70,12 +71,14 @@ final readonly class SymfonyToJsonEncoder implements DataEncoderInterface
 
         try {
             /** @var array<int|string,mixed> $data */
-            return json_encode($data, JSON_THROW_ON_ERROR);
+            return json_encode($data);
+            // @codeCoverageIgnoreStart
         } catch (JsonException $ex) {
             throw new DataEncodingException(
                 message: 'Failed to encode data to JSON',
                 previous: $ex,
             );
+            // @codeCoverageIgnoreEnd
         }
     }
 

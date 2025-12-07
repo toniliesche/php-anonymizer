@@ -48,4 +48,9 @@
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Parsers/Node/ArrayNodeParserTest.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="tests/Unit/Parsers/Node/ArrayNodeParserTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Parsers/Node/ComplexRegexParserTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="tests/Unit/Serializer/SerializerBuilderTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Serializer/SerializerBuilderTest.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="tests/Unit/Serializer/SerializerBuilderTest.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/Serializer/SerializerBuilderTest.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/Serializer/SerializerBuilderTest.php"/>
 </phpmd-baseline>

@@ -1,14 +1,25 @@
-# Toni's Data Anonymization Toolkit
+# Toni's Data Anonymization Toolkit a.k.a. "php-anonymizer"
 
 ## 00 Preliminary
 
 ### Project Status
 
-[![Tests](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/toniliesche/php-anonymizer/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer)
+[![Tests](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml)
+[![Code Coverage](https://codecov.io/gh/toniliesche/php-anonymizer/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer)
+[![Downloads](https://img.shields.io/packagist/dt/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
+[![Stars](https://img.shields.io/github/stars/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
 
 ### Project Info
 
-![PHP Version](https://img.shields.io/packagist/php-v/php-anonymizer/anonymizer) [![Latest Version](https://img.shields.io/packagist/v/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer) ![License](https://img.shields.io/github/license/toniliesche/php-anonymizer)
+[![PHP Version](https://img.shields.io/packagist/php-v/php-anonymizer/anonymizer)](https://github.com/toniliesche/php-anonymizer)
+[![Latest Version](https://img.shields.io/packagist/v/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
+[![License](https://img.shields.io/github/license/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
+
+
+### Repo Status
+
+[![Last Commit](https://img.shields.io/github/last-commit/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
+[![Issues](https://img.shields.io/github/issues/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
 
 ### License
 

@@ -17,10 +17,12 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class SymfonyToJsonEncoderTest extends TestCase
 {
-    public function testWillFailOnInitializationWhenSymfonyPackageIsMissing(): void
+    public function testCreateWillFailOnJsonExtensionIsMissing(): void
     {
         $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
-        $dependencyChecker->method('libraryIsInstalled')->willReturn(false);
+        $dependencyChecker->expects($this->once())
+            ->method('extensionIsLoaded')
+            ->willReturn(false);
 
         $this->expectException(MissingPlatformRequirementsException::class);
         new SymfonyToJsonEncoder(
@@ -30,7 +32,25 @@ final class SymfonyToJsonEncoderTest extends TestCase
         );
     }
 
-    public function testWillFailOnInitializationWhenNormalizerDoesNotImplementInterface(): void
+    public function testCreateWillFailOnSymfonyPackageIsMissing(): void
+    {
+        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker->expects($this->once())
+            ->method('extensionIsLoaded')
+            ->willReturn(true);
+        $dependencyChecker->expects($this->once())
+            ->method('libraryIsInstalled')
+            ->willReturn(false);
+
+        $this->expectException(MissingPlatformRequirementsException::class);
+        new SymfonyToJsonEncoder(
+            /** @phpstan-ignore-next-line */
+            new stdClass(),
+            $dependencyChecker,
+        );
+    }
+
+    public function testCreateWillFailOnNormalizerDoesNotImplementInterface(): void
     {
         $this->expectException(InvalidArgumentException::class);
         new SymfonyToJsonEncoder(

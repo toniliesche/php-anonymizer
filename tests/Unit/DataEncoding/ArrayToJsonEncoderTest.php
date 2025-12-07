@@ -14,7 +14,7 @@ use stdClass;
 
 final class ArrayToJsonEncoderTest extends TestCase
 {
-    public function testWillFailOnInitializationWhenJsonExceptionIsMissing(): void
+    public function testCreateWillFailOnJsonExceptionIsMissing(): void
     {
         $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
         $dependencyChecker->method('extensionIsLoaded')->willReturn(false);

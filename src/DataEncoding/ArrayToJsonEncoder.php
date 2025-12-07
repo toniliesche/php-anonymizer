@@ -6,16 +6,15 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\DataEncoding;
 
-use JsonException;
 use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
 use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Model\TempStorage;
+use Safe\Exceptions\JsonException;
 use function is_array;
 use function Safe\json_encode;
-use const JSON_THROW_ON_ERROR;
 
 final readonly class ArrayToJsonEncoder implements DataEncoderInterface
 {
@@ -46,7 +45,7 @@ final readonly class ArrayToJsonEncoder implements DataEncoderInterface
 
         try {
             /** @var array<int|string,mixed> $data */
-            return json_encode($data, JSON_THROW_ON_ERROR);
+            return json_encode($data);
         } catch (JsonException $ex) {
             throw new DataEncodingException(
                 message: 'Failed to encode data to JSON',

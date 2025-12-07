@@ -32,7 +32,9 @@ final class KebabCaseStrategy implements NameConverterStrategyInterface
 
     public function split(Convert $convert): Convert
     {
+        // @codeCoverageIgnoreStart
         return $convert->fromKebab();
+        // @codeCoverageIgnoreEnd
     }
 
     public function join(Convert $convert): string

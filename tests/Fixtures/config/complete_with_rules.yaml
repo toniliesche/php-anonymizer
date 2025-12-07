@@ -13,8 +13,15 @@ anonymizer:
     order:
       default_access: array
       nodes:
+        - name: order
+          children:
+            - name: address
+              children:
+                - name: name
+                - name: street
+                - name: email
   serializer:
-    enabled: false
+    enabled: true
     resolvers:
       attributes: true
       phpdocs: true
@@ -25,5 +32,5 @@ anonymizer:
       with_isser_functions: true
     encoders:
       json: true
-      xml: false
-      yaml: false
+      xml: true
+      yaml: true
