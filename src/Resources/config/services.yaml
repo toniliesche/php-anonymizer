@@ -3,6 +3,8 @@ services:
     autoconfigure: true
     autowire: true
 
+  PhpAnonymizer\Anonymizer\AnonymizerInterface: '@PhpAnonymizer\Anonymizer\Anonymizer'
+
   PhpAnonymizer\Anonymizer\Anonymizer:
     factory: [ '@PhpAnonymizer\Anonymizer\AnonymizerFactory', 'create' ]
 
