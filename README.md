@@ -7,19 +7,19 @@
 [![Tests](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer/actions/workflows/ci.yml)
 [![Code Coverage](https://codecov.io/gh/toniliesche/php-anonymizer/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer)
 [![Downloads](https://img.shields.io/packagist/dt/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
-[![Stars](https://img.shields.io/github/stars/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
+[![Stars](https://img.shields.io/github/stars/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer/stargazers)
 
 ### Project Info
 
 [![PHP Version](https://img.shields.io/packagist/php-v/php-anonymizer/anonymizer)](https://github.com/toniliesche/php-anonymizer)
 [![Latest Version](https://img.shields.io/packagist/v/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
-[![License](https://img.shields.io/github/license/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
+[![License](https://img.shields.io/github/license/toniliesche/php-anonymizer)](https://raw.githubusercontent.com/toniliesche/php-anonymizer/refs/heads/main/LICENSE.md)
 
 
 ### Repo Status
 
 [![Last Commit](https://img.shields.io/github/last-commit/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
-[![Issues](https://img.shields.io/github/issues/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer)
+[![Issues](https://img.shields.io/github/issues/toniliesche/php-anonymizer)](https://github.com/toniliesche/php-anonymizer/issues)
 
 ### License
 
