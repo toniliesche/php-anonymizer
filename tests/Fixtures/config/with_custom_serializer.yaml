@@ -1,0 +1,15 @@
+anonymizer:
+  data:
+    access_provider: default
+    faker: false
+    faker_seed: my-seed-123
+    generation_provider: default
+    processor_type: default
+  parsers:
+    node_mapper: default
+    node_parser: array
+    rule_set_parser: array
+  serializer:
+    enabled: true
+    mode: custom
+    custom_serializer: MySerializer

@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 
 final class AnonymizerTest extends TestCase
 {
-    public function testWillFailOnRegisteringingDefaultAsDataAccessForRuleSet(): void
+    public function testWillFailOnRegisteringDefaultAsDataAccessForRuleSet(): void
     {
         $anonymizer = new Anonymizer(
             new DefaultRuleSetParser(),

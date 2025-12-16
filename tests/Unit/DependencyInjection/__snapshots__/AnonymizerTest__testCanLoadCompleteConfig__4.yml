@@ -1,0 +1,15 @@
+enabled: true
+mode: internal
+resolvers:
+    attributes: true
+    phpdocs: true
+    reflection: true
+naming_schemas:
+    method_names: camelCase
+    variable_names: camelCase
+    with_isser_functions: true
+encoders:
+    json: true
+    xml: true
+    yaml: true
+custom_serializer: null

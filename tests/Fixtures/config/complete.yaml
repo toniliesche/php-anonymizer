@@ -11,6 +11,7 @@ anonymizer:
     rule_set_parser: array
   serializer:
     enabled: true
+    mode: internal
     resolvers:
       attributes: true
       phpdocs: true

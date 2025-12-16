@@ -22,6 +22,7 @@ anonymizer:
                 - name: email
   serializer:
     enabled: true
+    mode: internal
     resolvers:
       attributes: true
       phpdocs: true

@@ -11,9 +11,9 @@ use Faker\Generator;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DataAccessProviderFactoryInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\Factory\DefaultDataAccessProviderFactory;
-use PhpAnonymizer\Anonymizer\DataEncoding\NormalizerAwareDataEncoderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DataEncodingProviderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
+use PhpAnonymizer\Anonymizer\DataEncoding\Provider\NormalizerAwareDataEncodingProviderInterface;
 use PhpAnonymizer\Anonymizer\DataGeneration\FakerAwareStringGenerator;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DataGenerationProviderInterface;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
@@ -382,7 +382,7 @@ final class AnonymizerBuilder
             type: $this->dataGeneratorType ?? null,
         );
 
-        if ($this->dataEncodingProvider instanceof NormalizerAwareDataEncoderInterface) {
+        if ($this->dataEncodingProvider instanceof NormalizerAwareDataEncodingProviderInterface) {
             if ($this->normalizer instanceof NormalizerInterface) {
                 $this->dataEncodingProvider->setNormalizer($this->normalizer);
             }

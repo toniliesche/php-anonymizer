@@ -51,19 +51,16 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $parserNode
             ->scalarNode('node_mapper')
             ->defaultValue(NodeMapper::DEFAULT->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $parserNode
             ->scalarNode('node_parser')
             ->defaultValue(NodeParser::ARRAY->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $parserNode
             ->scalarNode('rule_set_parser')
             ->defaultValue(RuleSetParser::ARRAY->value)
-            ->isRequired()
             ->cannotBeEmpty();
     }
 
@@ -78,13 +75,11 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $dataNode
             ->scalarNode('access_provider')
             ->defaultValue(DataAccessProvider::DEFAULT->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $dataNode
             ->booleanNode('faker')
-            ->defaultFalse()
-            ->isRequired();
+            ->defaultFalse();
 
         $dataNode
             ->scalarNode('faker_seed')
@@ -93,13 +88,11 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $dataNode
             ->scalarNode('generation_provider')
             ->defaultValue(DataGenerationProvider::DEFAULT->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $dataNode
             ->scalarNode('processor_type')
             ->defaultValue(DataProcessor::DEFAULT->value)
-            ->isRequired()
             ->cannotBeEmpty();
     }
 
@@ -114,6 +107,15 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $serializerNode
             ->booleanNode('enabled')
             ->defaultFalse();
+
+        $serializerNode
+            ->enumNode('mode')
+            ->values(['autowire', 'custom', 'internal'])
+            ->defaultValue('internal');
+
+        $serializerNode
+            ->scalarNode('custom_serializer')
+            ->defaultNull();
 
         $resolversNode = $serializerNode
             ->arrayNode('resolvers')
@@ -140,13 +142,11 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         $namingSchemasNode
             ->scalarNode('method_names')
             ->defaultValue(NamingSchema::CAMEL_CASE->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $namingSchemasNode
             ->scalarNode('variable_names')
             ->defaultValue(NamingSchema::CAMEL_CASE->value)
-            ->isRequired()
             ->cannotBeEmpty();
 
         $namingSchemasNode

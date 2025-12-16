@@ -15,6 +15,11 @@ anonymizer:
       nodes:
   serializer:
     enabled: false
+    # valid modes : autowire, custom, internal
+    mode: autowire
+    # required for mode custom, must refer to existing service inside symfony container
+    # must implement SerializerInterface, NormalizerInterface and DenormalizerInterface
+    custom_serializer: AliasOfSerializer
     resolvers:
       attributes: true
       phpdocs: true
