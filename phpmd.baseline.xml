@@ -5,6 +5,7 @@
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/AnonymizerBuilder.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/AnonymizerBuilder.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/AnonymizerBuilder.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\IfStatementAssignment" file="src/AnonymizerFactory.php" method="__construct"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/ArrayDataAccess.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/AutoDetectDataAccess.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/PropertyDataAccess.php"/>
@@ -16,6 +17,7 @@
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataGeneration/Provider/Factory/DefaultDataGenerationProviderFactory.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataGeneration/StarMaskedStringGenerator.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/Dependency/DefaultDependencyChecker.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DependencyInjection/Compiler/SerializerCompilerPass.php"/>
   <violation rule="PHPMD\Rule\Design\NumberOfChildren" file="src/Exception/BaseAnonymizerException.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataAccessProviderDefinitionException.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataGenerationProviderDefinitionException.php"/>
@@ -33,6 +35,7 @@
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Serializer/SerializerBuilder.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Helper/DataGeneration/RandomIntGenerator.php"/>
   <violation rule="PHPMD\Rule\CleanCode\BooleanArgumentFlag" file="tests/Helper/DependencyInjection/Config/ContainerBuilderConfig.php"/>
+  <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Integration/AnonymizerFactoryTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Integration/AnonymizerTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>

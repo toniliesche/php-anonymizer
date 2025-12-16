@@ -108,6 +108,15 @@ final class AnonymizerConfiguration implements ConfigurationInterface
             ->booleanNode('enabled')
             ->defaultFalse();
 
+        $serializerNode
+            ->enumNode('mode')
+            ->values(['autowire', 'custom', 'internal'])
+            ->defaultValue('internal');
+
+        $serializerNode
+            ->scalarNode('custom_serializer')
+            ->defaultNull();
+
         $resolversNode = $serializerNode
             ->arrayNode('resolvers')
             ->addDefaultsIfNotSet()
