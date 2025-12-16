@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 services:
   _defaults:
     autoconfigure: true
@@ -13,4 +14,8 @@ services:
       $dataOptions: '%anonymizer.data_options%'
       $parserOptions: '%anonymizer.parser_options%'
       $rules: '%anonymizer.rules%'
+      $serializer: '@?anonymizer.serializer'
+
+  PhpAnonymizer\Anonymizer\Serializer\SerializerFactory:
+    arguments:
       $serializerOptions: '%anonymizer.serializer_options%'

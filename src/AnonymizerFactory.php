@@ -6,14 +6,17 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer;
 
-use PhpAnonymizer\Anonymizer\Dependency\DefaultDependencyChecker;
-use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
-use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
-use PhpAnonymizer\Anonymizer\Serializer\SerializerBuilder;
-use Symfony\Component\Serializer\Serializer;
+use PhpAnonymizer\Anonymizer\Exception\AnonymizerFactoryException;
+use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 final readonly class AnonymizerFactory
 {
+    // @phpstan-ignore-next-line
+    private SerializerInterface&NormalizerInterface&DenormalizerInterface $serializer;
+
     /**
      * @param array{
      *      access_provider: string,
@@ -30,32 +33,16 @@ final readonly class AnonymizerFactory
      * @param array<string, array{
      *      nodes: array<mixed>,
      *    }> $rules
-     * @param array{
-     *      enabled: bool,
-     *      encoders: array{
-     *        json: bool,
-     *        xml: bool,
-     *        yaml: bool,
-     *      },
-     *      naming_schemas: array{
-     *        method_names: string,
-     *        variable_names: string,
-     *        with_isser_functions: bool,
-     *      },
-     *      resolvers: array{
-     *        attributes: bool,
-     *        phpdocs: bool,
-     *        reflection: bool,
-     *      },
-     *    } $serializerOptions
      */
     public function __construct(
         private array $dataOptions,
         private array $parserOptions,
         private array $rules,
-        private array $serializerOptions,
-        private DependencyCheckerInterface $dependencyChecker = new DefaultDependencyChecker(),
+        ?SerializerInterface $serializer = null,
     ) {
+        if (($set = $this->validateSerializer($serializer)) !== null) {
+            $this->serializer = $set;
+        }
     }
 
     public function create(): Anonymizer
@@ -72,16 +59,10 @@ final readonly class AnonymizerFactory
             ->withNodeParserType($this->parserOptions['node_parser'])
             ->withNodeMapperType($this->parserOptions['node_mapper']);
 
-        if ($this->serializerOptions['enabled']) {
-            if (!$this->dependencyChecker->libraryIsInstalled('symfony/serializer')) {
-                throw new MissingPlatformRequirementsException('The symfony/serializer package is required for this encoder');
-            }
-
-            $serializer = $this->createSerializer();
-
+        if (isset($this->serializer)) {
             $builder
-                ->withNormalizer($serializer)
-                ->withDenormalizer($serializer);
+                ->withNormalizer($this->serializer)
+                ->withDenormalizer($this->serializer);
         }
 
         $anonymizer = $builder->build();
@@ -97,40 +78,21 @@ final readonly class AnonymizerFactory
         return $anonymizer;
     }
 
-    private function createSerializer(): Serializer
+    private function validateSerializer(?SerializerInterface $serializer): (SerializerInterface&NormalizerInterface&DenormalizerInterface)|null
     {
-        $builder = (new SerializerBuilder())
-            ->withVariableNameSchema($this->serializerOptions['naming_schemas']['variable_names'])
-            ->withMethodNameSchema($this->serializerOptions['naming_schemas']['method_names']);
-
-        if ($this->serializerOptions['naming_schemas']['with_isser_functions']) {
-            $builder->withIsserPrefixSupport();
+        if ($serializer === null) {
+            return null;
         }
 
-        if ($this->serializerOptions['encoders']['json']) {
-            $builder->withJsonEncoder();
+        if (!$serializer instanceof NormalizerInterface) {
+            throw new AnonymizerFactoryException('Serializer must implement NormalizerInterface');
         }
 
-        if ($this->serializerOptions['encoders']['xml']) {
-            $builder->withXmlEncoder();
+        if (!$serializer instanceof DenormalizerInterface) {
+            throw new RuleDefinitionException('Serializer must implement DenormalizerInterface');
         }
 
-        if ($this->serializerOptions['encoders']['yaml']) {
-            $builder->withYamlEncoder();
-        }
-
-        if ($this->serializerOptions['resolvers']['attributes']) {
-            $builder->withAttributeResolver();
-        }
-
-        if ($this->serializerOptions['resolvers']['phpdocs']) {
-            $builder->withPhpDocsResolver();
-        }
-
-        if ($this->serializerOptions['resolvers']['reflection']) {
-            $builder->withReflectionResolver();
-        }
-
-        return $builder->build();
+        /** @var DenormalizerInterface&NormalizerInterface&SerializerInterface $serializer */
+        return $serializer;
     }
 }
