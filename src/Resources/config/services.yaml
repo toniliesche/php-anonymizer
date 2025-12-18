@@ -14,6 +14,7 @@ services:
       $dataOptions: '%anonymizer.data_options%'
       $parserOptions: '%anonymizer.parser_options%'
       $rules: '%anonymizer.rules%'
+      $ruleProviders: !tagged_iterator anonymizer.rule_provider
       $serializer: '@?anonymizer.serializer'
 
   PhpAnonymizer\Anonymizer\Serializer\SerializerFactory:

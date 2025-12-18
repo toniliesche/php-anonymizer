@@ -8,6 +8,7 @@ namespace PhpAnonymizer\Anonymizer;
 
 use PhpAnonymizer\Anonymizer\Exception\AnonymizerFactoryException;
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
+use PhpAnonymizer\Anonymizer\RuleProvider\RuleProviderInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -33,11 +34,13 @@ final readonly class AnonymizerFactory
      * @param array<string, array{
      *      nodes: array<mixed>,
      *    }> $rules
+     * @param iterable<RuleProviderInterface> $ruleProviders
      */
     public function __construct(
         private array $dataOptions,
         private array $parserOptions,
         private array $rules,
+        private iterable $ruleProviders,
         ?SerializerInterface $serializer = null,
     ) {
         if (($set = $this->validateSerializer($serializer)) !== null) {
@@ -73,6 +76,12 @@ final readonly class AnonymizerFactory
                 definitions: $ruleConfig['nodes'],
                 defaultDataAccess: $ruleConfig['default_access'] ?? 'array',
             );
+        }
+
+        foreach ($this->ruleProviders as $ruleProvider) {
+            foreach ($ruleProvider->provideRules() as $ruleName => $rule) {
+                $anonymizer->registerParsedRuleSet($ruleName, $rule);
+            }
         }
 
         return $anonymizer;
