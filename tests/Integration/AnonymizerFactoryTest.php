@@ -47,7 +47,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
+        [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNull($normalizer);
         self::assertNull($denormalizer);
@@ -77,7 +77,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
+        [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotSame($mySerializer, $normalizer);
         self::assertSame($serializer, $normalizer);
@@ -110,7 +110,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
+        [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotSame($serializer, $normalizer);
         self::assertSame($mySerializer, $normalizer);
@@ -143,7 +143,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
+        [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotNull($normalizer);
         self::assertNotSame($mySerializer, $normalizer);
