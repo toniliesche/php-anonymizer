@@ -10,10 +10,13 @@ use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
 use PhpAnonymizer\Anonymizer\Enum\DataField;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
+use Spatie\Snapshots\MatchesSnapshots;
 use stdClass;
 
 final class FakerAwareStringGeneratorTest extends TestCase
 {
+    use MatchesSnapshots;
+
     public function testCanVerifySupportOfStrings(): void
     {
         $dataGenerator = new FakerAwareStringGenerator();
@@ -59,55 +62,55 @@ final class FakerAwareStringGeneratorTest extends TestCase
 
         $firstName = 'Max';
         $anonymizedFirstName = $dataGenerator->generate(['test'], $firstName, 'firstName');
-        self::assertSame('Jenny', $anonymizedFirstName);
+        $this->assertMatchesSnapshot($anonymizedFirstName);
 
         $lastName = 'Mustermann';
         $anonymizedLastName = $dataGenerator->generate(['test'], $lastName, 'lastName');
-        self::assertSame('Neubauer', $anonymizedLastName);
+        $this->assertMatchesSnapshot($anonymizedLastName);
 
         $email = 'test@example.com';
         $anonymizedEmail = $dataGenerator->generate(['test'], $email, 'email');
-        self::assertSame('mai.edelgard@example.net', $anonymizedEmail);
+        $this->assertMatchesSnapshot($anonymizedEmail);
 
         $street = 'Musterstraße';
         $anonymizedStreet = $dataGenerator->generate(['test'], $street, 'street');
-        self::assertSame('Nico-Christ-Weg', $anonymizedStreet);
+        $this->assertMatchesSnapshot($anonymizedStreet);
 
         $streetNumber = '42';
         $anonymizedStreetNumber = $dataGenerator->generate(['test'], $streetNumber, 'streetNumber');
-        self::assertSame('82a', $anonymizedStreetNumber);
+        $this->assertMatchesSnapshot($anonymizedStreetNumber);
 
         $city = 'Musterstadt';
         $anonymizedCity = $dataGenerator->generate(['test'], $city, 'city');
-        self::assertSame('Obertshausen', $anonymizedCity);
+        $this->assertMatchesSnapshot($anonymizedCity);
 
         $zip = '12345';
         $anonymizedZip = $dataGenerator->generate(['test'], $zip, 'zip');
-        self::assertSame('49546', $anonymizedZip);
+        $this->assertMatchesSnapshot($anonymizedZip);
 
         $country = 'Deutschland';
         $anonymizedCountry = $dataGenerator->generate(['test'], $country, 'country');
-        self::assertSame('Malaysia', $anonymizedCountry);
+        $this->assertMatchesSnapshot($anonymizedCountry);
 
         $company = 'Musterfirma';
         $anonymizedCompany = $dataGenerator->generate(['test'], $company, 'company');
-        self::assertSame('Heinrich Günther GmbH & Co. OHG', $anonymizedCompany);
+        $this->assertMatchesSnapshot($anonymizedCompany);
 
         $username = 'max.mustermann';
         $anonymizedUsername = $dataGenerator->generate(['test'], $username, 'username');
-        self::assertSame('jost94', $anonymizedUsername);
+        $this->assertMatchesSnapshot($anonymizedUsername);
 
         $password = 'password';
         $anonymizedPassword = $dataGenerator->generate(['test'], $password, 'password');
-        self::assertSame('J"}6<,h]fZt(!', $anonymizedPassword);
+        $this->assertMatchesSnapshot($anonymizedPassword);
 
         $name = 'Max Mustermann';
         $anonymizedName = $dataGenerator->generate(['test'], $name, 'name');
-        self::assertSame('Herr Prof. Dr. Arndt Miller', $anonymizedName);
+        $this->assertMatchesSnapshot($anonymizedName);
 
         $welcome = 'Hello World';
         $anonymizedWelcome = $dataGenerator->generate(['test'], $welcome, 'welcome');
-        self::assertSame('***********', $anonymizedWelcome);
+        $this->assertMatchesSnapshot($anonymizedWelcome);
 
         $welcome = 'Hello World';
         $anonymizedWelcome = $dataGenerator->generate(['test'], $welcome, null);

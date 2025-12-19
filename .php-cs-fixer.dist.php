@@ -101,7 +101,7 @@ $rules = [
     'declare_parentheses' => true,
     'explicit_indirect_variable' => true,
     'single_space_around_construct' => true,
-    'list_syntax' => ['syntax' => 'long'],
+    'list_syntax' => ['syntax' => 'short'],
     'blank_line_after_namespace' => true,
     'clean_namespace' => true,
     'blank_lines_before_namespace' => true,

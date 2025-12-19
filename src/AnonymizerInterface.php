@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer;
 
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
+use PhpAnonymizer\Anonymizer\Model\RuleSet;
 
 interface AnonymizerInterface
 {
@@ -23,4 +24,6 @@ interface AnonymizerInterface
      * @param array<mixed> $definitions
      */
     public function registerRuleSet(string $name, array $definitions, string $defaultDataAccess = DataAccess::ARRAY->value): void;
+
+    public function registerParsedRuleSet(string $name, RuleSet $ruleSet): void;
 }

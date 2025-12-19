@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 use function Safe\file_get_contents;
 use function Safe\yaml_parse;
 
-class SerializerFactoryTest extends TestCase
+final class SerializerFactoryTest extends TestCase
 {
     public function testCreateWillFailOnMissingSymfonyPackage(): void
     {
