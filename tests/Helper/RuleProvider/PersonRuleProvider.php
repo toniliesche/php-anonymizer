@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Test\Helper\RuleProvider;
 use Generator;
 use PhpAnonymizer\Anonymizer\RuleProvider\BasicArrayRuleProvider;
 
-readonly class PersonRuleProvider extends BasicArrayRuleProvider
+final readonly class PersonRuleProvider extends BasicArrayRuleProvider
 {
     protected function getRules(): Generator
     {
