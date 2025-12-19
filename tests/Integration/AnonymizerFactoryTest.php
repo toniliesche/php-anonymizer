@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Integration;
+namespace PhpAnonymizer\Anonymizer\Test\Integration;
 
 use Generator;
 use PhpAnonymizer\Anonymizer\Anonymizer;
@@ -47,18 +47,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        $anonymizerReflection = new ReflectionClass($anonymizer);
-
-        /** @var DefaultDataProcessor $dataProcessor */
-        $dataProcessor = $anonymizerReflection->getProperty('dataProcessor')->getValue($anonymizer);
-        $dataProcessorReflection = new ReflectionClass($dataProcessor);
-
-        /** @var DefaultDataEncodingProvider $dataEncodingProvider */
-        $dataEncodingProvider = $dataProcessorReflection->getProperty('dataEncodingProvider')->getValue($dataProcessor);
-        $dataEncodingProviderReflection = new ReflectionClass($dataEncodingProvider);
-
-        $normalizer = $dataEncodingProviderReflection->getProperty('normalizer')->getValue($dataEncodingProvider);
-        $denormalizer = $dataEncodingProviderReflection->getProperty('denormalizer')->getValue($dataEncodingProvider);
+        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNull($normalizer);
         self::assertNull($denormalizer);
@@ -88,18 +77,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        $anonymizerReflection = new ReflectionClass($anonymizer);
-
-        /** @var DefaultDataProcessor $dataProcessor */
-        $dataProcessor = $anonymizerReflection->getProperty('dataProcessor')->getValue($anonymizer);
-        $dataProcessorReflection = new ReflectionClass($dataProcessor);
-
-        /** @var DefaultDataEncodingProvider $dataEncodingProvider */
-        $dataEncodingProvider = $dataProcessorReflection->getProperty('dataEncodingProvider')->getValue($dataProcessor);
-        $dataEncodingProviderReflection = new ReflectionClass($dataEncodingProvider);
-
-        $normalizer = $dataEncodingProviderReflection->getProperty('normalizer')->getValue($dataEncodingProvider);
-        $denormalizer = $dataEncodingProviderReflection->getProperty('denormalizer')->getValue($dataEncodingProvider);
+        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotSame($mySerializer, $normalizer);
         self::assertSame($serializer, $normalizer);
@@ -132,18 +110,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        $anonymizerReflection = new ReflectionClass($anonymizer);
-
-        /** @var DefaultDataProcessor $dataProcessor */
-        $dataProcessor = $anonymizerReflection->getProperty('dataProcessor')->getValue($anonymizer);
-        $dataProcessorReflection = new ReflectionClass($dataProcessor);
-
-        /** @var DefaultDataEncodingProvider $dataEncodingProvider */
-        $dataEncodingProvider = $dataProcessorReflection->getProperty('dataEncodingProvider')->getValue($dataProcessor);
-        $dataEncodingProviderReflection = new ReflectionClass($dataEncodingProvider);
-
-        $normalizer = $dataEncodingProviderReflection->getProperty('normalizer')->getValue($dataEncodingProvider);
-        $denormalizer = $dataEncodingProviderReflection->getProperty('denormalizer')->getValue($dataEncodingProvider);
+        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotSame($serializer, $normalizer);
         self::assertSame($mySerializer, $normalizer);
@@ -176,18 +143,7 @@ final class AnonymizerFactoryTest extends TestCase
         $builder->compile();
 
         $anonymizer = $builder->get(Anonymizer::class);
-        $anonymizerReflection = new ReflectionClass($anonymizer);
-
-        /** @var DefaultDataProcessor $dataProcessor */
-        $dataProcessor = $anonymizerReflection->getProperty('dataProcessor')->getValue($anonymizer);
-        $dataProcessorReflection = new ReflectionClass($dataProcessor);
-
-        /** @var DefaultDataEncodingProvider $dataEncodingProvider */
-        $dataEncodingProvider = $dataProcessorReflection->getProperty('dataEncodingProvider')->getValue($dataProcessor);
-        $dataEncodingProviderReflection = new ReflectionClass($dataEncodingProvider);
-
-        $normalizer = $dataEncodingProviderReflection->getProperty('normalizer')->getValue($dataEncodingProvider);
-        $denormalizer = $dataEncodingProviderReflection->getProperty('denormalizer')->getValue($dataEncodingProvider);
+        list($normalizer, $denormalizer) = $this->resolveSerializerComponents($anonymizer);
 
         self::assertNotNull($normalizer);
         self::assertNotSame($mySerializer, $normalizer);
@@ -210,5 +166,26 @@ final class AnonymizerFactoryTest extends TestCase
 
             yield [$file->getRealPath()];
         }
+    }
+
+    /**
+     * @return array{0:mixed,1:mixed}
+     */
+    private function resolveSerializerComponents(Anonymizer $anonymizer): array
+    {
+        $anonymizerReflection = new ReflectionClass($anonymizer);
+
+        /** @var DefaultDataProcessor $dataProcessor */
+        $dataProcessor = $anonymizerReflection->getProperty('dataProcessor')->getValue($anonymizer);
+        $dataProcessorReflection = new ReflectionClass($dataProcessor);
+
+        /** @var DefaultDataEncodingProvider $dataEncodingProvider */
+        $dataEncodingProvider = $dataProcessorReflection->getProperty('dataEncodingProvider')->getValue($dataProcessor);
+        $dataEncodingProviderReflection = new ReflectionClass($dataEncodingProvider);
+
+        $normalizer = $dataEncodingProviderReflection->getProperty('normalizer')->getValue($dataEncodingProvider);
+        $denormalizer = $dataEncodingProviderReflection->getProperty('denormalizer')->getValue($dataEncodingProvider);
+
+        return [$normalizer, $denormalizer];
     }
 }

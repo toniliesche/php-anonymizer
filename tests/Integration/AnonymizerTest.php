@@ -11,10 +11,13 @@ use PhpAnonymizer\Anonymizer\Enum\NodeParser;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Data;
 use PHPUnit\Framework\TestCase;
+use Spatie\Snapshots\MatchesSnapshots;
 use stdClass;
 
 final class AnonymizerTest extends TestCase
 {
+    use MatchesSnapshots;
+
     public function testCanLoadRulesFromJsonAndSubstituteDataInArray(): void
     {
         $anonymizer = (new AnonymizerBuilder())
@@ -178,8 +181,8 @@ final class AnonymizerTest extends TestCase
 
         $processedData = $anonymizer->run('address', $data);
 
-        self::assertSame('Marley', $processedData['address']['firstName']);
-        self::assertSame('Kerluke', $processedData['address']['lastName']);
+        $this->assertMatchesSnapshot($processedData['address']['firstName']);
+        $this->assertMatchesSnapshot($processedData['address']['lastName']);
         self::assertSame('New York', $processedData['address']['city']);
     }
 
@@ -203,7 +206,7 @@ final class AnonymizerTest extends TestCase
         $data = '{"address":{"firstName":"John","lastName":"Doe","city":"New York"}}';
         $processedData = $anonymizer->run('address', $data, DataEncoder::JSON->value);
 
-        self::assertSame('{"address":{"firstName":"Marley","lastName":"Kerluke","city":"New York"}}', $processedData);
+        $this->assertMatchesJsonSnapshot($processedData);
     }
 
     public function testCanSubstituteValuesInFilteredFieldsOnly(): void
