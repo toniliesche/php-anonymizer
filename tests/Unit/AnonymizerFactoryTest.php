@@ -22,6 +22,7 @@ final class AnonymizerFactoryTest extends TestCase
             dataOptions: $configArray['anonymizer']['data'],
             parserOptions: $configArray['anonymizer']['parsers'],
             rules: [],
+            ruleProviders: [],
         );
 
         $factory->create();
@@ -37,6 +38,7 @@ final class AnonymizerFactoryTest extends TestCase
             dataOptions: $configArray['anonymizer']['data'],
             parserOptions: $configArray['anonymizer']['parsers'],
             rules: $configArray['anonymizer']['rules'],
+            ruleProviders: [],
         );
 
         $factory->create();

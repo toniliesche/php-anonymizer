@@ -10,5 +10,8 @@ use Generator;
 
 interface RuleLoaderInterface
 {
+    /**
+     * @return Generator<string, mixed>
+     */
     public function loadRules(): Generator;
 }

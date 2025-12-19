@@ -39,4 +39,9 @@ final readonly class Anonymizer implements AnonymizerInterface
 
         $this->dataProcessor->getRuleSetProvider()->registerRuleSet($name, $ruleSet);
     }
+
+    public function registerParsedRuleSet(string $name, RuleSet $ruleSet): void
+    {
+        $this->dataProcessor->getRuleSetProvider()->registerRuleSet($name, $ruleSet);
+    }
 }
