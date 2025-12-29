@@ -24,7 +24,7 @@
     "fakerphp/faker": "^1.24",
     "friendsofphp/php-cs-fixer": "^3.91",
     "icanhazstring/composer-unused": "dev-main",
-    "infection/infection": "^0.31",
+    "infection/infection": "^0.31 || ^0.32",
     "phpmd/phpmd": "^2.15",
     "phpstan/extension-installer": "^1.4",
     "phpstan/phpstan": "^2.1",
