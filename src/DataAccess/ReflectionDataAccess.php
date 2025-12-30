@@ -10,6 +10,7 @@ use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Model\Data\Tree;
 use ReflectionClass;
 use ReflectionException;
 use function array_slice;
@@ -71,6 +72,13 @@ final class ReflectionDataAccess extends AbstractObjectDataAccess
             $reflection->getProperty($name)->setValue($parent, $newValue);
         } catch (Error) {
             throw FieldDoesNotExistException::orIsNotAccessibleFromPath($path);
+        }
+    }
+
+    public function parseDataTree(array $path, mixed $data): Tree
+    {
+        if (!$this->supports($data)) {
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
         }
     }
 }

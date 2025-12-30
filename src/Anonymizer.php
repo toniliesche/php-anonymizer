@@ -8,7 +8,7 @@ namespace PhpAnonymizer\Anonymizer;
 
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
-use PhpAnonymizer\Anonymizer\Model\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 

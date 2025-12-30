@@ -9,8 +9,8 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\NodeConflictException;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PHPUnit\Framework\TestCase;
 
 final class TreeTest extends TestCase

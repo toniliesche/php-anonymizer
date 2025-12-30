@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer;
 
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
-use PhpAnonymizer\Anonymizer\Model\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
 
 interface AnonymizerInterface
 {

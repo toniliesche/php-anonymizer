@@ -8,7 +8,7 @@ namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
 use Safe\Exceptions\PcreException;
 use function array_key_exists;
 use function is_bool;

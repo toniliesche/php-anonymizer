@@ -10,6 +10,7 @@ use Error;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Model\Data\Tree;
 use function array_slice;
 use function method_exists;
 use function ucfirst;
@@ -69,5 +70,12 @@ final class SetterDataAccess extends AbstractObjectDataAccess
 
         // @phpstan-ignore-next-line
         $parent->{$setter}($newValue);
+    }
+
+    public function parseDataTree(array $path, mixed $data): Tree
+    {
+        if (!$this->supports($data)) {
+            throw InvalidObjectTypeException::notAnObject(array_slice($path, 0, -1));
+        }
     }
 }

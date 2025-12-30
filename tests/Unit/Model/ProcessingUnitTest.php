@@ -12,11 +12,11 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
-use PhpAnonymizer\Anonymizer\Model\RuleSet;
-use PhpAnonymizer\Anonymizer\Model\RuleSetProvider;
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Processing\DenyListProcessingUnit;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProvider;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
 
@@ -61,7 +61,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -125,7 +125,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -185,7 +185,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -238,7 +238,7 @@ final class ProcessingUnitTest extends TestCase
 
         $data = '{"address":{"name":"John Doe","city":"New York"}}';
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -305,7 +305,7 @@ final class ProcessingUnitTest extends TestCase
             'address' => '{"name":"John Doe","city":"New York"}',
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -358,7 +358,7 @@ final class ProcessingUnitTest extends TestCase
             'addresses' => 'invalid type',
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -412,7 +412,7 @@ final class ProcessingUnitTest extends TestCase
             city: 'New York',
         );
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),

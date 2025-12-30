@@ -44,4 +44,11 @@ final class InvalidObjectTypeException extends InvalidArgumentException
         return new self(sprintf('Field is not an integer : [%s]', implode('.', $path)));
         // @codeCoverageIgnoreEnd
     }
+
+    public static function mixedArray(): self
+    {
+        // @codeCoverageIgnoreStart
+        return new self('Anonymizer currently does not support working on mixed-type arrays.');
+        // @codeCoverageIgnoreEnd
+    }
 }

@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\AbstractRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;

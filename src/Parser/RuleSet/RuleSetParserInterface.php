@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Parser\RuleSet;
 
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 
 interface RuleSetParserInterface
 {

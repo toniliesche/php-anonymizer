@@ -8,6 +8,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
+use PhpAnonymizer\Anonymizer\Model\Data\Tree;
 
 final readonly class AutoDetectDataAccess implements DataAccessInterface
 {
@@ -78,5 +79,14 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
         }
 
         return false;
+    }
+
+    public function parseDataTree(array $path, mixed $data): Tree
+    {
+        $nodes = [];
+
+        return new Tree(
+            childNodes: $nodes,
+        );
     }
 }

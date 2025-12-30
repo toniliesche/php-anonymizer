@@ -7,8 +7,8 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Mapper\Node;
 
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
 
 interface NodeMapperInterface
 {

@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
 
 interface NodeParserInterface
 {
