@@ -6,11 +6,11 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-final class Address
+final class PublicAddress
 {
     public function __construct(
-        private string $name,
-        private string $city,
+        public string $name,
+        public string $city,
     ) {
     }
 

@@ -42,5 +42,5 @@ interface DataAccessInterface
      *
      * @throws InvalidObjectTypeException
      */
-    public function parseDataTree(array $path, mixed $data): Tree;
+    public function parseDataTree(mixed $data, array $path = []): Tree;
 }

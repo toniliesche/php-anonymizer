@@ -6,12 +6,14 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-final readonly class ReadonlyFoobar
+final class PublicFooParent
 {
+    /**
+     * @param array<int, mixed> $array
+     */
     public function __construct(
-        public string $foo,
-        public string $bar,
-        public string $baz,
+        public PublicFoobar $foobar,
+        public array $array,
     ) {
     }
 }

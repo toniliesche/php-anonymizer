@@ -81,7 +81,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
         return false;
     }
 
-    public function parseDataTree(array $path, mixed $data): Tree
+    public function parseDataTree(mixed $data, array $path = []): Tree
     {
         $nodes = [];
 

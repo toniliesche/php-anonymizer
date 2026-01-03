@@ -1,21 +1,137 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use PhpAnonymizer\Anonymizer\DataAccess\PropertyDataAccess;
+use PhpAnonymizer\Anonymizer\Enum\DataAccess;
+use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicAddress;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicFoobar;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicFooParent;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 final class PropertyDataAccessTest extends TestCase
 {
+    public function testCanParseSimpleDataTree(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new PublicFoobar(
+            foo: 'foo',
+            bar: 'bar',
+            baz: 'baz',
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(1, $tree->childNodes);
+        $node = $tree->childNodes[0];
+
+        self::assertSame('baz', $node->name);
+        self::assertSame(NodeType::LEAF, $node->nodeType);
+        self::assertSame(DataAccess::PROPERTY->value, $node->dataAccess);
+        self::assertFalse($node->isList);
+        self::assertEmpty($node->childNodes);
+    }
+
+    public function testCanParseDataTreeWithChildren(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new PublicFooParent(
+            foobar: new PublicFoobar(
+                foo: 'foo',
+                bar: 'bar',
+                baz: 'baz',
+            ),
+            array: [
+                'foo',
+                'bar',
+                'baz',
+            ],
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(2, $tree->childNodes);
+        $foobarNode = $tree->childNodes[0];
+
+        self::assertSame('foobar', $foobarNode->name);
+        self::assertSame(NodeType::NODE, $foobarNode->nodeType);
+        self::assertSame(DataAccess::PROPERTY->value, $foobarNode->dataAccess);
+        self::assertFalse($foobarNode->isList);
+        self::assertNotEmpty($foobarNode->childNodes);
+
+        $arrayNode = $tree->childNodes[1];
+
+        self::assertSame('array', $arrayNode->name);
+        self::assertSame(NodeType::LEAF, $arrayNode->nodeType);
+        self::assertSame(DataAccess::PROPERTY->value, $arrayNode->dataAccess);
+        self::assertTrue($arrayNode->isList);
+        self::assertEmpty($arrayNode->childNodes);
+    }
+
+    public function testCanParseDataTreeWithObjectArray(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new PublicFooParent(
+            foobar: new PublicFoobar(
+                foo: 'foo',
+                bar: 'bar',
+                baz: 'baz',
+            ),
+            array: [
+                new PublicFoobar(
+                    foo: 'foo',
+                    bar: 'bar',
+                    baz: 'baz',
+                ),
+                new PublicAddress(
+                    name: 'John Doe',
+                    city: 'New York',
+                ),
+            ],
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(2, $tree->childNodes);
+        $foobarNode = $tree->childNodes[0];
+
+        self::assertSame('foobar', $foobarNode->name);
+        self::assertSame(NodeType::NODE, $foobarNode->nodeType);
+        self::assertSame(DataAccess::PROPERTY->value, $foobarNode->dataAccess);
+        self::assertFalse($foobarNode->isList);
+        self::assertNotEmpty($foobarNode->childNodes);
+
+        $arrayNode = $tree->childNodes[1];
+
+        self::assertSame('array', $arrayNode->name);
+        self::assertSame(NodeType::NODE, $arrayNode->nodeType);
+        self::assertSame(DataAccess::PROPERTY->value, $arrayNode->dataAccess);
+        self::assertTrue($arrayNode->isList);
+        self::assertCount(3, $arrayNode->childNodes);
+
+        foreach ($arrayNode->childNodes as $childNode) {
+            self::assertSame(NodeType::LEAF, $childNode->nodeType);
+            self::assertSame(DataAccess::PROPERTY->value, $childNode->dataAccess);
+            self::assertFalse($childNode->isList);
+            self::assertEmpty($childNode->childNodes);
+        }
+    }
+
     public function testCanCheckIfChildPropertyExists(): void
     {
         $access = new PropertyDataAccess();

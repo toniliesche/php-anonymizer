@@ -14,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PhpAnonymizer\Anonymizer\Helpers\ArrayTools;
 use PhpAnonymizer\Anonymizer\Model\Data\Node;
 use PhpAnonymizer\Anonymizer\Model\Data\Tree;
+use RuntimeException;
 use Webmozart\Assert\Assert;
 use function array_key_exists;
 use function array_slice;
@@ -60,7 +61,7 @@ final class ArrayDataAccess implements DataAccessInterface
         return is_array($parent);
     }
 
-    public function parseDataTree(array $path, mixed $data): Tree
+    public function parseDataTree(mixed $data, array $path = []): Tree
     {
         if (!$this->supports($data)) {
             throw InvalidObjectTypeException::notAnArray(array_slice($path, 0, -1));
@@ -68,16 +69,21 @@ final class ArrayDataAccess implements DataAccessInterface
 
         Assert::isArray($data);
 
-        $nodes = [];
+        $tree = new Tree();
 
-        return new Tree(
-            childNodes: $nodes,
-        );
+        foreach ($data as $key => $value) {
+            $tree->addChildNode($this->parseDataNode($key, $value, [$key]));
+        }
+
+        return $tree;
     }
 
-    private function parseDataNode(string $key, mixed $data): Node
+    /**
+     * @param string[] $path
+     */
+    private function parseDataNode(string $key, mixed $data, array $path): Node
     {
-        if (!is_array($data)) {
+        if (is_string($data)) {
             return new Node(
                 name: $key,
                 dataAccess: DataAccess::ARRAY->value,
@@ -86,21 +92,25 @@ final class ArrayDataAccess implements DataAccessInterface
             );
         }
 
-        $arrayType = ArrayTools::detect($data);
+        $arrayType = ArrayTools::detectType($data);
 
         return match ($arrayType) {
-            ArrayType::LIST => $this->parseListNode($key, $data),
-            ArrayType::MAP => $this->parseMapNode($key, $data),
-            ArrayType::MIXED => throw InvalidObjectTypeException::mixedArray(),
+            ArrayType::LIST => $this->parseListNode($key, $data, $path),
+            ArrayType::MAP => $this->parseMapNode($key, $data, $path),
+            ArrayType::MIXED => throw InvalidObjectTypeException::mixedArray($path),
         };
     }
 
-    private function parseMapNode(string $key, array $data): Node
+    /**
+     * @param array<string, mixed> $data
+     * @param string[] $path
+     */
+    private function parseMapNode(string $key, array $data, array $path): Node
     {
         $childNodes = [];
 
         foreach ($data as $dataKey => $value) {
-            $childNodes[] = $this->parseDataNode($dataKey, $value);
+            $childNodes[] = $this->parseDataNode($dataKey, $value, $path);
         }
 
         return new Node(
@@ -112,19 +122,55 @@ final class ArrayDataAccess implements DataAccessInterface
         );
     }
 
-    private function parseListNode(string $key, array $data): Node
+    /**
+     * @param array<int, mixed> $data
+     * @param string[] $path
+     */
+    private function parseListNode(string $key, array $data, array $path): Node
     {
-        $arrayType = null;
-        foreach ($data as $listItem) {
-            $currentArrayType = ArrayTools::detect($listItem);
+        if (ArrayTools::isArrayOnlyArray($data)) {
+            return $this->parseListOfArrays($key, $data, $path);
         }
 
-        return new Node(
+        if (ArrayTools::isScalarOnlyArray($data)) {
+            return new Node(
+                name: $key,
+                dataAccess: DataAccess::ARRAY->value,
+                nodeType: NodeType::LEAF,
+                isList: true,
+            );
+        }
+
+        throw new RuntimeException();
+    }
+
+    /**
+     * @param array<int, array<int|string, mixed>> $data
+     * @param string[] $path
+     */
+    private function parseListOfArrays(string $key, array $data, array $path): Node
+    {
+        $node = new Node(
             name: $key,
             dataAccess: DataAccess::ARRAY->value,
-            nodeType: $nodeType,
+            nodeType: NodeType::NODE,
             isList: true,
-            childNodes: $childNodes,
         );
+
+        $arrayType = null;
+        foreach ($data as $listItem) {
+            $currentArrayType = ArrayTools::detectType($listItem);
+            $arrayType ??= $currentArrayType;
+
+            if ($arrayType !== $currentArrayType) {
+                throw new RuntimeException();
+            }
+        }
+
+        foreach ($data as $listItem) {
+            $node->mergeChildrenFromNode($this->parseDataNode($key, $listItem, $path), $path);
+        }
+
+        return $node;
     }
 }

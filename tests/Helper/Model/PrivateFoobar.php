@@ -6,12 +6,11 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 
-final class Foobar
+final class PrivateFoobar
 {
     public function __construct(
         private readonly string $foo,
-        /** @phpstan-ignore-next-line */
-        private string $bar,
+        private readonly string $bar,
         private string $baz,
     ) {
     }
@@ -21,9 +20,9 @@ final class Foobar
         return $this->foo;
     }
 
-    public function setBar(string $bar): void
+    public function getBar(): string
     {
-        $this->bar = $bar;
+        return $this->bar;
     }
 
     public function getBaz(): string

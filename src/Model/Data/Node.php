@@ -24,4 +24,22 @@ final class Node implements ChildNodeAccessInterface
     ) {
         $this->childNodes = $childNodes;
     }
+
+    /**
+     * @param string[] $path
+     */
+    public function mergeChildrenFromNode(Node $node, array $path): void
+    {
+        foreach ($node->childNodes as $childNode) {
+            if (!$this->hasChildNode($childNode->name)) {
+                $this->addChildNode($childNode);
+
+                continue;
+            }
+
+            $tempPath = $path;
+            $tempPath[] = $childNode->name;
+            $this->getChildNode($childNode->name)->mergeChildrenFromNode($childNode, $tempPath);
+        }
+    }
 }

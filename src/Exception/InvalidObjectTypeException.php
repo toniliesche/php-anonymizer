@@ -45,10 +45,33 @@ final class InvalidObjectTypeException extends InvalidArgumentException
         // @codeCoverageIgnoreEnd
     }
 
-    public static function mixedArray(): self
+    /**
+     * @param string[] $path
+     */
+    public static function mixedArray(array $path): self
     {
         // @codeCoverageIgnoreStart
-        return new self('Anonymizer currently does not support working on mixed-type arrays.');
+        return new self(sprintf('Anonymizer currently does not support working on mixed-type arrays : [%s].', implode('.', $path)));
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param string[] $path
+     */
+    public static function notAList(array $path): self
+    {
+        // @codeCoverageIgnoreStart
+        return new self(sprintf('Array is not a list : [%s]', implode('.', $path)));
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param string[] $path
+     */
+    public static function notStringOnlyArray(array $path): self
+    {
+        // @codeCoverageIgnoreStart
+        return new self(sprintf('Array must not contain non-string elements : [%s]', implode('.', $path)));
         // @codeCoverageIgnoreEnd
     }
 }

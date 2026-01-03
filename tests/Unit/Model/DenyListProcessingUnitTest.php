@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
@@ -20,7 +22,7 @@ use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
 
-final class ProcessingUnitTest extends TestCase
+final class DenyListProcessingUnitTest extends TestCase
 {
     public function testCanRunSimpleProcessingOfDataInArray(): void
     {
