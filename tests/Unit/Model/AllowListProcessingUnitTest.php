@@ -166,7 +166,7 @@ final class AllowListProcessingUnitTest extends TestCase
                     'city' => 'New York',
                 ],
             ],
-            json_decode($processedData, true, 512, JSON_THROW_ON_ERROR),
+            json_decode((string) $processedData, true, 512, JSON_THROW_ON_ERROR),
         );
         $this->assertMatchesSnapshot($processedData);
     }
