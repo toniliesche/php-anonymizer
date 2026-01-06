@@ -7,7 +7,12 @@
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/AnonymizerBuilder.php"/>
   <violation rule="PHPMD\Rule\CleanCode\IfStatementAssignment" file="src/AnonymizerFactory.php" method="__construct"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/ArrayDataAccess.php"/>
+  <violation rule="PHPMD\Rule\Design\WeightedMethodCount" file="src/DataAccess/AutoDetectDataAccess.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/DataAccess/AutoDetectDataAccess.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/AutoDetectDataAccess.php"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/DataAccess/AutoDetectDataAccess.php" method="parseObjectTree"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="src/DataAccess/AutoDetectDataAccess.php" method="parseObjectTree"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/DataAccess/AutoDetectDataAccess.php" method="collectObjectFieldNames"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/DataAccess/PropertyDataAccess.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/DataAccess/PropertyDataAccess.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/DataAccess/Provider/Factory/DefaultDataAccessProviderFactory.php"/>
@@ -24,8 +29,11 @@
   <violation rule="PHPMD\Rule\Design\NumberOfChildren" file="src/Exception/BaseAnonymizerException.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataAccessProviderDefinitionException.php"/>
   <violation rule="PHPMD\Rule\Naming\LongClassName" file="src/Exception/InvalidDataGenerationProviderDefinitionException.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Model/Processing/AllowListProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Model/Processing/AllowListProcessingUnit.php"/>
-  <violation rule="PHPMD\Rule\UnusedPrivateMethod" file="src/Model/Processing/AllowListProcessingUnit.php" method="getAnonymizedValue"/>
+  <violation rule="PHPMD\Rule\CyclomaticComplexity" file="src/Model/Processing/AllowListProcessingUnit.php" method="processNode"/>
+  <violation rule="PHPMD\Rule\Design\NpathComplexity" file="src/Model/Processing/AllowListProcessingUnit.php" method="processNode"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="src/Model/Processing/AllowListProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="src/Model/Processing/DenyListProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="src/Model/Processing/DenyListProcessingUnit.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="src/Model/Processing/DenyListProcessingUnit.php"/>
@@ -45,6 +53,7 @@
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Integration/AnonymizerTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/ArrayDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/ReflectionDataAccessTest.php"/>
@@ -55,6 +64,7 @@
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/FakerAwareStringGeneratorTest.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/Helpers/ArrayToolsTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/Model/DenyListProcessingUnitTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Model/NodeTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Parsers/Node/ArrayNodeParserTest.php"/>
