@@ -9,6 +9,7 @@ namespace PhpAnonymizer\Anonymizer\Test\Helper\Model;
 final class PublicFoobar
 {
     public function __construct(
+        // @phpstan-ignore-next-line
         private readonly string $foo,
         private string $bar,
         public string $baz,

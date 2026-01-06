@@ -21,9 +21,12 @@ use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProvider;
 use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
+use Spatie\Snapshots\MatchesSnapshots;
 
 final class DenyListProcessingUnitTest extends TestCase
 {
+    use MatchesSnapshots;
+
     public function testCanRunSimpleProcessingOfDataInArray(): void
     {
         $nameNode = new Node(
@@ -80,6 +83,7 @@ final class DenyListProcessingUnitTest extends TestCase
 
         self::assertSame('********', $processedData['address']['name']);
         self::assertSame('New York', $processedData['address']['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunSimpleProcessingOfDataInListOfArrays(): void
@@ -146,6 +150,7 @@ final class DenyListProcessingUnitTest extends TestCase
         self::assertSame('New York', $processedData['addresses'][0]['city']);
         self::assertSame('********', $processedData['addresses'][1]['name']);
         self::assertSame('Los Angeles', $processedData['addresses'][1]['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunSimpleDataProcessingOfNonExistantDataInArray(): void
@@ -204,6 +209,7 @@ final class DenyListProcessingUnitTest extends TestCase
 
         self::assertSame('The Testing Corp', $processedData['address']['company']);
         self::assertSame('New York', $processedData['address']['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunComplexProcessingOfDataWithJsonInput(): void
@@ -255,6 +261,7 @@ final class DenyListProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process('json');
         self::assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunComplexProcessingOfDataWithNestedJsonInput(): void
@@ -322,6 +329,7 @@ final class DenyListProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process();
         self::assertSame('{"name":"********","city":"New York"}', $processedData['address']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testWillFailOnArrayProcessingOfSimpleValue(): void

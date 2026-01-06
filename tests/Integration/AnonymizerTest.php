@@ -211,6 +211,40 @@ final class AnonymizerTest extends TestCase
         $this->assertMatchesJsonSnapshot($processedData);
     }
 
+    public function testCanEncodeProcessedArrayAsJson(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->build();
+
+        $anonymizer->registerRuleSet(
+            name: 'address',
+            definitions: [
+                'address.name',
+            ],
+        );
+
+        $data = [
+            'address' => [
+                'name' => 'John Doe',
+                'city' => 'New York',
+            ],
+        ];
+
+        $processedData = $anonymizer->run('address', $data, DataEncoder::ARRAY_TO_JSON->value);
+
+        self::assertIsString($processedData);
+        self::assertSame(
+            [
+                'address' => [
+                    'name' => '********',
+                    'city' => 'New York',
+                ],
+            ],
+            json_decode($processedData, true, 512, JSON_THROW_ON_ERROR),
+        );
+    }
+
     public function testCanSubstituteValuesInFilteredFieldsOnly(): void
     {
         $anonymizer = (new AnonymizerBuilder())
