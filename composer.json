@@ -13,7 +13,8 @@
     "php": "^8.2",
     "jawira/case-converter": "^3.6",
     "myclabs/deep-copy": "^1.12",
-    "thecodingmachine/safe": "^2.5 || ^3.3"
+    "thecodingmachine/safe": "^2.5 || ^3.3",
+    "webmozart/assert": "^1.12"
   },
   "require-dev": {
     "ext-dom": "*",
