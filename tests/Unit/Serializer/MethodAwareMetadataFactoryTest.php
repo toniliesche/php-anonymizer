@@ -102,6 +102,9 @@ final class TestClassMetadata implements ClassMetadataInterface
         }
     }
 
+    /**
+     * @return ReflectionClass<TestClassMetadata>
+     */
     public function getReflectionClass(): ReflectionClass
     {
         return new ReflectionClass($this);

@@ -144,11 +144,17 @@ final class ReflectionDataAccessTest extends TestCase
                 'baz' => 'qux',
             ];
 
+            /**
+             * @return array<string, string>
+             */
             public function getMeta(): array
             {
                 return $this->meta;
             }
 
+            /**
+             * @param array<string, string> $meta
+             */
             public function setMeta(array $meta): void
             {
                 $this->meta = $meta;
@@ -183,11 +189,17 @@ final class ReflectionDataAccessTest extends TestCase
                 1 => 'baz',
             ];
 
+            /**
+             * @return array<int|string, string>
+             */
             public function getMixed(): array
             {
                 return $this->mixed;
             }
 
+            /**
+             * @param array<int|string, string> $mixed
+             */
             public function setMixed(array $mixed): void
             {
                 $this->mixed = $mixed;
@@ -208,11 +220,17 @@ final class ReflectionDataAccessTest extends TestCase
                 ['foo' => 'bar'],
             ];
 
+            /**
+             * @return array<int, array<string, string>>
+             */
             public function getItems(): array
             {
                 return $this->items;
             }
 
+            /**
+             * @param array<int, array<string, string>> $items
+             */
             public function setItems(array $items): void
             {
                 $this->items = $items;

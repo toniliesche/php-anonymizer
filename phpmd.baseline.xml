@@ -52,19 +52,26 @@
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Integration/AnonymizerFactoryTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Integration/AnonymizerTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/ArrayDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyMethods" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataAccess/AutoDetectDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/PropertyDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/ReflectionDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/ReflectionDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataAccess/SetterDataAccessTest.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/DataAccess/SetterDataAccessTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/DataEncoding/Provider/DefaultDataEncodingProviderTest.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataGeneration/FakerAwareStringGeneratorTest.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/FakerAwareStringGeneratorTest.php"/>
   <violation rule="PHPMD\Rule\Naming\LongVariable" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/DataGeneration/Provider/DefaultDataGenerationProviderTest.php"/>
+  <violation rule="PHPMD\Rule\UnusedFormalParameter" file="tests/Unit/DependencyInjection/Compiler/SerializerCompilerPassTest.php"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/Helpers/ArrayToolsTest.php"/>
+  <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Model/AllowListProcessingUnitTest.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/Model/AllowListProcessingUnitTest.php"/>
+  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="tests/Unit/Model/AllowListProcessingUnitTest.php"/>
   <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="tests/Unit/Model/DenyListProcessingUnitTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Model/NodeTest.php"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="tests/Unit/Parsers/Node/ArrayNodeParserTest.php"/>

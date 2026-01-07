@@ -685,6 +685,7 @@ final class AutoDetectFieldNamesFixture
 
     private readonly string $readonlyValue;
 
+    /** @var array<string, string> */
     private array $data = [
         'magic' => 'magic',
     ];
@@ -704,6 +705,9 @@ final class AutoDetectFieldNamesFixture
         $this->data['magic'] = $value;
     }
 
+    /**
+     * @return array<string, string> $value
+     */
     public function export(): array
     {
         return [
@@ -723,6 +727,7 @@ final class AutoDetectFieldFilterFixture
 
     private readonly string $readonlyValue;
 
+    /** @var array<string, object|string> */
     private array $data = [
         'fancy' => 'fancy',
         'only' => 'only',
@@ -758,6 +763,9 @@ final class AutoDetectFieldFilterFixture
         return 'ignored';
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function export(): array
     {
         return [
@@ -808,6 +816,9 @@ final class AutoDetectMergeNodeFixture
         $this->data = $value;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function export(): array
     {
         return $this->data;
@@ -926,16 +937,19 @@ final class CustomDataAccess implements DataAccessInterface
 {
     public function hasChild(array $path, mixed $parent, string $name): bool
     {
+        // @phpstan-ignore-next-line
         return is_object($parent) && isset($parent->{$name});
     }
 
     public function getChild(array $path, mixed $parent, string $name): mixed
     {
+        // @phpstan-ignore-next-line
         return $parent->{$name};
     }
 
     public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
     {
+        // @phpstan-ignore-next-line
         $parent->{$name} = $newValue;
     }
 

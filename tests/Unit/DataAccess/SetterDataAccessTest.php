@@ -364,6 +364,7 @@ final class SetterScalarFixture
 
 final class SetterMapArrayFixture
 {
+    /** @var array<string, string> */
     private array $meta = [
         'foo' => 'bar',
     ];
@@ -387,6 +388,7 @@ final class SetterMapArrayFixture
 
 final class SetterMixedListFixture
 {
+    /** @var array<int, int> */
     private array $values = [1, 2, 3];
 
     /**
@@ -420,6 +422,9 @@ final class SetterThrowingGetterFixture
         $this->value = $value;
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function export(): array
     {
         return [
