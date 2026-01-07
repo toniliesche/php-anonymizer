@@ -19,6 +19,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateFoobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateFooParent;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class ReflectionDataAccessTest extends TestCase
@@ -130,6 +131,96 @@ final class ReflectionDataAccessTest extends TestCase
             self::assertFalse($childNode->isList);
             self::assertEmpty($childNode->childNodes);
         }
+    }
+
+    public function testCanParseDataTreeWithMapArray(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new class () {
+            /** @var array<string, string> */
+            private array $meta = [
+                'foo' => 'bar',
+                'baz' => 'qux',
+            ];
+
+            public function getMeta(): array
+            {
+                return $this->meta;
+            }
+
+            public function setMeta(array $meta): void
+            {
+                $this->meta = $meta;
+            }
+        };
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertTrue($tree->hasChildNode('meta'));
+        $metaNode = $tree->getChildNode('meta');
+        self::assertSame(NodeType::NODE, $metaNode->nodeType);
+        self::assertTrue($metaNode->hasChildNode('foo'));
+        self::assertTrue($metaNode->hasChildNode('baz'));
+    }
+
+    public function testWillFailOnParseDataTreeWithNonObject(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(['foo' => 'bar']);
+    }
+
+    public function testWillFailOnParseDataTreeWithMixedArray(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new class () {
+            /** @var array<int|string, string> */
+            private array $mixed = [
+                'foo' => 'bar',
+                1 => 'baz',
+            ];
+
+            public function getMixed(): array
+            {
+                return $this->mixed;
+            }
+
+            public function setMixed(array $mixed): void
+            {
+                $this->mixed = $mixed;
+            }
+        };
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree($data);
+    }
+
+    public function testWillFailOnParseDataTreeWithListOfArrays(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new class () {
+            /** @var array<int, array<string, string>> */
+            private array $items = [
+                ['foo' => 'bar'],
+            ];
+
+            public function getItems(): array
+            {
+                return $this->items;
+            }
+
+            public function setItems(array $items): void
+            {
+                $this->items = $items;
+            }
+        };
+
+        $this->expectException(RuntimeException::class);
+        $access->parseDataTree($data);
     }
 
     public function testCanCheckIfChildPropertyExists(): void

@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
-$finder = PhpCsFixer\Finder::create()
+$finder = Finder::create()
     ->in(__DIR__)
     ->files()
     ->exclude('vendor')

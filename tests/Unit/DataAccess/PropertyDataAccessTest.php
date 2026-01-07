@@ -19,6 +19,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicFoobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicFooParent;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class PropertyDataAccessTest extends TestCase
@@ -130,6 +131,66 @@ final class PropertyDataAccessTest extends TestCase
             self::assertFalse($childNode->isList);
             self::assertEmpty($childNode->childNodes);
         }
+    }
+
+    public function testCanParseDataTreeWithMapArray(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new class () {
+            /** @var array<string, string> */
+            public array $meta = [
+                'foo' => 'bar',
+                'baz' => 'qux',
+            ];
+        };
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertTrue($tree->hasChildNode('meta'));
+        $metaNode = $tree->getChildNode('meta');
+        self::assertSame(NodeType::NODE, $metaNode->nodeType);
+        self::assertTrue($metaNode->hasChildNode('foo'));
+        self::assertTrue($metaNode->hasChildNode('baz'));
+    }
+
+    public function testWillFailOnParseDataTreeWithNonObject(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(['foo' => 'bar']);
+    }
+
+    public function testWillFailOnParseDataTreeWithMixedArray(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new class () {
+            /** @var array<int|string, string> */
+            public array $mixed = [
+                'foo' => 'bar',
+                1 => 'baz',
+            ];
+        };
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree($data);
+    }
+
+    public function testWillFailOnParseDataTreeWithListOfArrays(): void
+    {
+        $access = new PropertyDataAccess();
+
+        $data = new class () {
+            /** @var array<int, array<string, string>> */
+            public array $items = [
+                ['foo' => 'bar'],
+            ];
+        };
+
+        $this->expectException(RuntimeException::class);
+        $access->parseDataTree($data);
     }
 
     public function testCanCheckIfChildPropertyExists(): void

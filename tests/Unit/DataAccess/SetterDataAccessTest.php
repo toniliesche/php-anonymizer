@@ -6,6 +6,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
+use Error;
 use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
@@ -17,6 +18,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\FooParent;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use stdClass;
 
 final class SetterDataAccessTest extends TestCase
@@ -130,6 +132,47 @@ final class SetterDataAccessTest extends TestCase
         }
     }
 
+    public function testWillFailOnParseDataTreeWithNonObject(): void
+    {
+        $access = new SetterDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(['foo' => 'bar']);
+    }
+
+    public function testParseNodeReturnsNullForUnsupportedType(): void
+    {
+        $access = new SetterDataAccess();
+
+        $reflection = new ReflectionMethod($access, 'parseNode');
+
+        $result = $reflection->invoke(
+            $access,
+            'value',
+            'getValue',
+            new SetterScalarFixture(),
+            ['value'],
+        );
+
+        self::assertNull($result);
+    }
+
+    public function testWillFailOnParseDataTreeWithNonListArray(): void
+    {
+        $access = new SetterDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(new SetterMapArrayFixture());
+    }
+
+    public function testWillFailOnParseDataTreeWithListOfNonStrings(): void
+    {
+        $access = new SetterDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(new SetterMixedListFixture());
+    }
+
     public function testCanCheckIfChildPropertyExists(): void
     {
         $access = new SetterDataAccess();
@@ -143,6 +186,13 @@ final class SetterDataAccessTest extends TestCase
         self::assertTrue($access->hasChild(['test'], $data, 'baz'));
         self::assertFalse($access->hasChild(['test'], $data, 'foo'));
         self::assertFalse($access->hasChild(['test'], $data, 'bar'));
+    }
+
+    public function testHasChildReturnsFalseWhenGetterThrows(): void
+    {
+        $access = new SetterDataAccess();
+
+        self::assertFalse($access->hasChild(['test'], new SetterThrowingGetterFixture(), 'value'));
     }
 
     public function testCanCheckIfUnitializedChildPropertyDoesNotExist(): void
@@ -294,5 +344,86 @@ final class SetterDataAccessTest extends TestCase
         )));
         self::assertFalse($access->supports([]));
         self::assertFalse($access->supports('foobar'));
+    }
+}
+
+final class SetterScalarFixture
+{
+    private int $value = 123;
+
+    public function getValue(): int
+    {
+        return $this->value;
+    }
+
+    public function setValue(int $value): void
+    {
+        $this->value = $value;
+    }
+}
+
+final class SetterMapArrayFixture
+{
+    private array $meta = [
+        'foo' => 'bar',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
+     * @param array<string, string> $meta
+     */
+    public function setMeta(array $meta): void
+    {
+        $this->meta = $meta;
+    }
+}
+
+final class SetterMixedListFixture
+{
+    private array $values = [1, 2, 3];
+
+    /**
+     * @return array<int, int>
+     */
+    public function getValues(): array
+    {
+        return $this->values;
+    }
+
+    /**
+     * @param array<int, int> $values
+     */
+    public function setValues(array $values): void
+    {
+        $this->values = $values;
+    }
+}
+
+final class SetterThrowingGetterFixture
+{
+    private string $value;
+
+    public function getValue(): string
+    {
+        throw new Error('boom');
+    }
+
+    public function setValue(string $value): void
+    {
+        $this->value = $value;
+    }
+
+    public function export(): array
+    {
+        return [
+            'value' => $this->value,
+        ];
     }
 }

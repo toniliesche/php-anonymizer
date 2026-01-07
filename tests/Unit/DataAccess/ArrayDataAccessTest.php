@@ -13,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class ArrayDataAccessTest extends TestCase
@@ -116,6 +117,59 @@ final class ArrayDataAccessTest extends TestCase
             self::assertFalse($childNode->isList);
             self::assertEmpty($childNode->childNodes);
         }
+    }
+
+    public function testWillFailOnParseDataTreeWithNonArray(): void
+    {
+        $access = new ArrayDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(new stdClass());
+    }
+
+    public function testWillFailOnParseDataTreeWithMixedArray(): void
+    {
+        $access = new ArrayDataAccess();
+
+        $data = [
+            'mixed' => [
+                'foo' => 'bar',
+                1 => 'baz',
+            ],
+        ];
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree($data);
+    }
+
+    public function testWillFailOnParseDataTreeWithMixedListTypes(): void
+    {
+        $access = new ArrayDataAccess();
+
+        $data = [
+            'items' => [
+                ['foo' => 'bar'],
+                'baz',
+            ],
+        ];
+
+        $this->expectException(RuntimeException::class);
+        $access->parseDataTree($data);
+    }
+
+    public function testWillFailOnParseDataTreeWithInconsistentArrayListTypes(): void
+    {
+        $access = new ArrayDataAccess();
+
+        $data = [
+            'items' => [
+                ['foo' => 'bar'],
+                ['baz'],
+            ],
+        ];
+
+        $this->expectException(RuntimeException::class);
+        $access->parseDataTree($data);
     }
 
     public function testCanCheckIfChildPropertyExists(): void
