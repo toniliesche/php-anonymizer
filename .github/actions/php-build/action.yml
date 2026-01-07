@@ -20,7 +20,7 @@ runs:
         php-version: ${{ inputs.php_version }}
         coverage: xdebug
         extensions: ${{ inputs.php_extensions }}
-        tools: composer, composer-require-checker, phpmd
+        tools: composer, phpmd
     - name: Install dependencies
       shell: bash
       run: composer install
