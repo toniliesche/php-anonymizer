@@ -73,7 +73,7 @@ final class SymfonyToJsonEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->decode($data, new TempStorage());
-        self::assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
+        self::assertSame(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
     }
 
     public function testWillFailOnDecodeOnNonObject(): void

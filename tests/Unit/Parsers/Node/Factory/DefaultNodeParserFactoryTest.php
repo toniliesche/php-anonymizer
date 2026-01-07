@@ -14,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -53,7 +54,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testCanRegisterCustomNodeParserWithCallable(): void
     {
-        $callable = fn () => $this->createMock(NodeParserInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
         $factory->registerCustomNodeParser('custom', $callable);
 
@@ -63,7 +64,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testCanRegisterCustomNodeParserWithInstance(): void
     {
-        $parser = $this->createMock(NodeParserInterface::class);
+        $parser = self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
         $factory->registerCustomNodeParser('custom', $parser);
 
@@ -73,7 +74,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomNodeParserOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(NodeParserInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
 
         $this->expectException(NodeParserExistsException::class);
@@ -92,7 +93,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomNodeParserWhenNodeParserDoesNotImplementInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultNodeParserFactory();
 
         $this->expectException(InvalidNodeParserDefinitionException::class);

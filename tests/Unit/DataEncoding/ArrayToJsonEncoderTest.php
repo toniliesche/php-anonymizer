@@ -18,7 +18,7 @@ final class ArrayToJsonEncoderTest extends TestCase
 {
     public function testCreateWillFailOnJsonExceptionIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker->method('extensionIsLoaded')->willReturn(false);
 
         $this->expectException(MissingPlatformRequirementsException::class);

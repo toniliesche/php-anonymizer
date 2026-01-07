@@ -18,7 +18,7 @@ final class YamlEncoderTest extends TestCase
 {
     public function testInitializationFailsOnMissingYamlExtension(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker->method('extensionIsLoaded')->willReturn(false);
 
         $this->expectException(MissingPlatformRequirementsException::class);

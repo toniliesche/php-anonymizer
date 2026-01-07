@@ -19,6 +19,7 @@ use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProvider;
 use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PHPUnit\Framework\TestCase;
 use Spatie\Snapshots\MatchesSnapshots;
+use function Safe\json_decode;
 
 final class AllowListProcessingUnitTest extends TestCase
 {
@@ -159,15 +160,12 @@ final class AllowListProcessingUnitTest extends TestCase
         );
 
         $processedData = $processingUnit->process('json');
-        self::assertSame(
-            [
-                'address' => [
-                    'name' => '********',
-                    'city' => 'New York',
-                ],
+        self::assertSame([
+            'address' => [
+                'name' => '********',
+                'city' => 'New York',
             ],
-            json_decode((string) $processedData, true, 512, JSON_THROW_ON_ERROR),
-        );
+        ], json_decode((string) $processedData, true, 512, JSON_THROW_ON_ERROR));
         $this->assertMatchesSnapshot($processedData);
     }
 

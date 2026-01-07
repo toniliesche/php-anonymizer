@@ -38,10 +38,8 @@ final class ArrayRuleSetParser implements RuleSetParserInterface
     {
         $tree = new Tree();
 
-        if ($definition !== []) {
-            foreach ($definition as $nodes) {
-                $this->parseNode($tree, $nodes, []);
-            }
+        foreach ($definition as $nodes) {
+            $this->parseNode($tree, $nodes, []);
         }
 
         return $tree;

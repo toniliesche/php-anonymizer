@@ -125,7 +125,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
 
         foreach ($data as $key => $value) {
             $node = $this->parseArrayNode((string) $key, $value, array_merge($path, [(string) $key]));
-            if ($node !== null) {
+            if ($node instanceof Node) {
                 $tree->addChildNode($node);
             }
         }
@@ -174,7 +174,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
 
         foreach ($data as $dataKey => $value) {
             $childNode = $this->parseArrayNode($dataKey, $value, $path);
-            if ($childNode !== null) {
+            if ($childNode instanceof Node) {
                 $childNodes[] = $childNode;
             }
         }
@@ -239,7 +239,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
 
         foreach ($data as $listItem) {
             $childNode = $this->parseArrayNode($key, $listItem, $path);
-            if ($childNode !== null) {
+            if ($childNode instanceof Node) {
                 $node->mergeChildrenFromNode($childNode, $path);
             }
         }
@@ -343,11 +343,11 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
                     $this->resolveDataAccessName($dataAccess),
                     $childPath,
                 );
-                if ($childNode === null) {
+                if (!$childNode instanceof Node) {
                     continue;
                 }
 
-                if ($mergedNode === null) {
+                if (!$mergedNode instanceof Node) {
                     $mergedNode = $childNode;
 
                     continue;
@@ -356,7 +356,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
                 $this->mergeChildNode($mergedNode, $childNode, $childPath);
             }
 
-            if ($mergedNode !== null) {
+            if ($mergedNode instanceof Node) {
                 $tree->addChildNode($mergedNode);
             }
         }
@@ -441,7 +441,7 @@ final readonly class AutoDetectDataAccess implements DataAccessInterface
 
         if (is_array($value)) {
             $arrayNode = $this->parseArrayNode($name, $value, $path);
-            if ($arrayNode === null) {
+            if (!$arrayNode instanceof Node) {
                 return null;
             }
 

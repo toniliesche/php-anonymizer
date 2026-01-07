@@ -43,7 +43,7 @@ final class DefaultNodeParserFactory implements NodeParserFactoryInterface
         }
 
         if ($definition instanceof NodeParserInterface) {
-            $this->customNodeParsers[$name] = static fn () => $definition;
+            $this->customNodeParsers[$name] = static fn (): NodeParserInterface => $definition;
 
             return;
         }

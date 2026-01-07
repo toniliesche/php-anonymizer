@@ -24,7 +24,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 {
     public function testCreateWillFailOnSymfonyPackageIsMissingAndNormalizerIsGiven(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);
@@ -40,7 +40,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
     public function testCreateWillFailOnSymfonyPackageIsMissingAndDenormalizerIsGiven(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);
@@ -88,7 +88,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
     public function testWillFailOnNormalizerSetterInjectionWhenSymfonyPackageIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);
@@ -113,7 +113,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
     public function testWillFailOnDenormalizerSetterInjectionWhenSymfonyPackageIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);
@@ -154,7 +154,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataEncoder(): void
     {
-        $encoder = $this->createMock(DataEncoderInterface::class);
+        $encoder = self::createStub(DataEncoderInterface::class);
 
         $provider = new DefaultDataEncodingProvider();
         $provider->registerCustomDataEncoder('custom', $encoder);
@@ -165,7 +165,7 @@ final class DefaultDataEncodingProviderTest extends TestCase
 
     public function testWillFailOnRegisteringCustomEncoderOnNameConflict(): void
     {
-        $encoder = $this->createMock(DataEncoderInterface::class);
+        $encoder = self::createStub(DataEncoderInterface::class);
         $provider = new DefaultDataEncodingProvider();
 
         $this->expectException(DataEncoderExistsException::class);

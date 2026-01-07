@@ -15,6 +15,7 @@ use PhpAnonymizer\Anonymizer\Test\Helper\Model\Data;
 use PHPUnit\Framework\TestCase;
 use Spatie\Snapshots\MatchesSnapshots;
 use stdClass;
+use function Safe\json_decode;
 
 final class AnonymizerTest extends TestCase
 {
@@ -234,15 +235,12 @@ final class AnonymizerTest extends TestCase
         $processedData = $anonymizer->run('address', $data, DataEncoder::ARRAY_TO_JSON->value);
 
         self::assertIsString($processedData);
-        self::assertSame(
-            [
-                'address' => [
-                    'name' => '********',
-                    'city' => 'New York',
-                ],
+        self::assertSame([
+            'address' => [
+                'name' => '********',
+                'city' => 'New York',
             ],
-            json_decode($processedData, true, 512, JSON_THROW_ON_ERROR),
-        );
+        ], json_decode($processedData, true, 512, JSON_THROW_ON_ERROR));
     }
 
     public function testCanSubstituteValuesInFilteredFieldsOnly(): void

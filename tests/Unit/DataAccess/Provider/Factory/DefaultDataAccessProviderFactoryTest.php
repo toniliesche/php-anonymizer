@@ -13,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Exception\DataAccessProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataAccessProviderDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\UnknownDataAccessProviderException;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -44,7 +45,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataAccessProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataAccessProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
         $factory->registerCustomDataAccessProvider('custom', $callable);
 
@@ -54,7 +55,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataAccessProviderWithInstance(): void
     {
-        $provider = $this->createMock(DataAccessProviderInterface::class);
+        $provider = self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
         $factory->registerCustomDataAccessProvider('custom', $provider);
 
@@ -64,7 +65,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataAccessProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataAccessProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
 
         $this->expectException(DataAccessProviderExistsException::class);
@@ -83,7 +84,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataAccessProviderWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultDataAccessProviderFactory();
 
         $this->expectException(InvalidDataAccessProviderDefinitionException::class);

@@ -150,7 +150,7 @@ final class AllowListProcessingUnit implements ProcessingUnitInterface
                 throw InvalidObjectTypeException::notAnArray(array_slice($path, 0, -1));
             }
 
-            foreach ($value as $key => $item) {
+            foreach (array_keys($value) as $key) {
                 foreach ($node->childNodes as $childNode) {
                     $this->processNode($path, $value[$key], $childNode, $nextRuleNode, $dataAccess);
                 }
@@ -177,7 +177,7 @@ final class AllowListProcessingUnit implements ProcessingUnitInterface
         DataAccessInterface $dataAccess,
         array $path,
     ): bool {
-        if ($ruleNode === null) {
+        if (!$ruleNode instanceof RuleNode) {
             return false;
         }
 

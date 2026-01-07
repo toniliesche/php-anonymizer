@@ -21,7 +21,7 @@ final class SymfonyEncoderTest extends TestCase
 {
     public function testCreateWillFailOnSymfonyPackageIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker->method('libraryIsInstalled')->willReturn(false);
 
         $this->expectException(MissingPlatformRequirementsException::class);
@@ -67,7 +67,7 @@ final class SymfonyEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->decode($data, new TempStorage());
-        self::assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
+        self::assertSame(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
     }
 
     public function testWillFailOnDecodeOnNonObject(): void

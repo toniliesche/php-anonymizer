@@ -41,7 +41,7 @@ final class DefaultDataProcessorFactory implements DataProcessorFactoryInterface
         }
 
         if ($definition instanceof DataProcessorInterface) {
-            $this->customDataProcessors[$name] = static fn () => $definition;
+            $this->customDataProcessors[$name] = static fn (): DataProcessorInterface => $definition;
 
             return;
         }

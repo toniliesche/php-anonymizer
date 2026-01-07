@@ -300,20 +300,16 @@ final class MethodToVariableNameConverterTest extends TestCase
         );
 
         if (!$isValid) {
-            self::assertFalse(
-                $converter->isSupportedMethodName(
-                    $methodName,
-                ),
-            );
+            self::assertFalse($converter->isSupportedMethodName(
+                $methodName,
+            ));
 
             return;
         }
 
-        self::assertTrue(
-            $converter->isSupportedMethodName(
-                $methodName,
-            ),
-        );
+        self::assertTrue($converter->isSupportedMethodName(
+            $methodName,
+        ));
     }
 
     #[DataProvider('provideMethodsAndVarsForMethodToVarConversionTests')]
@@ -325,10 +321,7 @@ final class MethodToVariableNameConverterTest extends TestCase
             isserPrefix: true,
         );
 
-        self::assertSame(
-            $varName,
-            $converter->convertMethodToVariableName($methodName),
-        );
+        self::assertSame($varName, $converter->convertMethodToVariableName($methodName));
     }
 
     #[DataProvider('provideVarsForSupportTests')]
@@ -341,20 +334,16 @@ final class MethodToVariableNameConverterTest extends TestCase
         );
 
         if (!$isValid) {
-            self::assertFalse(
-                $converter->isSupportedVariableName(
-                    $varName,
-                ),
-            );
+            self::assertFalse($converter->isSupportedVariableName(
+                $varName,
+            ));
 
             return;
         }
 
-        self::assertTrue(
-            $converter->isSupportedVariableName(
-                $varName,
-            ),
-        );
+        self::assertTrue($converter->isSupportedVariableName(
+            $varName,
+        ));
     }
 
     #[DataProvider('provideMethodsAndVarsForVarToMethodConversionTests')]
@@ -366,10 +355,7 @@ final class MethodToVariableNameConverterTest extends TestCase
             isserPrefix: true,
         );
 
-        self::assertSame(
-            $methodName,
-            $converter->convertVariableToMethodName($varName),
-        );
+        self::assertSame($methodName, $converter->convertVariableToMethodName($varName));
     }
 
     public static function provideMethodsForSupportTests(): Generator

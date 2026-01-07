@@ -14,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownNodeMapperException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\Factory\DefaultNodeMapperFactory;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -45,7 +46,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(NodeMapperInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
         $factory->registerCustomNodeMapper('custom', $callable);
 
@@ -55,7 +56,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
     {
-        $provider = $this->createMock(NodeMapperInterface::class);
+        $provider = self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
         $factory->registerCustomNodeMapper('custom', $provider);
 
@@ -65,7 +66,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(NodeMapperInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
 
         $this->expectException(NodeMapperExistsException::class);
@@ -84,7 +85,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultNodeMapperFactory();
 
         $this->expectException(InvalidNodeMapperDefinitionException::class);

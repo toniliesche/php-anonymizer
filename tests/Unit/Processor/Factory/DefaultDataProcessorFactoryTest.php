@@ -16,6 +16,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownDataProcessorException;
 use PhpAnonymizer\Anonymizer\Processor\DataProcessorInterface;
 use PhpAnonymizer\Anonymizer\Processor\DefaultDataProcessor;
 use PhpAnonymizer\Anonymizer\Processor\Factory\DefaultDataProcessorFactory;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -58,7 +59,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataProcessorWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataProcessorInterface::class);
+        $callable = fn (): Stub => self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $callable);
 
@@ -71,7 +72,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataProcessorWithInstance(): void
     {
-        $processor = $this->createMock(DataProcessorInterface::class);
+        $processor = self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $processor);
 
@@ -84,7 +85,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomDataProcessorOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataProcessorInterface::class);
+        $callable = fn (): Stub => self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
 
         $this->expectException(DataProcessorExistsException::class);
@@ -103,7 +104,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testWillFailOnRegisterAndProvideCustomDataProcessorWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultDataProcessorFactory();
 
         $this->expectException(InvalidDataProcessorDefinitionException::class);

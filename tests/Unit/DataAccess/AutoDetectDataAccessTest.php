@@ -224,15 +224,13 @@ final class AutoDetectDataAccessTest extends TestCase
 
         self::assertTrue($access->supports([]));
         self::assertTrue($access->supports(new stdClass()));
-        self::assertTrue(
-            $access->supports(
-                new Foobar(
-                    foo: 'foo',
-                    bar: 'bar',
-                    baz: 'baz',
-                ),
+        self::assertTrue($access->supports(
+            new Foobar(
+                foo: 'foo',
+                bar: 'bar',
+                baz: 'baz',
             ),
-        );
+        ));
         self::assertFalse($access->supports('foobar'));
     }
 

@@ -13,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Exception\DataGenerationProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionException;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -44,7 +45,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataGenerationProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $callable);
 
@@ -54,7 +55,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
     {
-        $provider = $this->createMock(DataGenerationProviderInterface::class);
+        $provider = self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $provider);
 
@@ -64,7 +65,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataGenerationProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
 
         $this->expectException(DataGenerationProviderExistsException::class);
@@ -83,7 +84,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultDataGenerationProviderFactory();
 
         $this->expectException(InvalidDataGenerationProviderDefinitionException::class);

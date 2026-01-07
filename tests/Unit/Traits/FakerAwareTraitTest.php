@@ -17,7 +17,7 @@ final class FakerAwareTraitTest extends TestCase
 {
     public function testWillFailOnInjectingFakerWhenFakerLibraryIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);
