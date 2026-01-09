@@ -12,6 +12,9 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\PropertyListOfArraysFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\PropertyMapArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\PropertyMixedArrayFixture;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicAddress;
@@ -137,13 +140,7 @@ final class PropertyDataAccessTest extends TestCase
     {
         $access = new PropertyDataAccess();
 
-        $data = new class () {
-            /** @var array<string, string> */
-            public array $meta = [
-                'foo' => 'bar',
-                'baz' => 'qux',
-            ];
-        };
+        $data = new PropertyMapArrayFixture();
 
         $tree = $access->parseDataTree($data);
 
@@ -166,13 +163,7 @@ final class PropertyDataAccessTest extends TestCase
     {
         $access = new PropertyDataAccess();
 
-        $data = new class () {
-            /** @var array<int|string, string> */
-            public array $mixed = [
-                'foo' => 'bar',
-                1 => 'baz',
-            ];
-        };
+        $data = new PropertyMixedArrayFixture();
 
         $this->expectException(InvalidObjectTypeException::class);
         $access->parseDataTree($data);
@@ -182,12 +173,7 @@ final class PropertyDataAccessTest extends TestCase
     {
         $access = new PropertyDataAccess();
 
-        $data = new class () {
-            /** @var array<int, array<string, string>> */
-            public array $items = [
-                ['foo' => 'bar'],
-            ];
-        };
+        $data = new PropertyListOfArraysFixture();
 
         $this->expectException(RuntimeException::class);
         $access->parseDataTree($data);

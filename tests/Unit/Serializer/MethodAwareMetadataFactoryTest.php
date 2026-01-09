@@ -8,12 +8,8 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\Serializer;
 
 use PhpAnonymizer\Anonymizer\Serializer\MethodAwareMetadataFactory;
 use PhpAnonymizer\Anonymizer\Serializer\NameConverter\MethodToVariableNameConverterInterface;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\TestClassMetadata;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use Symfony\Component\Serializer\Attribute\Ignore;
-use Symfony\Component\Serializer\Mapping\AttributeMetadataInterface;
-use Symfony\Component\Serializer\Mapping\ClassDiscriminatorMapping;
-use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 
 final class MethodAwareMetadataFactoryTest extends TestCase
@@ -60,69 +56,5 @@ final class MethodAwareMetadataFactoryTest extends TestCase
         $subject = new MethodAwareMetadataFactory($factory, $converter);
 
         self::assertTrue($subject->hasMetadataFor('TestClass'));
-    }
-}
-
-final class TestClassMetadata implements ClassMetadataInterface
-{
-    /** @var array<string, AttributeMetadataInterface> */
-    private array $attributes = [];
-
-    private ?ClassDiscriminatorMapping $mapping = null;
-
-    public function __construct(
-        private readonly string $name,
-        #[Ignore]
-        private readonly string $secret,
-    ) {
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function addAttributeMetadata(AttributeMetadataInterface $attributeMetadata): void
-    {
-        $this->attributes[$attributeMetadata->getName()] = $attributeMetadata;
-    }
-
-    /**
-     * @return array<string, AttributeMetadataInterface>
-     */
-    public function getAttributesMetadata(): array
-    {
-        return $this->attributes;
-    }
-
-    public function merge(ClassMetadataInterface $classMetadata): void
-    {
-        foreach ($classMetadata->getAttributesMetadata() as $name => $attributeMetadata) {
-            $this->attributes[$name] = $attributeMetadata;
-        }
-    }
-
-    /**
-     * @return ReflectionClass<TestClassMetadata>
-     */
-    public function getReflectionClass(): ReflectionClass
-    {
-        return new ReflectionClass($this);
-    }
-
-    public function getClassDiscriminatorMapping(): ?ClassDiscriminatorMapping
-    {
-        return $this->mapping;
-    }
-
-    public function setClassDiscriminatorMapping(?ClassDiscriminatorMapping $mapping): void
-    {
-        $this->mapping = $mapping;
-    }
-
-    #[Ignore]
-    public function getSecret(): string
-    {
-        return $this->secret;
     }
 }

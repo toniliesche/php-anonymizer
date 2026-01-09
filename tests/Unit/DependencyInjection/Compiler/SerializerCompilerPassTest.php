@@ -11,6 +11,7 @@ use PhpAnonymizer\Anonymizer\Exception\AnonymizerConfigException;
 use PhpAnonymizer\Anonymizer\Exception\ContainerException;
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
 use PhpAnonymizer\Anonymizer\Serializer\SerializerFactory;
+use PhpAnonymizer\Anonymizer\Test\Helper\Compiler\CustomSerializer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
@@ -146,22 +147,5 @@ final class SerializerCompilerPassTest extends TestCase
 
         $this->expectException(RuleDefinitionException::class);
         (new SerializerCompilerPass())->process($container);
-    }
-}
-
-final class CustomSerializer implements SerializerInterface
-{
-    public function serialize(mixed $data, string $format, array $context = []): string
-    {
-        return '';
-    }
-
-    public function deserialize(
-        mixed $data,
-        string $type,
-        string $format,
-        array $context = [],
-    ): mixed {
-        return null;
     }
 }

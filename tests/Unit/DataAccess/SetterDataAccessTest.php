@@ -6,13 +6,16 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
-use Error;
 use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\SetterMapArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\SetterMixedListFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\SetterScalarFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\SetterThrowingGetterFixture;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
@@ -344,91 +347,5 @@ final class SetterDataAccessTest extends TestCase
         )));
         self::assertFalse($access->supports([]));
         self::assertFalse($access->supports('foobar'));
-    }
-}
-
-final class SetterScalarFixture
-{
-    private int $value = 123;
-
-    public function getValue(): int
-    {
-        return $this->value;
-    }
-
-    public function setValue(int $value): void
-    {
-        $this->value = $value;
-    }
-}
-
-final class SetterMapArrayFixture
-{
-    /** @var array<string, string> */
-    private array $meta = [
-        'foo' => 'bar',
-    ];
-
-    /**
-     * @return array<string, string>
-     */
-    public function getMeta(): array
-    {
-        return $this->meta;
-    }
-
-    /**
-     * @param array<string, string> $meta
-     */
-    public function setMeta(array $meta): void
-    {
-        $this->meta = $meta;
-    }
-}
-
-final class SetterMixedListFixture
-{
-    /** @var array<int, int> */
-    private array $values = [1, 2, 3];
-
-    /**
-     * @return array<int, int>
-     */
-    public function getValues(): array
-    {
-        return $this->values;
-    }
-
-    /**
-     * @param array<int, int> $values
-     */
-    public function setValues(array $values): void
-    {
-        $this->values = $values;
-    }
-}
-
-final class SetterThrowingGetterFixture
-{
-    private string $value;
-
-    public function getValue(): string
-    {
-        throw new Error('boom');
-    }
-
-    public function setValue(string $value): void
-    {
-        $this->value = $value;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function export(): array
-    {
-        return [
-            'value' => $this->value,
-        ];
     }
 }

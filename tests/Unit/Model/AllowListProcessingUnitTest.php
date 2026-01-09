@@ -6,12 +6,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
 
-use PhpAnonymizer\Anonymizer\DataAccess\DataAccessInterface;
-use PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DefaultDataAccessProvider;
-use PhpAnonymizer\Anonymizer\DataEncoding\DataEncoderInterface;
-use PhpAnonymizer\Anonymizer\DataEncoding\NoOpEncoder;
-use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DataEncodingProviderInterface;
 use PhpAnonymizer\Anonymizer\DataEncoding\Provider\DefaultDataEncodingProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\Provider\DefaultDataGeneratorProvider;
 use PhpAnonymizer\Anonymizer\DataGeneration\StarMaskedStringGenerator;
@@ -19,15 +14,16 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataEncoder;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
-use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
-use PhpAnonymizer\Anonymizer\Model\Data\Node as DataNode;
-use PhpAnonymizer\Anonymizer\Model\Data\Tree as DataTree;
 use PhpAnonymizer\Anonymizer\Model\Processing\AllowListProcessingUnit;
 use PhpAnonymizer\Anonymizer\Model\Rule\Node;
 use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
 use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProvider;
 use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\MissingChildAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\NonArrayListValueAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\NoOpEncodingProvider;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\StubDataAccessProvider;
 use PHPUnit\Framework\TestCase;
 use Spatie\Snapshots\MatchesSnapshots;
 use function Safe\json_decode;
@@ -479,99 +475,5 @@ final class AllowListProcessingUnitTest extends TestCase
             $ruleSet,
             $data,
         );
-    }
-}
-
-final class NoOpEncodingProvider implements DataEncodingProviderInterface
-{
-    public function provideEncoder(?string $type): DataEncoderInterface
-    {
-        return new NoOpEncoder();
-    }
-}
-
-final readonly class StubDataAccessProvider implements DataAccessProviderInterface
-{
-    public function __construct(
-        private DataAccessInterface $dataAccess,
-    ) {
-    }
-
-    public function supports(string $dataAccess): bool
-    {
-        return true;
-    }
-
-    public function provideDataAccess(string $dataAccess): DataAccessInterface
-    {
-        return $this->dataAccess;
-    }
-}
-
-final class NonArrayListValueAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return true;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        return 'oops';
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return true;
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): DataTree
-    {
-        return new DataTree([
-            new DataNode(
-                name: 'items',
-                dataAccess: DataAccess::ARRAY->value,
-                nodeType: NodeType::NODE,
-                isList: true,
-            ),
-        ]);
-    }
-}
-
-final class MissingChildAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return false;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        throw FieldDoesNotExistException::fromPath($path);
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return true;
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): DataTree
-    {
-        return new DataTree([
-            new DataNode(
-                name: 'name',
-                dataAccess: DataAccess::ARRAY->value,
-                nodeType: NodeType::LEAF,
-                isList: false,
-            ),
-        ]);
     }
 }

@@ -8,7 +8,6 @@ namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use PhpAnonymizer\Anonymizer\DataAccess\ArrayDataAccess;
 use PhpAnonymizer\Anonymizer\DataAccess\AutoDetectDataAccess;
-use PhpAnonymizer\Anonymizer\DataAccess\DataAccessInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\PropertyDataAccess;
 use PhpAnonymizer\Anonymizer\DataAccess\ReflectionDataAccess;
 use PhpAnonymizer\Anonymizer\DataAccess\SetterDataAccess;
@@ -17,7 +16,18 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
-use PhpAnonymizer\Anonymizer\Model\Data\Tree;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\CustomDataAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\NoChildAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\NonNodeValueAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\ThrowingGetChildAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\ThrowingHasChildAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\DataAccess\ThrowingInvalidObjectAccess;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectArrayListOfMapsFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectFieldFilterFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectFieldNamesFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectMergeLeafNodeFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectMergeNodeFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\AutoDetectMetaMapFixture;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\MixedFooParent;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\PublicAddress;
@@ -291,13 +301,7 @@ final class AutoDetectDataAccessTest extends TestCase
             ],
         );
 
-        $data = new class () {
-            /** @var array<int, array<string, string>> */
-            public array $items = [
-                ['name' => 'John', 'city' => 'New York'],
-                ['name' => 'Jane', 'city' => 'Los Angeles'],
-            ];
-        };
+        $data = new AutoDetectArrayListOfMapsFixture();
 
         $tree = $access->parseDataTree($data);
 
@@ -552,12 +556,7 @@ final class AutoDetectDataAccessTest extends TestCase
             ],
         );
 
-        $data = new class () {
-            /** @var array<string, string> */
-            public array $meta = [
-                'foo' => 'bar',
-            ];
-        };
+        $data = new AutoDetectMetaMapFixture();
 
         $tree = $access->parseDataTree($data);
 
@@ -674,319 +673,5 @@ final class AutoDetectDataAccessTest extends TestCase
                 new SetterDataAccess(),
             ],
         );
-    }
-}
-
-final class AutoDetectFieldNamesFixture
-{
-    public string $publicValue = 'public';
-
-    private string $hidden = 'hidden';
-
-    private readonly string $readonlyValue;
-
-    /** @var array<string, string> */
-    private array $data = [
-        'magic' => 'magic',
-    ];
-
-    public function __construct()
-    {
-        $this->readonlyValue = 'readonly';
-    }
-
-    public function getMagic(): string
-    {
-        return $this->data['magic'];
-    }
-
-    public function setMagic(string $value): void
-    {
-        $this->data['magic'] = $value;
-    }
-
-    /**
-     * @return array<string, string> $value
-     */
-    public function export(): array
-    {
-        return [
-            'publicValue' => $this->publicValue,
-            'hidden' => $this->hidden,
-            'readonlyValue' => $this->readonlyValue,
-            'magic' => $this->getMagic(),
-        ];
-    }
-}
-
-final class AutoDetectFieldFilterFixture
-{
-    public ?string $nullable = null;
-
-    public string $unset;
-
-    private readonly string $readonlyValue;
-
-    /** @var array<string, object|string> */
-    private array $data = [
-        'fancy' => 'fancy',
-        'only' => 'only',
-    ];
-
-    public function __construct()
-    {
-        $this->readonlyValue = 'readonly';
-    }
-
-    public function getFancy(): string
-    {
-        return $this->data['fancy'];
-    }
-
-    public function setFancy(string $value): void
-    {
-        $this->data['fancy'] = $value;
-    }
-
-    public function getOnly(): string
-    {
-        return $this->data['only'];
-    }
-
-    public function setItem(object $value): void
-    {
-        $this->data['item'] = $value;
-    }
-
-    public function get(): string
-    {
-        return 'ignored';
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function export(): array
-    {
-        return [
-            'nullable' => $this->nullable,
-            'unset' => $this->unset,
-            'readonlyValue' => $this->readonlyValue,
-            'fancy' => $this->getFancy(),
-            'only' => $this->getOnly(),
-        ];
-    }
-}
-
-final class AutoDetectMergeLeafNodeFixture
-{
-    public string $item = 'value';
-
-    public function getItem(): object
-    {
-        return new class () {
-            public string $name = 'child';
-        };
-    }
-
-    public function setItem(string $item): void
-    {
-        $this->item = $item;
-    }
-}
-
-final class AutoDetectMergeNodeFixture
-{
-    /** @var array<string, string> */
-    public array $data = ['foo' => 'a'];
-
-    /**
-     * @return array<string, string>
-     */
-    public function getData(): array
-    {
-        return ['bar' => 'b'];
-    }
-
-    /**
-     * @param array<string, string> $value
-     */
-    public function setData(array $value): void
-    {
-        $this->data = $value;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    public function export(): array
-    {
-        return $this->data;
-    }
-}
-
-final class ThrowingHasChildAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        throw InvalidObjectTypeException::notAnObject($path);
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        throw FieldDoesNotExistException::fromPath($path);
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
-    }
-}
-
-final class ThrowingGetChildAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return true;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        throw FieldDoesNotExistException::fromPath($path);
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
-    }
-}
-
-final class NoChildAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return false;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        return null;
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
-    }
-}
-
-final class ThrowingInvalidObjectAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return true;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        throw InvalidObjectTypeException::notAnObject($path);
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
-    }
-}
-
-final class CustomDataAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        // @phpstan-ignore-next-line
-        return is_object($parent) && isset($parent->{$name});
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        // @phpstan-ignore-next-line
-        return $parent->{$name};
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-        // @phpstan-ignore-next-line
-        $parent->{$name} = $newValue;
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
-    }
-}
-
-final class NonNodeValueAccess implements DataAccessInterface
-{
-    public function hasChild(array $path, mixed $parent, string $name): bool
-    {
-        return true;
-    }
-
-    public function getChild(array $path, mixed $parent, string $name): mixed
-    {
-        return 123;
-    }
-
-    public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void
-    {
-    }
-
-    public function supports(mixed $parent): bool
-    {
-        return is_object($parent);
-    }
-
-    public function parseDataTree(mixed $data, array $path = []): Tree
-    {
-        throw new RuntimeException();
     }
 }

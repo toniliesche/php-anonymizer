@@ -12,6 +12,11 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionListOfArraysFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionMapArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionMixedArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionPublicBarFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionPublicFooFixture;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateAddress;
@@ -137,29 +142,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = new class () {
-            /** @var array<string, string> */
-            private array $meta = [
-                'foo' => 'bar',
-                'baz' => 'qux',
-            ];
-
-            /**
-             * @return array<string, string>
-             */
-            public function getMeta(): array
-            {
-                return $this->meta;
-            }
-
-            /**
-             * @param array<string, string> $meta
-             */
-            public function setMeta(array $meta): void
-            {
-                $this->meta = $meta;
-            }
-        };
+        $data = new ReflectionMapArrayFixture();
 
         $tree = $access->parseDataTree($data);
 
@@ -182,29 +165,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = new class () {
-            /** @var array<int|string, string> */
-            private array $mixed = [
-                'foo' => 'bar',
-                1 => 'baz',
-            ];
-
-            /**
-             * @return array<int|string, string>
-             */
-            public function getMixed(): array
-            {
-                return $this->mixed;
-            }
-
-            /**
-             * @param array<int|string, string> $mixed
-             */
-            public function setMixed(array $mixed): void
-            {
-                $this->mixed = $mixed;
-            }
-        };
+        $data = new ReflectionMixedArrayFixture();
 
         $this->expectException(InvalidObjectTypeException::class);
         $access->parseDataTree($data);
@@ -214,28 +175,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = new class () {
-            /** @var array<int, array<string, string>> */
-            private array $items = [
-                ['foo' => 'bar'],
-            ];
-
-            /**
-             * @return array<int, array<string, string>>
-             */
-            public function getItems(): array
-            {
-                return $this->items;
-            }
-
-            /**
-             * @param array<int, array<string, string>> $items
-             */
-            public function setItems(array $items): void
-            {
-                $this->items = $items;
-            }
-        };
+        $data = new ReflectionListOfArraysFixture();
 
         $this->expectException(RuntimeException::class);
         $access->parseDataTree($data);
@@ -245,9 +185,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         self::assertTrue($access->hasChild(['test'], $data, 'foo'));
         self::assertFalse($access->hasChild(['test'], $data, 'bar'));
@@ -278,9 +216,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
@@ -301,9 +237,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->getChild(['test'], $data, 'bar');
@@ -337,9 +271,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $bar = 'bar';
-        });
+        $data = new ReflectionPublicBarFixture();
 
         $access->setChildValue(['test'], $data, 'bar', 'baz');
 
@@ -363,9 +295,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $bar = 'bar';
-        });
+        $data = new ReflectionPublicBarFixture();
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->setChildValue(['test'], $data, 'foo', 'baz');
