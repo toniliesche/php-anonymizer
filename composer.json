@@ -1,0 +1,25 @@
+{
+    "name": "php-anonymizer/anonymizer",
+    "description": "A predictable, array-oriented PHP data anonymizer",
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.5",
+        "thecodingmachine/safe": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpAnonymizer\\Anonymizer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpAnonymizer\\Anonymizer\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "1.0.x-dev"
+        }
+    }
+}
