@@ -56,7 +56,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataProcessorWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataProcessorInterface::class);
+        $callable = fn () => self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $callable);
 
@@ -69,7 +69,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataProcessorWithInstance(): void
     {
-        $processor = $this->createMock(DataProcessorInterface::class);
+        $processor = self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
         $factory->registerCustomDataProcessor('custom', $processor);
 
@@ -82,7 +82,7 @@ final class DefaultDataProcessorFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomDataProcessorOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataProcessorInterface::class);
+        $callable = fn () => self::createStub(DataProcessorInterface::class);
         $factory = new DefaultDataProcessorFactory();
 
         $this->expectException(DataProcessorExistsException::class);

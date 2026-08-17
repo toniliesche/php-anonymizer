@@ -101,6 +101,54 @@ final class AnonymizerTest extends TestCase
         self::assertSame('New York', $processedData['address']['city']);
     }
 
+    public function testCanPreserveStringFallbackOnNodeWithChildren(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withNodeParserType('array')
+            ->withRuleSetParserType('array')
+            ->withRulesFromArray([
+                'rules' => [
+                    'address' => [
+                        'nodes' => [
+                            [
+                                'name' => 'address',
+                                'children' => [['name' => 'street']],
+                                'fallback' => ['match' => 'scalar'],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->build();
+
+        self::assertSame(['address' => 'private'], $anonymizer->run('address', ['address' => 'private']));
+    }
+
+    public function testCanAnonymizeStringFallbackOnNodeWithChildren(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->withNodeParserType('array')
+            ->withRuleSetParserType('array')
+            ->withRulesFromArray([
+                'rules' => [
+                    'address' => [
+                        'nodes' => [
+                            [
+                                'name' => 'address',
+                                'children' => [['name' => 'street']],
+                                'fallback' => ['match' => 'scalar', 'anonymize' => true],
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->build();
+
+        self::assertSame(['address' => '*******'], $anonymizer->run('address', ['address' => 'private']));
+    }
+
     public function testCanSubstituteDataInArray(): void
     {
         $anonymizer = (new AnonymizerBuilder())

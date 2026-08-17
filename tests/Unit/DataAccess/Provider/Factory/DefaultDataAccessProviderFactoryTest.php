@@ -42,7 +42,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataAccessProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataAccessProviderInterface::class);
+        $callable = fn () => self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
         $factory->registerCustomDataAccessProvider('custom', $callable);
 
@@ -52,7 +52,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataAccessProviderWithInstance(): void
     {
-        $provider = $this->createMock(DataAccessProviderInterface::class);
+        $provider = self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
         $factory->registerCustomDataAccessProvider('custom', $provider);
 
@@ -62,7 +62,7 @@ final class DefaultDataAccessProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataAccessProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataAccessProviderInterface::class);
+        $callable = fn () => self::createStub(DataAccessProviderInterface::class);
         $factory = new DefaultDataAccessProviderFactory();
 
         $this->expectException(DataAccessProviderExistsException::class);

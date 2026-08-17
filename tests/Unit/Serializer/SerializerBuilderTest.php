@@ -600,7 +600,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithExtraEncoder(): void
     {
-        $extraEncoder = $this->createMock(EncoderInterface::class);
+        $extraEncoder = self::createStub(EncoderInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraEncoder($extraEncoder);
@@ -616,7 +616,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($encoders as $encoder) {
-            if (!$encoder instanceof MockObject) {
+            if ($encoder !== $extraEncoder) {
                 continue;
             }
 
@@ -629,7 +629,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithoutExtraEncoder(): void
     {
-        $extraEncoder = $this->createMock(EncoderInterface::class);
+        $extraEncoder = self::createStub(EncoderInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraEncoder($extraEncoder);
@@ -659,7 +659,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithExtraDecoder(): void
     {
-        $extraDecoder = $this->createMock(DecoderInterface::class);
+        $extraDecoder = self::createStub(DecoderInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraDecoder($extraDecoder);
@@ -675,7 +675,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($decoders as $decoder) {
-            if (!$decoder instanceof MockObject) {
+            if ($decoder !== $extraDecoder) {
                 continue;
             }
 
@@ -688,7 +688,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithoutExtraDecoder(): void
     {
-        $extraDecoder = $this->createMock(DecoderInterface::class);
+        $extraDecoder = self::createStub(DecoderInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraDecoder($extraDecoder);
@@ -718,7 +718,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithExtraNormalizer(): void
     {
-        $extraNormalizer = $this->createMock(NormalizerInterface::class);
+        $extraNormalizer = self::createStub(NormalizerInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraNormalizer($extraNormalizer);
@@ -731,7 +731,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof MockObject) {
+            if ($normalizer !== $extraNormalizer) {
                 continue;
             }
 
@@ -744,7 +744,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithoutExtraNormalizer(): void
     {
-        $extraNormalizer = $this->createMock(NormalizerInterface::class);
+        $extraNormalizer = self::createStub(NormalizerInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraNormalizer($extraNormalizer);
@@ -771,7 +771,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithExtraDenormalizer(): void
     {
-        $extraDenormalizer = $this->createMock(DenormalizerInterface::class);
+        $extraDenormalizer = self::createStub(DenormalizerInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraDenormalizer($extraDenormalizer);
@@ -784,7 +784,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($denormalizers as $denormalizer) {
-            if (!$denormalizer instanceof MockObject) {
+            if ($denormalizer !== $extraDenormalizer) {
                 continue;
             }
 
@@ -797,7 +797,7 @@ final class SerializerBuilderTest extends TestCase
 
     public function testCanCreateSerializerWithoutExtraDenormalizer(): void
     {
-        $extraDenormalizer = $this->createMock(DenormalizerInterface::class);
+        $extraDenormalizer = self::createStub(DenormalizerInterface::class);
 
         $builder = new SerializerBuilder();
         $builder->addExtraDenormalizer($extraDenormalizer);

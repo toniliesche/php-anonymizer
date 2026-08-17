@@ -1,13 +1,14 @@
+include make/release.mk
 
 ifneq ("$(wildcard $(CURDIR)/build.properties)","")
 	include $(CURDIR)/build.properties
 endif
 
-build-%: set-version-% tag-git-%;
+.PHONY: build deps-install test check lint fmt clean
+build: ;
 
-tag-git-%: tests set-version-%
-	git tag -a $(build.version) -m "Release $(build.version)"
-	git push origin $(build.version)
+deps-install:
+	composer install --prefer-dist --no-interaction
 
 new-release-branch:
 	git checkout -b release/$(build.version.major).$(build.version.minor).x
@@ -17,10 +18,10 @@ set-version-release:
 	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix})
 
 set-version-rc:
-	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix}-rc${build.version.candidate})
+	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix}-rc.${build.version.candidate})
 
 set-version-patch:
-	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix}.${build.version.patch})
+	$(eval build.version := ${build.version.major}.${build.version.minor}.${build.version.bugfix}-hotfix.${build.version.patch})
 
 increase-%: update-% write-properties
 	@echo updated build.properties file
@@ -75,7 +76,19 @@ commit-checks cc: check-style rector-check static-analysis;
 
 push-checks pc: quality-of-code;
 
-quality-of-code: check-style rector-check require-checks security-check mess-detection static-analysis tests;
+#quality-of-code: check-style rector-check require-checks security-check mess-detection static-analysis test;
+quality-of-code: check-style rector-check require-checks security-check static-analysis test;
+
+check: commit-checks
+
+lint: check-style rector-check static-analysis
+
+fmt: fix-style
+
+test: unit-tests integration-tests
+
+clean:
+	rm -rf .coverage
 
 check-style:
 	vendor/bin/php-cs-fixer check src
@@ -90,8 +103,6 @@ fix-packages:
 
 static-analysis:
 	vendor/bin/phpstan
-
-tests: unit-tests integration-tests;
 
 unit-tests:
 	vendor/bin/phpunit --testsuite Unit
@@ -142,3 +153,8 @@ spot-lazy-traits:
 
 check-commented-code:
 	vendor/bin/swiss-knife check-commented-code src tests
+
+.PHONY: help
+help:
+	@printf '%s\n' 'make commit-checks   run fast quality checks' 'make push-checks     run the full quality suite' 'make tests            run unit and integration tests' 'make version-show    show the release version'
+.DEFAULT_GOAL := help

@@ -14,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use function is_string;
 use function sprintf;
 
 final class ProcessingUnit
@@ -92,6 +93,10 @@ final class ProcessingUnit
      */
     private function processValue(array $path, Node $rule, mixed $value): mixed
     {
+        if ($rule->hasScalarFallback() && is_string($value)) {
+            return $this->processScalarFallback($path, $rule, $value);
+        }
+
         if ($rule->isArray) {
             if (!is_array($value)) {
                 throw InvalidObjectTypeException::notAnArray($path);
@@ -121,6 +126,10 @@ final class ProcessingUnit
      */
     private function processSingleValue(array $path, Node $rule, mixed $value): mixed
     {
+        if ($rule->hasScalarFallback() && is_string($value)) {
+            return $this->processScalarFallback($path, $rule, $value);
+        }
+
         if ($rule->nodeType === NodeType::LEAF) {
             return $this->getAnonymizedValue($path, $value, $rule->valueType);
         }
@@ -130,6 +139,18 @@ final class ProcessingUnit
         }
 
         return $value;
+    }
+
+    /**
+     * @param string[] $path
+     */
+    private function processScalarFallback(array $path, Node $rule, string $value): string
+    {
+        if (!$rule->fallbackAnonymize) {
+            return $value;
+        }
+
+        return $this->getAnonymizedValue($path, $value, $rule->fallbackValueType);
     }
 
     /**

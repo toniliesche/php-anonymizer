@@ -62,7 +62,7 @@ final class DefaultDataAccessProviderTest extends TestCase
     {
         $provider = new DefaultDataAccessProvider();
 
-        $dataAccess = $this->createMock(DataAccessInterface::class);
+        $dataAccess = self::createStub(DataAccessInterface::class);
         $provider->registerCustomDataAccess('foobar', $dataAccess);
 
         self::assertTrue($provider->supports('foobar'));

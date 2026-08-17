@@ -40,7 +40,6 @@ final class AnonymizerConfiguration implements ConfigurationInterface
         return $treeBuilder;
     }
 
-    // @phpstan-ignore-next-line
     private function configureParsers(NodeBuilder $rootNode): void
     {
         $parserNode = $rootNode
@@ -64,7 +63,6 @@ final class AnonymizerConfiguration implements ConfigurationInterface
             ->cannotBeEmpty();
     }
 
-    // @phpstan-ignore-next-line
     private function configureDataAccessors(NodeBuilder $rootNode): void
     {
         $dataNode = $rootNode
@@ -96,7 +94,6 @@ final class AnonymizerConfiguration implements ConfigurationInterface
             ->cannotBeEmpty();
     }
 
-    // @phpstan-ignore-next-line
     private function configureSerializer(NodeBuilder $rootNode): void
     {
         $serializerNode = $rootNode

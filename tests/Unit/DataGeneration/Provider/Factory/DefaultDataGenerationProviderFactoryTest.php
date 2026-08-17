@@ -42,7 +42,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(DataGenerationProviderInterface::class);
+        $callable = fn () => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $callable);
 
@@ -52,7 +52,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
     {
-        $provider = $this->createMock(DataGenerationProviderInterface::class);
+        $provider = self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $provider);
 
@@ -62,7 +62,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(DataGenerationProviderInterface::class);
+        $callable = fn () => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
 
         $this->expectException(DataGenerationProviderExistsException::class);

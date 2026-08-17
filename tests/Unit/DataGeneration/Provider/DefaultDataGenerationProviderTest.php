@@ -33,7 +33,7 @@ final class DefaultDataGenerationProviderTest extends TestCase
 
     public function testWillFailOnInjectingFakerOnMissingFakerLibrary(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker
             ->method('libraryIsInstalled')
             ->willReturn(false);

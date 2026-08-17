@@ -27,6 +27,9 @@ final class Node implements ChildNodeAccessInterface
         public ?string $nestedRule = null,
         public ?string $filterField = null,
         public ?string $filterValue = null,
+        public ?string $fallbackMatch = null,
+        public bool $fallbackAnonymize = false,
+        public ?string $fallbackValueType = null,
         array $childNodes = [],
     ) {
         foreach ($childNodes as $childNode) {
@@ -66,6 +69,11 @@ final class Node implements ChildNodeAccessInterface
         return !is_null($this->filterField);
     }
 
+    public function hasScalarFallback(): bool
+    {
+        return $this->fallbackMatch === 'scalar';
+    }
+
     public function addChildNode(Node $node): void
     {
         if (!is_null($this->nestedRule)) {
@@ -96,7 +104,10 @@ final class Node implements ChildNodeAccessInterface
             || $this->dataAccess !== $dataAccess
             || $this->isArray !== $ruleResult->isArray
             || $this->nestedType !== $ruleResult->nestedType
-            || $this->nestedRule !== $ruleResult->nestedRule;
+            || $this->nestedRule !== $ruleResult->nestedRule
+            || $this->fallbackMatch !== $ruleResult->fallbackMatch
+            || $this->fallbackAnonymize !== $ruleResult->fallbackAnonymize
+            || $this->fallbackValueType !== $ruleResult->fallbackValueType;
     }
 
     public function definitionConflict(NodeParsingResult $ruleResult): bool

@@ -19,7 +19,7 @@ final class SymfonyEncoderTest extends TestCase
 {
     public function testCreateWillFailOnSymfonyPackageIsMissing(): void
     {
-        $dependencyChecker = $this->createMock(DependencyCheckerInterface::class);
+        $dependencyChecker = self::createStub(DependencyCheckerInterface::class);
         $dependencyChecker->method('libraryIsInstalled')->willReturn(false);
 
         $this->expectException(MissingPlatformRequirementsException::class);

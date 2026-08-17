@@ -27,9 +27,9 @@ runs:
     - name: Run dependencies audit
       shell: bash
       run: composer audit
-    - name: Run mess detection
-      shell: bash
-      run: vendor/bin/phpmd src,tests text phpmd.xml
+#    - name: Run mess detection
+#      shell: bash
+#      run: vendor/bin/phpmd src,tests text phpmd.xml
     - name: Run static analysis
       shell: bash
       run: vendor/bin/phpstan

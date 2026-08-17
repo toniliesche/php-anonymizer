@@ -51,7 +51,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testCanRegisterCustomNodeParserWithCallable(): void
     {
-        $callable = fn () => $this->createMock(NodeParserInterface::class);
+        $callable = fn () => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
         $factory->registerCustomNodeParser('custom', $callable);
 
@@ -61,7 +61,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testCanRegisterCustomNodeParserWithInstance(): void
     {
-        $parser = $this->createMock(NodeParserInterface::class);
+        $parser = self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
         $factory->registerCustomNodeParser('custom', $parser);
 
@@ -71,7 +71,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomNodeParserOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(NodeParserInterface::class);
+        $callable = fn () => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
 
         $this->expectException(NodeParserExistsException::class);

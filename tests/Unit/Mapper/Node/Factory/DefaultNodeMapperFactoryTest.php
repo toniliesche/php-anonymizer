@@ -43,7 +43,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => $this->createMock(NodeMapperInterface::class);
+        $callable = fn () => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
         $factory->registerCustomNodeMapper('custom', $callable);
 
@@ -53,7 +53,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithInstance(): void
     {
-        $provider = $this->createMock(NodeMapperInterface::class);
+        $provider = self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
         $factory->registerCustomNodeMapper('custom', $provider);
 
@@ -63,7 +63,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => $this->createMock(NodeMapperInterface::class);
+        $callable = fn () => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
 
         $this->expectException(NodeMapperExistsException::class);
