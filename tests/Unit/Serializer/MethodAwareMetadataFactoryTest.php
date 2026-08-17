@@ -51,7 +51,7 @@ final class MethodAwareMetadataFactoryTest extends TestCase
             ->with('TestClass')
             ->willReturn(true);
 
-        $converter = $this->createMock(MethodToVariableNameConverterInterface::class);
+        $converter = $this->createStub(MethodToVariableNameConverterInterface::class);
 
         $subject = new MethodAwareMetadataFactory($factory, $converter);
 

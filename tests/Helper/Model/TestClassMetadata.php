@@ -12,6 +12,7 @@ use Symfony\Component\Serializer\Mapping\AttributeMetadataInterface;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorMapping;
 use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
 
+// @phpstan-ignore-next-line class.disallowedSubtype
 final class TestClassMetadata implements ClassMetadataInterface
 {
     /** @var array<string, AttributeMetadataInterface> */
@@ -56,7 +57,7 @@ final class TestClassMetadata implements ClassMetadataInterface
      */
     public function getReflectionClass(): ReflectionClass
     {
-        return new ReflectionClass($this);
+        return new ReflectionClass(self::class);
     }
 
     public function getClassDiscriminatorMapping(): ?ClassDiscriminatorMapping

@@ -241,6 +241,31 @@ $anonymizer->registerRuleSet(
 );
 ```
 
+If a node normally contains children but may also contain a string, a scalar fallback can stop traversal at that
+branch. By default the string is preserved:
+
+```yaml
+- name: address
+  children:
+    - name: street
+  fallback:
+    match: scalar
+    anonymize: false
+```
+
+Set `anonymize` to `true` to mask matching strings. An optional `value_type` selects the configured generator (for
+example, a Faker type):
+
+```yaml
+fallback:
+  match: scalar
+  anonymize: true
+  value_type: name
+```
+
+The same array-rule syntax is accepted when rules are loaded from YAML or JSON, or registered as PHP arrays. The
+current `scalar` match targets strings; values of other types retain the existing type-validation behavior.
+
 #### 02.01.02 Array rule syntax
 
 Additionally it is possible to make use of array notation to tell the anonymizer engine that there is a list of items at

@@ -20,6 +20,9 @@ final readonly class NodeParsingResult
         public ?string $nestedRule = null,
         public ?string $filterField = null,
         public ?string $filterValue = null,
+        public ?string $fallbackMatch = null,
+        public bool $fallbackAnonymize = false,
+        public ?string $fallbackValueType = null,
     ) {
         if (!is_null($this->nestedType)) {
             if (is_null($this->nestedRule)) {

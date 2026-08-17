@@ -27,6 +27,9 @@ final class DefaultNodeMapper implements NodeMapperInterface
             nestedRule: $ruleResult->nestedRule,
             filterField: $ruleResult->filterField,
             filterValue: $ruleResult->filterValue,
+            fallbackMatch: $ruleResult->fallbackMatch,
+            fallbackAnonymize: $ruleResult->fallbackAnonymize,
+            fallbackValueType: $ruleResult->fallbackValueType,
         );
     }
 }

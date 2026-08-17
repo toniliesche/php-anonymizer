@@ -364,6 +364,54 @@ final class ArrayNodeParserTest extends TestCase
         );
     }
 
+    public function testCanParseScalarFallback(): void
+    {
+        $result = (new ArrayNodeParser())->parseNode(
+            [
+                'name' => 'address',
+                'children' => [],
+                'fallback' => [
+                    'match' => 'scalar',
+                    'anonymize' => true,
+                    'value_type' => 'name',
+                ],
+            ],
+            '',
+        );
+
+        self::assertSame('scalar', $result->fallbackMatch);
+        self::assertTrue($result->fallbackAnonymize);
+        self::assertSame('name', $result->fallbackValueType);
+    }
+
+    public function testWillFailOnScalarFallbackWithoutChildren(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        (new ArrayNodeParser())->parseNode(
+            [
+                'name' => 'address',
+                'fallback' => ['match' => 'scalar'],
+            ],
+            '',
+        );
+    }
+
+    public function testWillFailOnScalarFallbackValueTypeWithoutAnonymization(): void
+    {
+        $this->expectException(InvalidNodeDefinitionException::class);
+        (new ArrayNodeParser())->parseNode(
+            [
+                'name' => 'address',
+                'children' => [],
+                'fallback' => [
+                    'match' => 'scalar',
+                    'value_type' => 'name',
+                ],
+            ],
+            '',
+        );
+    }
+
     public static function provideTestOptions(): Generator
     {
         foreach (['data_access', 'value_type', 'nested_rule'] as $option) {

@@ -46,7 +46,7 @@ final class AnonymizerFactoryTest extends TestCase
             builderConfig: (new ContainerBuilderConfig()),
         );
 
-        $builder->compile();
+        $builder->compile(true);
 
         $anonymizer = $builder->get(Anonymizer::class);
         [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
@@ -76,7 +76,7 @@ final class AnonymizerFactoryTest extends TestCase
         $definition->setSynthetic(true);
         $builder->setDefinition('MySerializer', $definition);
 
-        $builder->compile();
+        $builder->compile(true);
 
         $anonymizer = $builder->get(Anonymizer::class);
         [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
@@ -109,7 +109,7 @@ final class AnonymizerFactoryTest extends TestCase
         $definition->setSynthetic(true);
         $builder->setDefinition('MySerializer', $definition);
 
-        $builder->compile();
+        $builder->compile(true);
 
         $anonymizer = $builder->get(Anonymizer::class);
         [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
@@ -142,7 +142,7 @@ final class AnonymizerFactoryTest extends TestCase
         $definition->setSynthetic(true);
         $builder->setDefinition('MySerializer', $definition);
 
-        $builder->compile();
+        $builder->compile(true);
 
         $anonymizer = $builder->get(Anonymizer::class);
         [$normalizer, $denormalizer] = $this->resolveSerializerComponents($anonymizer);
