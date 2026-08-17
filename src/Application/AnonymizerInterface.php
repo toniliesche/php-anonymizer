@@ -11,4 +11,7 @@ interface AnonymizerInterface
      * @return array<string, mixed>
      */
     public function anonymize(string $profile, array $data): array;
+
+    /** @param array<string, mixed> $data */
+    public function anonymizeWithReport(string $profile, array $data): AnonymizationResult;
 }

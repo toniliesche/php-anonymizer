@@ -1,5 +1,33 @@
 # PHP Anonymizer Core
 
-Pure PHP array anonymization. The first iteration supports flat string-field
-redaction with immutable profile definitions. See the repository README for
-usage and the iteration plan for the roadmap.
+Pure PHP array anonymization with immutable profile definitions. The core
+supports flat and nested string redaction without mutating the input array.
+
+```php
+$profile = ProfileDefinition::fromArray('customer', [
+    'mode' => 'redact',
+    'rules' => [
+        ['field' => 'customer', 'children' => [['field' => 'email']]],
+        ['field' => 'orders', 'each' => [['field' => 'reference']]],
+        ['field' => 'tags', 'each' => true],
+    ],
+]);
+
+$result = $anonymizer->anonymizeWithReport('customer', [
+    'customer' => ['email' => 'a@example.com'],
+    'orders' => [['reference' => 'A-1']],
+    'tags' => ['internal'],
+]);
+
+$result->data();              // redacted array
+$result->anonymizedPaths();   // ['/customer/email', '/orders/0/reference', '/tags/0']
+$result->missingPaths();      // []
+```
+
+`children` traverses an associative map, while `each` traverses a PHP list.
+`each: true` redacts every string list element; `each: [rules]` traverses list
+elements as maps. Wrong runtime shapes and selected non-string values fail with
+path-aware exceptions. Report and exception paths use RFC 6901 JSON Pointer
+notation, so `/` is encoded as `~1` and `~` as `~0`.
+
+See the repository README and iteration plan for the complete roadmap.

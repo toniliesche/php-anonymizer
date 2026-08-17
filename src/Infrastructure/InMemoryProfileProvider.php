@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Infrastructure;
 
 use InvalidArgumentException;
+use Override;
 use PhpAnonymizer\Anonymizer\Application\ProfileProviderInterface;
 use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
 
@@ -26,7 +27,7 @@ final class InMemoryProfileProvider implements ProfileProviderInterface
         }
     }
 
-    #[\Override]
+    #[Override]
     public function get(string $name): ?ProfileDefinition
     {
         return $this->profiles[$name] ?? null;

@@ -82,4 +82,66 @@ final class ProfileDefinitionTest extends TestCase
             'rules' => [['field' => 'email'], ['field' => 'email']],
         ]);
     }
+
+    public function testCreatesNestedMapAndListRules(): void
+    {
+        $profile = ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [
+                ['field' => 'customer', 'children' => [['field' => 'email']]],
+                ['field' => 'tags', 'each' => true],
+                ['field' => 'orders', 'each' => [['field' => 'reference']]],
+            ],
+        ]);
+
+        self::assertTrue($profile->rules()[0]->hasChildren());
+        self::assertCount(1, $profile->rules()[0]->children());
+        self::assertTrue($profile->rules()[1]->eachStrings());
+        self::assertNotNull($profile->rules()[2]->eachRules());
+    }
+
+    public function testRejectsBothTraversalForms(): void
+    {
+        $this->expectExceptionMessageMatches('/both children and each/');
+        ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => [['field' => 'email']], 'each' => true]],
+        ]);
+    }
+
+    public function testRejectsDuplicateNestedSiblingFields(): void
+    {
+        $this->expectExceptionMessageMatches('/duplicates field "email"/');
+        ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => [['field' => 'email'], ['field' => 'email']]]],
+        ]);
+    }
+
+    public function testRejectsMalformedEachDefinition(): void
+    {
+        $this->expectExceptionMessageMatches('/each must be true or a non-empty list/');
+        ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'tags', 'each' => []]],
+        ]);
+    }
+
+    public function testRejectsMalformedChildrenDefinition(): void
+    {
+        $this->expectExceptionMessageMatches('/children must be a non-empty list/');
+        ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => []]],
+        ]);
+    }
+
+    public function testRejectsNonMapNestedRule(): void
+    {
+        $this->expectExceptionMessageMatches('/nested rule 0 must be a map/');
+        ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => ['email']]],
+        ]);
+    }
 }
