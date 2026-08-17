@@ -12,8 +12,8 @@
   "require": {
     "php": "^8.2",
     "jawira/case-converter": "^3.6",
-    "myclabs/deep-copy": "^1.12",
-    "thecodingmachine/safe": "^2.5 || ^3.3"
+    "myclabs/deep-copy": "^1.13",
+    "thecodingmachine/safe": "^2.5 || ^3.4"
   },
   "require-dev": {
     "ext-dom": "*",
