@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataGeneration\Provider\Factory;
@@ -11,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataGenerationProvider;
 use PhpAnonymizer\Anonymizer\Exception\DataGenerationProviderExistsException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidDataGenerationProviderDefinitionException;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -42,7 +45,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => self::createStub(DataGenerationProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
         $factory->registerCustomDataGenerationProvider('custom', $callable);
 
@@ -62,7 +65,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => self::createStub(DataGenerationProviderInterface::class);
+        $callable = fn (): Stub => self::createStub(DataGenerationProviderInterface::class);
         $factory = new DefaultDataGenerationProviderFactory();
 
         $this->expectException(DataGenerationProviderExistsException::class);
@@ -81,7 +84,7 @@ final class DefaultDataGenerationProviderFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultDataGenerationProviderFactory();
 
         $this->expectException(InvalidDataGenerationProviderDefinitionException::class);

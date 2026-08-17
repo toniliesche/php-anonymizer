@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\RuleProvider;
@@ -7,7 +9,7 @@ namespace PhpAnonymizer\Anonymizer\RuleProvider;
 use Generator;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
-use PhpAnonymizer\Anonymizer\Model\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
 use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\ArrayRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;

@@ -111,13 +111,11 @@ final readonly class MethodToVariableNameConverter implements MethodToVariableNa
             );
         }
 
-        $matchExpression .= sprintf(
+        return $matchExpression . sprintf(
             ')(:?%s%s)+$/',
             $this->methodNameStrategy->getSeparator(),
             $this->methodNameStrategy->getGroupMatch(),
         );
-
-        return $matchExpression;
     }
 
     private function buildMethodReplaceExpression(): string
@@ -135,9 +133,7 @@ final readonly class MethodToVariableNameConverter implements MethodToVariableNa
             );
         }
 
-        $matchExpression .= ')/';
-
-        return $matchExpression;
+        return $matchExpression . ')/';
     }
 
     private function buildVarMatchExpression(): string

@@ -8,7 +8,7 @@ inputs:
     required: false
   php_version:
     description: Select php version
-    default: 8.2
+    default: "8.2"
     required: false
 
 runs:
@@ -20,7 +20,7 @@ runs:
         php-version: ${{ inputs.php_version }}
         coverage: xdebug
         extensions: ${{ inputs.php_extensions }}
-        tools: composer, composer-require-checker
+        tools: composer, phpmd
     - name: Install dependencies
       shell: bash
       run: composer install

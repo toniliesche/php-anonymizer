@@ -39,7 +39,7 @@ final class DefaultDataGenerationProviderFactory implements DataGenerationProvid
         }
 
         if ($definition instanceof DataGenerationProviderInterface) {
-            $this->customDataGenerationProviders[$name] = static fn () => $definition;
+            $this->customDataGenerationProviders[$name] = static fn (): DataGenerationProviderInterface => $definition;
 
             return;
         }

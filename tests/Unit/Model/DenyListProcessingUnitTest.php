@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
@@ -12,16 +14,19 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\ProcessingUnit;
-use PhpAnonymizer\Anonymizer\Model\RuleSet;
-use PhpAnonymizer\Anonymizer\Model\RuleSetProvider;
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Processing\DenyListProcessingUnit;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProvider;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PHPUnit\Framework\TestCase;
+use Spatie\Snapshots\MatchesSnapshots;
 
-final class ProcessingUnitTest extends TestCase
+final class DenyListProcessingUnitTest extends TestCase
 {
+    use MatchesSnapshots;
+
     public function testCanRunSimpleProcessingOfDataInArray(): void
     {
         $nameNode = new Node(
@@ -61,7 +66,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -78,6 +83,7 @@ final class ProcessingUnitTest extends TestCase
 
         self::assertSame('********', $processedData['address']['name']);
         self::assertSame('New York', $processedData['address']['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunSimpleProcessingOfDataInListOfArrays(): void
@@ -125,7 +131,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -144,6 +150,7 @@ final class ProcessingUnitTest extends TestCase
         self::assertSame('New York', $processedData['addresses'][0]['city']);
         self::assertSame('********', $processedData['addresses'][1]['name']);
         self::assertSame('Los Angeles', $processedData['addresses'][1]['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunSimpleDataProcessingOfNonExistantDataInArray(): void
@@ -185,7 +192,7 @@ final class ProcessingUnitTest extends TestCase
             ],
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -202,6 +209,7 @@ final class ProcessingUnitTest extends TestCase
 
         self::assertSame('The Testing Corp', $processedData['address']['company']);
         self::assertSame('New York', $processedData['address']['city']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunComplexProcessingOfDataWithJsonInput(): void
@@ -238,7 +246,7 @@ final class ProcessingUnitTest extends TestCase
 
         $data = '{"address":{"name":"John Doe","city":"New York"}}';
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -253,6 +261,7 @@ final class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process('json');
         self::assertSame('{"address":{"name":"********","city":"New York"}}', $processedData);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testCanRunComplexProcessingOfDataWithNestedJsonInput(): void
@@ -305,7 +314,7 @@ final class ProcessingUnitTest extends TestCase
             'address' => '{"name":"John Doe","city":"New York"}',
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -320,6 +329,7 @@ final class ProcessingUnitTest extends TestCase
 
         $processedData = $processingUnit->process();
         self::assertSame('{"name":"********","city":"New York"}', $processedData['address']);
+        $this->assertMatchesSnapshot($processedData);
     }
 
     public function testWillFailOnArrayProcessingOfSimpleValue(): void
@@ -358,7 +368,7 @@ final class ProcessingUnitTest extends TestCase
             'addresses' => 'invalid type',
         ];
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),
@@ -412,7 +422,7 @@ final class ProcessingUnitTest extends TestCase
             city: 'New York',
         );
 
-        $processingUnit = new ProcessingUnit(
+        $processingUnit = new DenyListProcessingUnit(
             new DefaultDataGeneratorProvider(
                 [
                     new StarMaskedStringGenerator(),

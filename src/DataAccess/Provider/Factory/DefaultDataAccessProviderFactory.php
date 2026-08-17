@@ -38,7 +38,7 @@ final class DefaultDataAccessProviderFactory implements DataAccessProviderFactor
         }
 
         if ($definition instanceof DataAccessProviderInterface) {
-            $this->customDataAccessProviders[$name] = static fn () => $definition;
+            $this->customDataAccessProviders[$name] = static fn (): DataAccessProviderInterface => $definition;
 
             return;
         }

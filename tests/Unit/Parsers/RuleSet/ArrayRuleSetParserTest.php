@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet;
@@ -47,21 +49,21 @@ final class ArrayRuleSetParserTest extends TestCase
         );
 
         $dataLevel = $tree->getChildNode('data');
-        self::assertEquals('data', $dataLevel->name);
-        self::assertEquals('array', $dataLevel->dataAccess);
-        self::assertEquals(NodeType::NODE, $dataLevel->nodeType);
+        self::assertSame('data', $dataLevel->name);
+        self::assertSame('array', $dataLevel->dataAccess);
+        self::assertSame(NodeType::NODE, $dataLevel->nodeType);
         self::assertFalse($dataLevel->isArray);
 
         $addressLevel = $dataLevel->getChildNode('address');
-        self::assertEquals('address', $addressLevel->name);
-        self::assertEquals('property', $addressLevel->dataAccess);
-        self::assertEquals(NodeType::NODE, $addressLevel->nodeType);
+        self::assertSame('address', $addressLevel->name);
+        self::assertSame('property', $addressLevel->dataAccess);
+        self::assertSame(NodeType::NODE, $addressLevel->nodeType);
         self::assertTrue($addressLevel->isArray);
 
         $nameLevel = $addressLevel->getChildNode('name');
-        self::assertEquals('name', $nameLevel->name);
-        self::assertEquals('setter', $nameLevel->dataAccess);
-        self::assertEquals(NodeType::LEAF, $nameLevel->nodeType);
+        self::assertSame('name', $nameLevel->name);
+        self::assertSame('setter', $nameLevel->dataAccess);
+        self::assertSame(NodeType::LEAF, $nameLevel->nodeType);
         self::assertFalse($nameLevel->isArray);
     }
 

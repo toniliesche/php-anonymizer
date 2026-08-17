@@ -8,6 +8,7 @@ namespace PhpAnonymizer\Anonymizer\DataAccess;
 
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Model\Data\Tree;
 
 interface DataAccessInterface
 {
@@ -35,4 +36,11 @@ interface DataAccessInterface
     public function setChildValue(array $path, mixed &$parent, string $name, mixed $newValue): void;
 
     public function supports(mixed $parent): bool;
+
+    /**
+     * @param string[] $path
+     *
+     * @throws InvalidObjectTypeException
+     */
+    public function parseDataTree(mixed $data, array $path = []): Tree;
 }

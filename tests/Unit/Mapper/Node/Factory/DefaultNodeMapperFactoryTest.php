@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Mapper\Node\Factory;
@@ -12,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Exception\UnknownNodeMapperException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\Factory\DefaultNodeMapperFactory;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -43,7 +46,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testCanRegisterAndProvideCustomDataGenerationProviderWithCallable(): void
     {
-        $callable = fn () => self::createStub(NodeMapperInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
         $factory->registerCustomNodeMapper('custom', $callable);
 
@@ -63,7 +66,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderOnNameConflict(): void
     {
-        $callable = fn () => self::createStub(NodeMapperInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeMapperInterface::class);
         $factory = new DefaultNodeMapperFactory();
 
         $this->expectException(NodeMapperExistsException::class);
@@ -82,7 +85,7 @@ final class DefaultNodeMapperFactoryTest extends TestCase
 
     public function testWillFailOnRegisteringCustomDataGenerationProviderWhenNotImplementingInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultNodeMapperFactory();
 
         $this->expectException(InvalidNodeMapperDefinitionException::class);

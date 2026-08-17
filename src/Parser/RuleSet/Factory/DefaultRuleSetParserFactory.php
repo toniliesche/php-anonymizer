@@ -44,7 +44,7 @@ final class DefaultRuleSetParserFactory implements RuleSetParserFactoryInterface
         }
 
         if ($definition instanceof RuleSetParserInterface) {
-            $this->customRuleSetParsers[$name] = static fn () => $definition;
+            $this->customRuleSetParsers[$name] = static fn (): RuleSetParserInterface => $definition;
 
             return;
         }

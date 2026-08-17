@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Integration;
@@ -8,11 +10,13 @@ use PhpAnonymizer\Anonymizer\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\DataEncoder;
 use PhpAnonymizer\Anonymizer\Enum\NodeParser;
+use PhpAnonymizer\Anonymizer\Test\Helper\Integration\AddressesContainer;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Address;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Data;
 use PHPUnit\Framework\TestCase;
 use Spatie\Snapshots\MatchesSnapshots;
 use stdClass;
+use function Safe\json_decode;
 
 final class AnonymizerTest extends TestCase
 {
@@ -257,6 +261,37 @@ final class AnonymizerTest extends TestCase
         $this->assertMatchesJsonSnapshot($processedData);
     }
 
+    public function testCanEncodeProcessedArrayAsJson(): void
+    {
+        $anonymizer = (new AnonymizerBuilder())
+            ->withDefaults()
+            ->build();
+
+        $anonymizer->registerRuleSet(
+            name: 'address',
+            definitions: [
+                'address.name',
+            ],
+        );
+
+        $data = [
+            'address' => [
+                'name' => 'John Doe',
+                'city' => 'New York',
+            ],
+        ];
+
+        $processedData = $anonymizer->run('address', $data, DataEncoder::ARRAY_TO_JSON->value);
+
+        self::assertIsString($processedData);
+        self::assertSame([
+            'address' => [
+                'name' => '********',
+                'city' => 'New York',
+            ],
+        ], json_decode($processedData, true, 512, JSON_THROW_ON_ERROR));
+    }
+
     public function testCanSubstituteValuesInFilteredFieldsOnly(): void
     {
         $anonymizer = (new AnonymizerBuilder())
@@ -375,14 +410,7 @@ final class AnonymizerTest extends TestCase
             new Address(name: 'Jane Doe', city: 'Los Angeles'),
         ];
 
-        $data = new class ($addresses) {
-            /**
-             * @param Address[] $addresses
-             */
-            public function __construct(public array $addresses)
-            {
-            }
-        };
+        $data = new AddressesContainer($addresses);
 
         $processedData = $anonymizer->run('address', ['data' => $data]);
 
@@ -412,14 +440,7 @@ final class AnonymizerTest extends TestCase
             new Address(name: 'Jane Doe', city: 'Los Angeles'),
         ];
 
-        $data = new class ($addresses) {
-            /**
-             * @param Address[] $addresses
-             */
-            public function __construct(public array $addresses)
-            {
-            }
-        };
+        $data = new AddressesContainer($addresses);
 
         $processedData = $anonymizer->run('address', ['data' => $data]);
 

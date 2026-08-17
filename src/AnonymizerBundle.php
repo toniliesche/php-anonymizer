@@ -9,7 +9,6 @@ namespace PhpAnonymizer\Anonymizer;
 use PhpAnonymizer\Anonymizer\DependencyInjection\AnonymizerExtension;
 use PhpAnonymizer\Anonymizer\DependencyInjection\Compiler\SerializerCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class AnonymizerBundle extends AbstractBundle
@@ -21,7 +20,7 @@ final class AnonymizerBundle extends AbstractBundle
         );
     }
 
-    public function getContainerExtension(): Extension
+    public function getContainerExtension(): AnonymizerExtension
     {
         return new AnonymizerExtension();
     }

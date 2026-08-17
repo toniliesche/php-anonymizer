@@ -11,10 +11,10 @@ use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeParserException;
 use PhpAnonymizer\Anonymizer\Mapper\Node\DefaultNodeMapper;
 use PhpAnonymizer\Anonymizer\Mapper\Node\NodeMapperInterface;
-use PhpAnonymizer\Anonymizer\Model\ChildNodeAccessInterface;
-use PhpAnonymizer\Anonymizer\Model\Node;
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
-use PhpAnonymizer\Anonymizer\Model\Tree;
+use PhpAnonymizer\Anonymizer\Model\Rule\ChildNodeAccessInterface;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\Tree;
 use PhpAnonymizer\Anonymizer\Parser\Node\ArrayNodeParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use function array_key_exists;
@@ -38,10 +38,8 @@ final class ArrayRuleSetParser implements RuleSetParserInterface
     {
         $tree = new Tree();
 
-        if ($definition !== []) {
-            foreach ($definition as $nodes) {
-                $this->parseNode($tree, $nodes, []);
-            }
+        foreach ($definition as $nodes) {
+            $this->parseNode($tree, $nodes, []);
         }
 
         return $tree;

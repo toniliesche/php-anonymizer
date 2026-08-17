@@ -6,7 +6,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Processor;
 
-use PhpAnonymizer\Anonymizer\Model\RuleSetProviderInterface;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProviderInterface;
 
 interface DataProcessorInterface
 {

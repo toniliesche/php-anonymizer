@@ -89,7 +89,7 @@ final readonly class AnonymizerFactory
 
     private function validateSerializer(?SerializerInterface $serializer): (SerializerInterface&NormalizerInterface&DenormalizerInterface)|null
     {
-        if ($serializer === null) {
+        if (!$serializer instanceof SerializerInterface) {
             return null;
         }
 

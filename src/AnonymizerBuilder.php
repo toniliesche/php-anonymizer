@@ -119,7 +119,7 @@ final class AnonymizerBuilder
     public function withNodeMapperType(string $nodeMapperType): self
     {
         $this->nodeMapperType = $nodeMapperType;
-        if (isset($this->nodeMapper)) {
+        if ($this->nodeMapper instanceof NodeMapperInterface) {
             unset($this->nodeMapper);
         }
 
@@ -139,7 +139,7 @@ final class AnonymizerBuilder
     public function withNodeParserType(string $nodeParserType): self
     {
         $this->nodeParserType = $nodeParserType;
-        if (isset($this->nodeParser)) {
+        if ($this->nodeParser instanceof NodeParserInterface) {
             unset($this->nodeParser);
         }
 
@@ -199,7 +199,7 @@ final class AnonymizerBuilder
     public function withDataAccessProviderType(string $dataAccessProviderType): self
     {
         $this->dataAccessProviderType = $dataAccessProviderType;
-        if (isset($this->dataAccessProvider)) {
+        if ($this->dataAccessProvider instanceof DataAccessProviderInterface) {
             unset($this->dataAccessProvider);
         }
 
@@ -219,7 +219,7 @@ final class AnonymizerBuilder
     public function withDataGenerationProviderType(string $dataGeneratorType): self
     {
         $this->dataGeneratorType = $dataGeneratorType;
-        if (isset($this->dataGenerationProvider)) {
+        if ($this->dataGenerationProvider instanceof DataGenerationProviderInterface) {
             unset($this->dataGenerationProvider);
         }
 
@@ -354,13 +354,13 @@ final class AnonymizerBuilder
 
     private function setupRuleSetParser(): void
     {
-        if (!isset($this->nodeParser)) {
+        if (!$this->nodeParser instanceof NodeParserInterface) {
             $this->nodeParser = $this->nodeParserFactory->getNodeParser(
                 type: $this->nodeParserType ?? null,
             );
         }
 
-        if (!isset($this->nodeMapper)) {
+        if (!$this->nodeMapper instanceof NodeMapperInterface) {
             $this->nodeMapper = $this->nodeMapperFactory->getNodeMapper(
                 type: $this->nodeMapperType,
             );
@@ -405,7 +405,7 @@ final class AnonymizerBuilder
             throw new MissingPlatformRequirementsException('Faker library is required to inject faker');
         }
 
-        if (!isset($this->dataGenerationProvider)) {
+        if (!$this->dataGenerationProvider instanceof DataGenerationProviderInterface) {
             throw new InvalidArgumentException('Data generation provider is required to inject faker');
         }
 
@@ -418,7 +418,7 @@ final class AnonymizerBuilder
             );
         }
 
-        if (isset($this->fakerSeed)) {
+        if ($this->fakerSeed !== null) {
             $this->dataGenerationProvider->setSeed($this->fakerSeed);
         }
     }

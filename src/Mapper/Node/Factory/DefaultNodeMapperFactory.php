@@ -38,7 +38,7 @@ final class DefaultNodeMapperFactory implements NodeMapperFactoryInterface
         }
 
         if ($definition instanceof NodeMapperInterface) {
-            $this->customNodeMappers[$name] = static fn () => $definition;
+            $this->customNodeMappers[$name] = static fn (): NodeMapperInterface => $definition;
 
             return;
         }

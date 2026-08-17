@@ -4,7 +4,7 @@
 
 declare(strict_types=1);
 
-namespace PhpAnonymizer\Anonymizer\Model;
+namespace PhpAnonymizer\Anonymizer\Model\Rule;
 
 use PhpAnonymizer\Anonymizer\Exception\RuleDefinitionException;
 

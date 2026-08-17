@@ -1,28 +1,191 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataAccess;
 
 use PhpAnonymizer\Anonymizer\DataAccess\ReflectionDataAccess;
+use PhpAnonymizer\Anonymizer\Enum\DataAccess;
+use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\FieldDoesNotExistException;
 use PhpAnonymizer\Anonymizer\Exception\FieldIsNotInitializedException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionListOfArraysFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionMapArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionMixedArrayFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionPublicBarFixture;
+use PhpAnonymizer\Anonymizer\Test\Helper\Fixtures\ReflectionPublicFooFixture;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Barfoo;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\Foobar;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateAddress;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateFoobar;
+use PhpAnonymizer\Anonymizer\Test\Helper\Model\PrivateFooParent;
 use PhpAnonymizer\Anonymizer\Test\Helper\Model\ReadonlyFoobar;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use stdClass;
 
 final class ReflectionDataAccessTest extends TestCase
 {
+    public function testCanParseSimpleDataTree(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new PrivateFoobar(
+            foo: 'foo',
+            bar: 'bar',
+            baz: 'baz',
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(1, $tree->childNodes);
+        $node = $tree->childNodes[0];
+
+        self::assertSame('baz', $node->name);
+        self::assertSame(NodeType::LEAF, $node->nodeType);
+        self::assertSame(DataAccess::REFLECTION->value, $node->dataAccess);
+        self::assertFalse($node->isList);
+        self::assertEmpty($node->childNodes);
+    }
+
+    public function testCanParseDataTreeWithChildren(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new PrivateFooParent(
+            foobar: new PrivateFoobar(
+                foo: 'foo',
+                bar: 'bar',
+                baz: 'baz',
+            ),
+            array: [
+                'foo',
+                'bar',
+                'baz',
+            ],
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(2, $tree->childNodes);
+        $foobarNode = $tree->childNodes[0];
+
+        self::assertSame('foobar', $foobarNode->name);
+        self::assertSame(NodeType::NODE, $foobarNode->nodeType);
+        self::assertSame(DataAccess::REFLECTION->value, $foobarNode->dataAccess);
+        self::assertFalse($foobarNode->isList);
+        self::assertNotEmpty($foobarNode->childNodes);
+
+        $arrayNode = $tree->childNodes[1];
+
+        self::assertSame('array', $arrayNode->name);
+        self::assertSame(NodeType::LEAF, $arrayNode->nodeType);
+        self::assertSame(DataAccess::REFLECTION->value, $arrayNode->dataAccess);
+        self::assertTrue($arrayNode->isList);
+        self::assertEmpty($arrayNode->childNodes);
+    }
+
+    public function testCanParseDataTreeWithObjectArray(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new PrivateFooParent(
+            foobar: new PrivateFoobar(
+                foo: 'foo',
+                bar: 'bar',
+                baz: 'baz',
+            ),
+            array: [
+                new PrivateFoobar(
+                    foo: 'foo',
+                    bar: 'bar',
+                    baz: 'baz',
+                ),
+                new PrivateAddress(
+                    name: 'John Doe',
+                    city: 'New York',
+                ),
+            ],
+        );
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertCount(2, $tree->childNodes);
+        $foobarNode = $tree->childNodes[0];
+
+        self::assertSame('foobar', $foobarNode->name);
+        self::assertSame(NodeType::NODE, $foobarNode->nodeType);
+        self::assertSame(DataAccess::REFLECTION->value, $foobarNode->dataAccess);
+        self::assertFalse($foobarNode->isList);
+        self::assertNotEmpty($foobarNode->childNodes);
+
+        $arrayNode = $tree->childNodes[1];
+
+        self::assertSame('array', $arrayNode->name);
+        self::assertSame(NodeType::NODE, $arrayNode->nodeType);
+        self::assertSame(DataAccess::REFLECTION->value, $arrayNode->dataAccess);
+        self::assertTrue($arrayNode->isList);
+        self::assertCount(3, $arrayNode->childNodes);
+
+        foreach ($arrayNode->childNodes as $childNode) {
+            self::assertSame(NodeType::LEAF, $childNode->nodeType);
+            self::assertSame(DataAccess::REFLECTION->value, $childNode->dataAccess);
+            self::assertFalse($childNode->isList);
+            self::assertEmpty($childNode->childNodes);
+        }
+    }
+
+    public function testCanParseDataTreeWithMapArray(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new ReflectionMapArrayFixture();
+
+        $tree = $access->parseDataTree($data);
+
+        self::assertTrue($tree->hasChildNode('meta'));
+        $metaNode = $tree->getChildNode('meta');
+        self::assertSame(NodeType::NODE, $metaNode->nodeType);
+        self::assertTrue($metaNode->hasChildNode('foo'));
+        self::assertTrue($metaNode->hasChildNode('baz'));
+    }
+
+    public function testWillFailOnParseDataTreeWithNonObject(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree(['foo' => 'bar']);
+    }
+
+    public function testWillFailOnParseDataTreeWithMixedArray(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new ReflectionMixedArrayFixture();
+
+        $this->expectException(InvalidObjectTypeException::class);
+        $access->parseDataTree($data);
+    }
+
+    public function testWillFailOnParseDataTreeWithListOfArrays(): void
+    {
+        $access = new ReflectionDataAccess();
+
+        $data = new ReflectionListOfArraysFixture();
+
+        $this->expectException(RuntimeException::class);
+        $access->parseDataTree($data);
+    }
+
     public function testCanCheckIfChildPropertyExists(): void
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         self::assertTrue($access->hasChild(['test'], $data, 'foo'));
         self::assertFalse($access->hasChild(['test'], $data, 'bar'));
@@ -53,9 +216,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         self::assertSame('bar', $access->getChild(['test'], $data, 'foo'));
     }
@@ -76,9 +237,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $foo = 'bar';
-        });
+        $data = new ReflectionPublicFooFixture();
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->getChild(['test'], $data, 'bar');
@@ -112,9 +271,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $bar = 'bar';
-        });
+        $data = new ReflectionPublicBarFixture();
 
         $access->setChildValue(['test'], $data, 'bar', 'baz');
 
@@ -138,9 +295,7 @@ final class ReflectionDataAccessTest extends TestCase
     {
         $access = new ReflectionDataAccess();
 
-        $data = (new class () {
-            public string $bar = 'bar';
-        });
+        $data = new ReflectionPublicBarFixture();
 
         $this->expectException(FieldDoesNotExistException::class);
         $access->setChildValue(['test'], $data, 'foo', 'baz');

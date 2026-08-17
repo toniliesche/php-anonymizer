@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\Node\Factory;
@@ -12,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\ComplexRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\Node\Factory\DefaultNodeParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\Node\NodeParserInterface;
 use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -51,7 +54,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testCanRegisterCustomNodeParserWithCallable(): void
     {
-        $callable = fn () => self::createStub(NodeParserInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
         $factory->registerCustomNodeParser('custom', $callable);
 
@@ -71,7 +74,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomNodeParserOnNameConflict(): void
     {
-        $callable = fn () => self::createStub(NodeParserInterface::class);
+        $callable = fn (): Stub => self::createStub(NodeParserInterface::class);
         $factory = new DefaultNodeParserFactory();
 
         $this->expectException(NodeParserExistsException::class);
@@ -90,7 +93,7 @@ final class DefaultNodeParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomNodeParserWhenNodeParserDoesNotImplementInterface(): void
     {
-        $callable = fn () => new stdClass();
+        $callable = fn (): stdClass => new stdClass();
         $factory = new DefaultNodeParserFactory();
 
         $this->expectException(InvalidNodeParserDefinitionException::class);

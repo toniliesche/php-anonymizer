@@ -8,12 +8,13 @@ namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeNameException;
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
 use Safe\Exceptions\PcreException;
 use function array_key_exists;
 use function is_array;
 use function is_bool;
 use function is_string;
+use function Safe\preg_match;
 use function sprintf;
 
 final class ArrayNodeParser implements NodeParserInterface
@@ -70,7 +71,7 @@ final class ArrayNodeParser implements NodeParserInterface
             );
         }
 
-        if (!is_string($node['name']) || \Safe\preg_match('/^[0-9a-zA-Z.\-_]+$/', $node['name']) === 0) {
+        if (!is_string($node['name']) || preg_match('/^[0-9a-zA-Z.\-_]+$/', $node['name']) === 0) {
             throw new InvalidNodeNameException(
                 sprintf(
                     'Invalid node name "%s" [path: %s].',

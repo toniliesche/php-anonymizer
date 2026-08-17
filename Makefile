@@ -120,8 +120,7 @@ mutation-tests mt: test-coverage-xml
 	vendor/bin/infection --show-mutations --coverage=.coverage/xml --logger-html=.coverage/infection.html
 
 require-checks:
-	composer-require-checker
-	vendor/bin/composer-unused --no-ansi
+	vendor/bin/composer-dependency-analyser
 	composer normalize --dry-run
 	composer validate
 
@@ -129,10 +128,10 @@ security-check audit:
 	composer audit
 
 mess-detection md phpmd:
-	vendor/bin/phpmd src,tests text phpmd.xml
+	phpmd src,tests text phpmd.xml
 
 md-baseline:
-	vendor/bin/phpmd src,tests text phpmd.xml --generate-baseline
+	phpmd src,tests text phpmd.xml --generate-baseline
 
 rector-check:
 	vendor/bin/rector process src tests --dry-run

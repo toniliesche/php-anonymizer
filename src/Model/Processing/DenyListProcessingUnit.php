@@ -4,7 +4,7 @@
 
 declare(strict_types=1);
 
-namespace PhpAnonymizer\Anonymizer\Model;
+namespace PhpAnonymizer\Anonymizer\Model\Processing;
 
 use PhpAnonymizer\Anonymizer\DataAccess\DataAccessInterface;
 use PhpAnonymizer\Anonymizer\DataAccess\Provider\DataAccessProviderInterface;
@@ -14,10 +14,14 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\DataEncodingException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidObjectTypeException;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSet;
+use PhpAnonymizer\Anonymizer\Model\Rule\RuleSetProviderInterface;
+use PhpAnonymizer\Anonymizer\Model\TempStorage;
 use function is_string;
 use function sprintf;
 
-final class ProcessingUnit
+final class DenyListProcessingUnit implements ProcessingUnitInterface
 {
     private ?string $overrideDataAccess = null;
 
@@ -67,7 +71,7 @@ final class ProcessingUnit
 
         if (!$node->hasFilterRule() || ($node->filterValue === $dataAccess->getChild($path, $data, $node->filterField))) {
             if ($node->containsNestedData()) {
-                $nestedUnit = new ProcessingUnit(
+                $nestedUnit = new DenyListProcessingUnit(
                     $this->dataGenerationProvider,
                     $this->dataAccessProvider,
                     $this->dataEncodingProvider,

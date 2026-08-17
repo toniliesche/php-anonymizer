@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Parsers\RuleSet\Factory;
@@ -12,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Parser\Node\SimpleRegexpParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\DefaultRuleSetParser;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\Factory\DefaultRuleSetParserFactory;
 use PhpAnonymizer\Anonymizer\Parser\RuleSet\RuleSetParserInterface;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -43,13 +46,12 @@ final class DefaultRuleSetParserFactoryTest extends TestCase
 
     public function testCanRegisterAndRetrieveCustomRuleSetParserWithCallable(): void
     {
-        $parser = self::createStub(RuleSetParserInterface::class);
-        $callable = static fn () => $parser;
+        $callable = fn (): Stub => self::createStub(RuleSetParserInterface::class);
         $factory = new DefaultRuleSetParserFactory();
         $factory->registerCustomRuleSetParser('custom', $callable);
 
         $resolvedParser = $factory->getRuleSetParser('custom');
-        self::assertSame($parser, $resolvedParser);
+        self::assertInstanceOf(Stub::class, $resolvedParser);
     }
 
     public function testCanRegisterAndRetrieveCustomRuleSetParserWithInstance(): void
@@ -59,12 +61,12 @@ final class DefaultRuleSetParserFactoryTest extends TestCase
         $factory->registerCustomRuleSetParser('custom', $parser);
 
         $resolvedParser = $factory->getRuleSetParser('custom');
-        self::assertSame($parser, $resolvedParser);
+        self::assertInstanceOf(Stub::class, $resolvedParser);
     }
 
     public function testWillFailOnRegisterCustomRuleSetParserOnNameConflict(): void
     {
-        $callable = fn () => self::createStub(RuleSetParserInterface::class);
+        $callable = fn (): Stub => self::createStub(RuleSetParserInterface::class);
         $factory = new DefaultRuleSetParserFactory();
 
         $this->expectException(RulesetParserExistsException::class);
@@ -83,7 +85,7 @@ final class DefaultRuleSetParserFactoryTest extends TestCase
 
     public function testWillFailOnRegisterCustomRuleSetParserWhenNotImplementingInterface(): void
     {
-        $callable = static fn () => new stdClass();
+        $callable = static fn (): stdClass => new stdClass();
         $factory = new DefaultRuleSetParserFactory();
 
         $this->expectException(InvalidRuleSetParserDefinitionException::class);

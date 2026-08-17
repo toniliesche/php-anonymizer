@@ -1,0 +1,3 @@
+addresses:
+    - { name: '********', city: 'New York' }
+    - { name: '********', city: 'Los Angeles' }

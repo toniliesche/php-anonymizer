@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\DataEncoding;
@@ -71,7 +73,7 @@ final class SymfonyToJsonEncoderTest extends TestCase
         );
 
         $encodedData = $encoder->decode($data, new TempStorage());
-        self::assertEquals(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
+        self::assertSame(['name' => 'John Doe', 'city' => 'New York'], $encodedData);
     }
 
     public function testWillFailOnDecodeOnNonObject(): void

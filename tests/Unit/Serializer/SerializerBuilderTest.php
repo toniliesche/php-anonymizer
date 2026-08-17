@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Serializer;
@@ -8,7 +10,7 @@ use PhpAnonymizer\Anonymizer\Dependency\DependencyCheckerInterface;
 use PhpAnonymizer\Anonymizer\Exception\MissingPlatformRequirementsException;
 use PhpAnonymizer\Anonymizer\Serializer\MethodAwareMetadataFactory;
 use PhpAnonymizer\Anonymizer\Serializer\SerializerBuilder;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
@@ -22,7 +24,6 @@ use Symfony\Component\Serializer\Encoder\YamlEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 final class SerializerBuilderTest extends TestCase
 {
@@ -168,7 +169,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -195,7 +196,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -222,7 +223,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -274,7 +275,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -326,7 +327,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -390,7 +391,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -616,7 +617,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($encoders as $encoder) {
-            if ($encoder !== $extraEncoder) {
+            if (!$encoder instanceof Stub) {
                 continue;
             }
 
@@ -646,7 +647,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($encoders as $encoder) {
-            if (!$encoder instanceof MockObject) {
+            if (!$encoder instanceof Stub) {
                 continue;
             }
 
@@ -675,7 +676,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($decoders as $decoder) {
-            if ($decoder !== $extraDecoder) {
+            if (!$decoder instanceof Stub) {
                 continue;
             }
 
@@ -705,7 +706,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($decoders as $decoder) {
-            if (!$decoder instanceof MockObject) {
+            if (!$decoder instanceof Stub) {
                 continue;
             }
 
@@ -731,7 +732,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if ($normalizer !== $extraNormalizer) {
+            if (!$normalizer instanceof Stub) {
                 continue;
             }
 
@@ -758,7 +759,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof MockObject) {
+            if (!$normalizer instanceof Stub) {
                 continue;
             }
 
@@ -784,7 +785,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($denormalizers as $denormalizer) {
-            if ($denormalizer !== $extraDenormalizer) {
+            if (!$denormalizer instanceof Stub) {
                 continue;
             }
 
@@ -811,7 +812,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($denormalizers as $denormalizer) {
-            if (!$denormalizer instanceof MockObject) {
+            if (!$denormalizer instanceof Stub) {
                 continue;
             }
 
@@ -835,7 +836,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;
@@ -869,7 +870,7 @@ final class SerializerBuilderTest extends TestCase
 
         $found = false;
         foreach ($normalizers as $normalizer) {
-            if (!$normalizer instanceof ObjectNormalizer) {
+            if (!$normalizer instanceof NormalizerInterface) {
                 continue;
             }
             $found = true;

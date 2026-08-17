@@ -7,7 +7,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Parser\Node;
 
 use PhpAnonymizer\Anonymizer\Exception\InvalidRegExpException;
-use PhpAnonymizer\Anonymizer\Model\NodeParsingResult;
+use PhpAnonymizer\Anonymizer\Model\Rule\NodeParsingResult;
 use Safe\Exceptions\PcreException;
 use function is_string;
 use function Safe\preg_match;

@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
-$finder = PhpCsFixer\Finder::create()
-    ->in(__DIR__ . '/examples')
-    ->in(__DIR__ . '/src')
-    ->in(__DIR__ . '/tests');
+$finder = Finder::create()
+    ->in(__DIR__)
+    ->files()
+    ->exclude('vendor')
+    ->ignoreDotFiles(false)
+    ->name('*.php');
 
 $rules = [
     'backtick_to_shell_exec' => true,

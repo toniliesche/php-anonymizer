@@ -1,5 +1,7 @@
 <?php
 
+// SPDX-License-Identifier: MIT
+
 declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Test\Unit\Model;
@@ -8,7 +10,7 @@ use PhpAnonymizer\Anonymizer\Enum\DataAccess;
 use PhpAnonymizer\Anonymizer\Enum\NodeType;
 use PhpAnonymizer\Anonymizer\Exception\ChildNodeNotFoundException;
 use PhpAnonymizer\Anonymizer\Exception\InvalidNodeDefinitionException;
-use PhpAnonymizer\Anonymizer\Model\Node;
+use PhpAnonymizer\Anonymizer\Model\Rule\Node;
 use PHPUnit\Framework\TestCase;
 
 final class NodeTest extends TestCase

@@ -18,18 +18,15 @@ runs:
     - name: Run composer.json validation check
       shell: bash
       run: composer validate
-    - name: Run missing dependencies check
+    - name: Run dependency analyser
       shell: bash
-      run: composer-require-checker
-    - name: Run unused dependencies check
-      shell: bash
-      run: vendor/bin/composer-unused --no-ansi
+      run: vendor/bin/composer-dependency-analyser
     - name: Run dependencies audit
       shell: bash
       run: composer audit
 #    - name: Run mess detection
 #      shell: bash
-#      run: vendor/bin/phpmd src,tests text phpmd.xml
+#      run: phpmd src,tests text phpmd.xml
     - name: Run static analysis
       shell: bash
       run: vendor/bin/phpstan
