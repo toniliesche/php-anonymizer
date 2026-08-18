@@ -1,0 +1,41 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
+
+use JsonException;
+use Override;
+
+use function Safe\json_decode;
+use function Safe\json_encode;
+
+final class JsonPayloadCodec implements PayloadCodecInterface
+{
+    #[Override]
+    public function id(): string
+    {
+        return 'json';
+    }
+
+    /** @return array<string, mixed> */
+    #[Override]
+    public function decode(string $payload): array
+    {
+        $root = json_decode($payload, false, flags: JSON_THROW_ON_ERROR);
+        if (!is_object($root)) {
+            throw new JsonException('JSON payload root must be an object.');
+        }
+
+        /** @var array<string, mixed> $data */
+        $data = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
+        return $data;
+    }
+
+    /** @param array<string, mixed> $data */
+    #[Override]
+    public function encode(array $data): string
+    {
+        return json_encode($data, JSON_THROW_ON_ERROR);
+    }
+}
