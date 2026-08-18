@@ -5,6 +5,7 @@
     "type": "library",
     "require": {
         "php": "^8.5",
+        "ext-mbstring": "*",
         "thecodingmachine/safe": "^3.4"
     },
     "autoload": {
