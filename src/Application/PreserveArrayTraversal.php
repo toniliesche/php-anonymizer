@@ -6,16 +6,20 @@ namespace PhpAnonymizer\Anonymizer\Application;
 
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Domain\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\RuleDefinition;
-use PhpAnonymizer\Anonymizer\Domain\ScalarAction;
 
 final readonly class PreserveArrayTraversal
 {
     private RedactUnselectedValues $unselectedValues;
+    private PreserveStringSelection $stringSelection;
 
-    public function __construct()
-    {
+    public function __construct(
+        ReplacementStrategyRegistry $strategies,
+        private EmbeddedPayloadTraversal $embedded,
+    ) {
         $this->unselectedValues = new RedactUnselectedValues();
+        $this->stringSelection = new PreserveStringSelection($strategies);
     }
 
     /**
@@ -45,7 +49,6 @@ final readonly class PreserveArrayTraversal
                 $missingPaths[] = $parentPath . '/' . $this->escape($rule->field());
             }
         }
-
         foreach ($data as $field => &$value) {
             $rule = $rulesByField[(string) $field] ?? null;
             $path = $parentPath . '/' . $this->escape((string) $field);
@@ -64,8 +67,12 @@ final readonly class PreserveArrayTraversal
      */
     private function selected(string $profile, mixed &$value, RuleDefinition $rule, string $path, array &$anonymizedPaths, array &$missingPaths): void
     {
+        if ($rule->embedded() instanceof EmbeddedPayloadDefinition) {
+            $this->embedded->apply($profile, $value, $path, $rule->embedded()->codec(), $rule->embedded()->profile(), $anonymizedPaths, $missingPaths);
+            return;
+        }
         if (is_string($value)) {
-            $this->selectedString($value, $rule, $path, $profile, $anonymizedPaths);
+            $this->stringSelection->apply($value, $rule, $path, $profile, $anonymizedPaths);
             return;
         }
         if (!is_array($value)) {
@@ -84,19 +91,6 @@ final readonly class PreserveArrayTraversal
             return;
         }
         throw UnsupportedValue::at($profile, $path, $value);
-    }
-
-    /** @param list<string> $anonymizedPaths */
-    private function selectedString(mixed &$value, RuleDefinition $rule, string $path, string $profile, array &$anonymizedPaths): void
-    {
-        if ($rule->scalarAction() === ScalarAction::REDACT) {
-            $value = '[REDACTED]';
-            $anonymizedPaths[] = $path;
-            return;
-        }
-        if (!$rule->scalarAction() instanceof ScalarAction && ($rule->hasChildren() || $rule->eachStrings() || $rule->eachRules() !== null)) {
-            throw UnsupportedValue::at($profile, $path, $value);
-        }
     }
 
     /**

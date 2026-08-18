@@ -19,14 +19,16 @@ final readonly class RuleDefinition
         private bool $eachStrings,
         private ?ConditionDefinition $condition,
         private ?ScalarAction $scalarAction,
+        private ?string $strategy,
+        private ?EmbeddedPayloadDefinition $embedded,
     ) {}
 
     /** @param array<string, mixed> $definition */
     public static function fromArray(array $definition): self
     {
         $keys = array_keys($definition);
-        if (!in_array('field', $keys, true) || array_diff($keys, ['field', 'children', 'each', 'when', 'on_scalar']) !== []) {
-            throw new InvalidProfileDefinition('rule keys must contain field, optionally with children, each, when, or on_scalar');
+        if (!in_array('field', $keys, true) || array_diff($keys, ['field', 'children', 'each', 'strategy', 'when', 'embedded', 'on_scalar']) !== []) {
+            throw new InvalidProfileDefinition('rule keys must contain field, optionally with children, each, strategy, when, embedded, or on_scalar');
         }
 
         if (!is_string($definition['field']) || $definition['field'] === '') {
@@ -73,6 +75,16 @@ final readonly class RuleDefinition
         return $this->scalarAction;
     }
 
+    public function strategy(): ?string
+    {
+        return $this->strategy;
+    }
+
+    public function embedded(): ?EmbeddedPayloadDefinition
+    {
+        return $this->embedded;
+    }
+
     /** @param array<string, mixed> $definition */
     private static function withTraversal(array $definition): self
     {
@@ -80,29 +92,42 @@ final readonly class RuleDefinition
         $field = $definition['field'];
         $hasChildren = array_key_exists('children', $definition);
         $hasEach = array_key_exists('each', $definition);
-        if ($hasChildren && $hasEach) {
-            throw new InvalidProfileDefinition('a rule cannot contain both children and each');
-        }
+        $hasStrategy = array_key_exists('strategy', $definition);
+        $hasEmbedded = array_key_exists('embedded', $definition);
+        self::assertTraversalCombination($hasChildren, $hasEach, $hasStrategy, $hasEmbedded);
 
         if ($hasChildren) {
             self::assertRuleList($definition['children'], 'children must be a non-empty list of rules');
-            return new self($field, self::compileChildren($definition['children']), null, false, self::compileCondition($definition), self::compileScalarAction($definition, true));
+            return new self($field, self::compileChildren($definition['children']), null, false, RuleOptionsCompiler::condition($definition), RuleOptionsCompiler::scalarAction($definition, true), null, null);
         }
 
         if ($hasEach && $definition['each'] === true) {
-            return new self($field, [], null, true, self::compileCondition($definition), self::compileScalarAction($definition, true));
+            return new self($field, [], null, true, RuleOptionsCompiler::condition($definition), RuleOptionsCompiler::scalarAction($definition, true), null, null);
         }
 
         if ($hasEach) {
             self::assertRuleList($definition['each'], 'each must be true or a non-empty list of rules');
-            return new self($field, [], self::compileChildren($definition['each']), false, self::compileCondition($definition), self::compileScalarAction($definition, true));
+            return new self($field, [], self::compileChildren($definition['each']), false, RuleOptionsCompiler::condition($definition), RuleOptionsCompiler::scalarAction($definition, true), null, null);
         }
 
         if (array_key_exists('on_scalar', $definition)) {
             throw new InvalidProfileDefinition('on_scalar requires children or each');
         }
 
-        return new self($field, [], null, false, self::compileCondition($definition), null);
+        return new self($field, [], null, false, RuleOptionsCompiler::condition($definition), null, RuleOptionsCompiler::strategy($definition), RuleOptionsCompiler::embedded($definition));
+    }
+
+    private static function assertTraversalCombination(bool $hasChildren, bool $hasEach, bool $hasStrategy, bool $hasEmbedded): void
+    {
+        if ($hasChildren && $hasEach) {
+            throw new InvalidProfileDefinition('a rule cannot contain both children and each');
+        }
+        if (($hasChildren || $hasEach) && ($hasStrategy || $hasEmbedded)) {
+            throw new InvalidProfileDefinition('strategy and embedded require a leaf rule');
+        }
+        if ($hasStrategy && $hasEmbedded) {
+            throw new InvalidProfileDefinition('a rule cannot contain both strategy and embedded');
+        }
     }
 
     /** @phpstan-assert non-empty-list<mixed> $value */
@@ -139,32 +164,4 @@ final readonly class RuleDefinition
         return $rules;
     }
 
-    /** @param array<string, mixed> $definition */
-    private static function compileCondition(array $definition): ?ConditionDefinition
-    {
-        if (!array_key_exists('when', $definition)) {
-            return null;
-        }
-        if (!is_array($definition['when'])) {
-            throw new InvalidProfileDefinition('when must be a map');
-        }
-
-        /** @var array<string, mixed> $condition */
-        $condition = $definition['when'];
-        return ConditionDefinition::fromArray($condition);
-    }
-
-    /** @param array<string, mixed> $definition */
-    private static function compileScalarAction(array $definition, bool $hasTraversal): ?ScalarAction
-    {
-        if (!array_key_exists('on_scalar', $definition)) {
-            return null;
-        }
-        $action = ScalarAction::tryFrom(is_string($definition['on_scalar']) ? $definition['on_scalar'] : '');
-        if (!$hasTraversal || !$action instanceof ScalarAction) {
-            throw new InvalidProfileDefinition('on_scalar must be redact or preserve and requires children or each');
-        }
-
-        return $action;
-    }
 }

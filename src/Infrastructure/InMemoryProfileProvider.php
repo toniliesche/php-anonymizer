@@ -28,6 +28,11 @@ final class InMemoryProfileProvider implements ProfileProviderInterface
     }
 
     #[Override]
+    public function profiles(): iterable
+    {
+        yield from $this->profiles;
+    }
+
     public function get(string $name): ?ProfileDefinition
     {
         return $this->profiles[$name] ?? null;

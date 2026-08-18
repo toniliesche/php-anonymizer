@@ -4,21 +4,38 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application;
 
+use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Application\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\ArrayAnonymizer;
+use PhpAnonymizer\Anonymizer\Application\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\DefaultRedactionStrategy;
+use PhpAnonymizer\Anonymizer\Application\EmbeddedPayloadTraversal;
+use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
+use PhpAnonymizer\Anonymizer\Application\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\PayloadAnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\PayloadCodecInterface;
+use PhpAnonymizer\Anonymizer\Application\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\PreserveArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\PreserveStringSelection;
+use PhpAnonymizer\Anonymizer\Application\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\RedactArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\RedactUnselectedValues;
+use PhpAnonymizer\Anonymizer\Application\ReplacementStrategyInterface;
+use PhpAnonymizer\Anonymizer\Application\ReplacementStrategyRegistry;
+use PhpAnonymizer\Anonymizer\Application\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Domain\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Infrastructure\InMemoryProfileProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 #[CoversClass(ArrayAnonymizer::class)]
 #[CoversClass(AnonymizationResult::class)]
@@ -27,9 +44,22 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(PreserveArrayTraversal::class)]
 #[CoversClass(RedactArrayTraversal::class)]
 #[CoversClass(RedactUnselectedValues::class)]
+#[CoversClass(ArrayTraversal::class)]
+#[CoversClass(EmbeddedPayloadTraversal::class)]
+#[CoversClass(PreserveStringSelection::class)]
+#[CoversClass(PayloadAnonymizationResult::class)]
+#[CoversClass(PayloadCodecFailure::class)]
+#[CoversClass(PayloadCodecRegistry::class)]
+#[CoversClass(ProfileRegistry::class)]
+#[CoversClass(ReplacementStrategyRegistry::class)]
+#[CoversClass(DefaultRedactionStrategy::class)]
+#[CoversClass(StarMaskStrategy::class)]
+#[CoversClass(JsonPayloadCodec::class)]
 #[UsesClass(ConditionDefinition::class)]
 #[UsesClass(ProfileDefinition::class)]
 #[UsesClass(RuleDefinition::class)]
+#[UsesClass(RuleOptionsCompiler::class)]
+#[UsesClass(EmbeddedPayloadDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
 final class ArrayAnonymizerTest extends TestCase
 {
@@ -478,5 +508,254 @@ final class ArrayAnonymizerTest extends TestCase
             ->anonymizeWithReport('allow', ['email' => 'keep', 'a/b~c' => 'hide']);
 
         self::assertSame(['/a~1b~0c'], $result->anonymizedPaths());
+    }
+
+    public function testTopLevelJsonPayloadIsAnonymizedAndReported(): void
+    {
+        $profile = ProfileDefinition::fromArray('payload', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+        $payload = '{"email":"secret","name":"Ada"}';
+
+        $result = $anonymizer->anonymizePayloadWithReport('payload', 'json', $payload);
+
+        self::assertSame('{"email":"[REDACTED]","name":"Ada"}', $result->payload());
+        self::assertSame(['/email'], $result->anonymizationResult()->anonymizedPaths());
+    }
+
+    public function testEmbeddedJsonPrefixesNestedReportPaths(): void
+    {
+        $nested = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [['field' => 'email'], ['field' => 'missing']]]);
+        $outer = ProfileDefinition::fromArray('outer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]],
+        ]);
+
+        $result = new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]))
+            ->anonymizeWithReport('outer', ['payload' => '{"email":"secret"}']);
+
+        self::assertSame(['payload' => '{"email":"[REDACTED]"}'], $result->data());
+        self::assertSame(['/payload/email'], $result->anonymizedPaths());
+        self::assertSame(['/payload/missing'], $result->missingPaths());
+    }
+
+    public function testPreserveModeSupportsEmbeddedJson(): void
+    {
+        $nested = ProfileDefinition::fromArray('nested', ['mode' => 'preserve', 'rules' => [['field' => 'email']]]);
+        $outer = ProfileDefinition::fromArray('outer', ['mode' => 'preserve', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]]]);
+
+        $result = new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]))
+            ->anonymizeWithReport('outer', ['payload' => '{"email":"keep","name":"hide"}']);
+
+        self::assertSame(['payload' => '{"email":"keep","name":"[REDACTED]"}'], $result->data());
+        self::assertSame(['/payload/name'], $result->anonymizedPaths());
+    }
+
+    public function testEmbeddedCodecEncodeFailuresAreContextual(): void
+    {
+        $codec = new class implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'failing';
+            }
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return ['email' => 'secret'];
+            }
+            #[Override]
+            public function encode(array $data): string
+            {
+                throw new RuntimeException('embedded encode failed');
+            }
+        };
+        $nested = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $outer = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'failing', 'profile' => 'nested']]]]);
+        $this->expectExceptionMessageMatches('/failed to encode embedded payload at "\/payload"/');
+        new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]), [], [$codec])->anonymize('outer', ['payload' => 'encoded']);
+    }
+
+    public function testPreserveModeCanUseAnExplicitStrategy(): void
+    {
+        $profile = ProfileDefinition::fromArray('allow', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'email', 'strategy' => 'star_mask']],
+        ]);
+
+        $result = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))
+            ->anonymizeWithReport('allow', ['email' => 'abc', 'name' => 'Ada']);
+
+        self::assertSame(['email' => '***', 'name' => '[REDACTED]'], $result->data());
+        self::assertSame(['/email', '/name'], $result->anonymizedPaths());
+    }
+
+    public function testCustomStrategyAndCodecAreUsed(): void
+    {
+        $strategy = new class implements ReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'suffix';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value . '-masked';
+            }
+        };
+        $codec = new class implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'pipe';
+            }
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return ['email' => $payload];
+            }
+            #[Override]
+            public function encode(array $data): string
+            {
+                return is_string($data['email'] ?? null) ? $data['email'] : '';
+            }
+        };
+        $profile = ProfileDefinition::fromArray('custom', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'suffix']]]);
+
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy], [$codec]);
+
+        self::assertSame('secret-masked', $anonymizer->anonymizePayload('custom', 'pipe', 'secret'));
+    }
+
+    public function testPayloadAndEmbeddedCodecFailuresAreContextual(): void
+    {
+        $profile = ProfileDefinition::fromArray('payload', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+        try {
+            $anonymizer->anonymizePayload('payload', 'json', '{');
+            self::fail('Expected a payload codec failure.');
+        } catch (PayloadCodecFailure $exception) {
+            self::assertStringContainsString('profile "payload"', $exception->getMessage());
+        }
+
+        $this->expectExceptionMessageMatches('/embedded payload at "\/payload"/');
+        $nested = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $outer = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]]]);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]))->anonymize('outer', ['payload' => '{']);
+    }
+
+    public function testTopLevelPayloadRejectsUnknownCodecNonMapAndEncodeFailures(): void
+    {
+        $profile = ProfileDefinition::fromArray('payload', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+        try {
+            $anonymizer->anonymizePayload('payload', 'missing', '{}');
+            self::fail('Expected an unknown codec failure.');
+        } catch (InvalidArgumentException) {
+            $this->addToAssertionCount(1);
+        }
+
+        $listCodec = new class implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'list';
+            }
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return [0 => 'not-a-map'];
+            }
+            #[Override]
+            public function encode(array $data): string
+            {
+                return '';
+            }
+        };
+        $listAnonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [], [$listCodec]);
+        try {
+            $listAnonymizer->anonymizePayload('payload', 'list', '{}');
+            self::fail('Expected a non-map failure.');
+        } catch (PayloadCodecFailure) {
+            $this->addToAssertionCount(1);
+        }
+
+        $failingCodec = new class implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'failing';
+            }
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return ['email' => 'secret'];
+            }
+            #[Override]
+            public function encode(array $data): string
+            {
+                throw new RuntimeException('encode failed');
+            }
+        };
+        $this->expectExceptionMessageMatches('/failed to encode payload/');
+        new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [], [$failingCodec])->anonymizePayload('payload', 'failing', '{}');
+    }
+
+    public function testEmbeddedPayloadRejectsNonStringAndMissingCodecAtTraversalBoundary(): void
+    {
+        $nested = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $outer = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]]]);
+        $this->expectException(UnsupportedValue::class);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]))->anonymize('outer', ['payload' => 42]);
+    }
+
+    public function testTraversalHelpersReportUnavailableExtensions(): void
+    {
+        $profiles = new ProfileRegistry([]);
+        $codecs = new PayloadCodecRegistry([]);
+        $strategies = new ReplacementStrategyRegistry([]);
+        $traversal = new ArrayTraversal($profiles, $strategies, $codecs);
+        $embedded = new EmbeddedPayloadTraversal($codecs, $traversal);
+        $value = '{}';
+        $paths = [];
+        $missing = [];
+        try {
+            $embedded->apply('outer', $value, '/payload', 'missing', 'nested', $paths, $missing);
+            self::fail('Expected missing codec failure.');
+        } catch (PayloadCodecFailure) {
+            $this->addToAssertionCount(1);
+        }
+
+        $rule = ProfileDefinition::fromArray('custom', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'missing']]])->rules()[0];
+        $redactor = new RedactArrayTraversal($strategies, $embedded);
+        $data = ['email' => 'secret'];
+        $this->expectException(UnsupportedValue::class);
+        $redactor->apply('custom', $data, [$rule], $paths, $missing);
+    }
+
+    public function testPreserveStringHelperReportsUnavailableStrategy(): void
+    {
+        $rule = ProfileDefinition::fromArray('custom', ['mode' => 'preserve', 'rules' => [['field' => 'email', 'strategy' => 'missing']]])->rules()[0];
+        $helper = new PreserveStringSelection(new ReplacementStrategyRegistry([]));
+        $value = 'secret';
+        $paths = [];
+        $this->expectException(UnsupportedValue::class);
+        $helper->apply($value, $rule, '/email', 'custom', $paths);
+    }
+
+    public function testUnknownEmbeddedProfileAndCyclesFailDuringConstruction(): void
+    {
+        $unknown = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'missing']]]]);
+        $this->expectExceptionMessageMatches('/unknown embedded profile/');
+        new ArrayAnonymizer(new InMemoryProfileProvider([$unknown]));
+    }
+
+    public function testEmbeddedProfileCyclesFailDuringConstruction(): void
+    {
+        $first = ProfileDefinition::fromArray('first', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'second']]]]);
+        $second = ProfileDefinition::fromArray('second', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'first']]]]);
+
+        $this->expectExceptionMessageMatches('/reference cycle detected/');
+        new ArrayAnonymizer(new InMemoryProfileProvider([$first, $second]));
     }
 }

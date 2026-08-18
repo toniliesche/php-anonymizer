@@ -8,5 +8,6 @@ use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
 
 interface ProfileProviderInterface
 {
-    public function get(string $name): ?ProfileDefinition;
+    /** @return iterable<ProfileDefinition> */
+    public function profiles(): iterable;
 }

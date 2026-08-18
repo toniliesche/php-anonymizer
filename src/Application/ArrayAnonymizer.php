@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application;
 
+use InvalidArgumentException;
 use Override;
-use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
-use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
-use PhpAnonymizer\Anonymizer\Domain\ProfileMode;
+use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
+use Throwable;
 
 final readonly class ArrayAnonymizer implements AnonymizerInterface
 {
-    private RedactArrayTraversal $redactor;
-    private PreserveArrayTraversal $preserver;
+    private ProfileRegistry $profileRegistry;
+    private PayloadCodecRegistry $codecRegistry;
+    private ArrayTraversal $traversal;
 
-    public function __construct(private ProfileProviderInterface $profiles)
+    /**
+     * @param iterable<ReplacementStrategyInterface> $strategies
+     * @param iterable<PayloadCodecInterface> $codecs
+     */
+    public function __construct(ProfileProviderInterface $profiles, iterable $strategies = [], iterable $codecs = [])
     {
-        $this->redactor = new RedactArrayTraversal();
-        $this->preserver = new PreserveArrayTraversal();
+        $this->profileRegistry = new ProfileRegistry($profiles->profiles());
+        /** @var list<PayloadCodecInterface> $registeredCodecs */
+        $registeredCodecs = $this->withBuiltInCodec($codecs);
+        $this->codecRegistry = new PayloadCodecRegistry($registeredCodecs);
+        /** @var list<ReplacementStrategyInterface> $registeredStrategies */
+        $registeredStrategies = $this->withBuiltInStrategies($strategies);
+        $strategyRegistry = new ReplacementStrategyRegistry($registeredStrategies);
+        $this->profileRegistry->validate($strategyRegistry, $this->codecRegistry);
+        $this->traversal = new ArrayTraversal($this->profileRegistry, $strategyRegistry, $this->codecRegistry);
     }
 
     /**
@@ -34,23 +46,74 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
     #[Override]
     public function anonymizeWithReport(string $profile, array $data): AnonymizationResult
     {
-        $definition = $this->profiles->get($profile);
-        if (!$definition instanceof ProfileDefinition) {
-            throw ProfileNotFound::named($profile);
+        return $this->traversal->apply($profile, $data);
+    }
+
+    #[Override]
+    public function anonymizePayload(string $profile, string $codec, string $payload): string
+    {
+        return $this->anonymizePayloadWithReport($profile, $codec, $payload)->payload();
+    }
+
+    #[Override]
+    public function anonymizePayloadWithReport(string $profile, string $codec, string $payload): PayloadAnonymizationResult
+    {
+        $payloadCodec = $this->codecRegistry->get($codec);
+        if (!$payloadCodec instanceof PayloadCodecInterface) {
+            throw new InvalidArgumentException(sprintf('Payload codec "%s" is not registered.', $codec));
         }
 
-        $result = $data;
-        /** @var list<string> $anonymizedPaths */
-        $anonymizedPaths = [];
-        /** @var list<string> $missingPaths */
-        $missingPaths = [];
-        if ($definition->mode() === ProfileMode::PRESERVE) {
-            $this->preserver->apply($profile, $result, $definition->rules(), $anonymizedPaths, $missingPaths);
-        } else {
-            $this->redactor->apply($profile, $result, $definition->rules(), $anonymizedPaths, $missingPaths);
+        try {
+            $data = $payloadCodec->decode($payload);
+        } catch (Throwable $exception) {
+            throw PayloadCodecFailure::topLevel($profile, $codec, 'decode', $exception);
+        }
+        if (!$this->isMap($data)) {
+            throw PayloadCodecFailure::expectedMap($profile, $codec);
+        }
+        /** @var array<string, mixed> $data */
+
+        $result = $this->anonymizeWithReport($profile, $data);
+        try {
+            $encoded = $payloadCodec->encode($result->data());
+        } catch (Throwable $exception) {
+            throw PayloadCodecFailure::topLevel($profile, $codec, 'encode', $exception);
         }
 
-        /** @var array<string, mixed> $result */
-        return new AnonymizationResult($result, $anonymizedPaths, $missingPaths);
+        return new PayloadAnonymizationResult($encoded, $result);
+    }
+
+    /** @param array<mixed, mixed> $value */
+    private function isMap(array $value): bool
+    {
+        return !array_is_list($value) || $value === [];
+    }
+
+    /**
+     * @param iterable<ReplacementStrategyInterface> $strategies
+     * @return list<ReplacementStrategyInterface>
+     */
+    private function withBuiltInStrategies(iterable $strategies): array
+    {
+        $result = [new DefaultRedactionStrategy(), new StarMaskStrategy()];
+        foreach ($strategies as $strategy) {
+            $result[] = $strategy;
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param iterable<PayloadCodecInterface> $codecs
+     * @return list<PayloadCodecInterface>
+     */
+    private function withBuiltInCodec(iterable $codecs): array
+    {
+        $result = [new JsonPayloadCodec()];
+        foreach ($codecs as $codec) {
+            $result[] = $codec;
+        }
+
+        return $result;
     }
 }

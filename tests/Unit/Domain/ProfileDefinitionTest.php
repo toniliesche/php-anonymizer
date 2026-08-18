@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Domain;
 
 use PhpAnonymizer\Anonymizer\Domain\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\ProfileMode;
 use PhpAnonymizer\Anonymizer\Domain\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\RuleOptionsCompiler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +18,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RuleDefinition::class)]
 #[CoversClass(InvalidProfileDefinition::class)]
 #[CoversClass(ConditionDefinition::class)]
+#[CoversClass(RuleOptionsCompiler::class)]
+#[CoversClass(EmbeddedPayloadDefinition::class)]
 final class ProfileDefinitionTest extends TestCase
 {
     public function testCreatesAFlatRedactionProfile(): void
@@ -210,5 +214,60 @@ final class ProfileDefinitionTest extends TestCase
             'mode' => 'redact',
             'rules' => [['field' => 'address', 'children' => [['field' => 'street']], 'on_scalar' => 'mask']],
         ]);
+    }
+
+    public function testCompilesStrategyAndEmbeddedPayload(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [
+                ['field' => 'email', 'strategy' => 'star_mask'],
+                ['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']],
+            ],
+        ]);
+
+        self::assertSame('star_mask', $profile->rules()[0]->strategy());
+        $embedded = $profile->rules()[1]->embedded();
+        self::assertNotNull($embedded);
+        self::assertSame('json', $embedded->codec());
+        self::assertSame('nested', $embedded->profile());
+    }
+
+    public function testRejectsStrategyAndEmbeddedOnTraversalOrTogether(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', [
+                'mode' => 'redact',
+                'rules' => [['field' => 'payload', 'children' => [['field' => 'email']], 'strategy' => 'star_mask']],
+            ]);
+            self::fail('Expected traversal strategy validation error.');
+        } catch (InvalidProfileDefinition) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->expectExceptionMessageMatches('/both strategy and embedded/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'payload', 'strategy' => 'star_mask', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]],
+        ]);
+    }
+
+    public function testRejectsMalformedStrategyAndEmbeddedDefinitions(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 42]]]);
+            self::fail('Expected strategy validation error.');
+        } catch (InvalidProfileDefinition) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->expectExceptionMessageMatches('/embedded must be a map/');
+        ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json']]]]);
+    }
+
+    public function testRejectsInvalidEmbeddedValueTypes(): void
+    {
+        $this->expectExceptionMessageMatches('/embedded codec and profile must be non-empty strings/');
+        ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 42, 'profile' => 'nested']]]]);
     }
 }

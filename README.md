@@ -2,7 +2,9 @@
 
 Pure PHP array anonymization with immutable profile definitions. The core
 supports flat and nested string redaction, preserve-mode allow-lists, and
-conditional rules without mutating the input array.
+conditional rules without mutating the input array. Named replacement
+strategies and encoded JSON payloads are supported through framework-free
+extension ports.
 
 ```php
 $profile = ProfileDefinition::fromArray('customer', [
@@ -33,4 +35,6 @@ notation, so `/` is encoded as `~1` and `~` as `~0`.
 
 See the repository README and iteration plan for the complete roadmap.
 See [`docs/profile-schema.md`](../../docs/profile-schema.md) for preserve-mode,
-condition, and scalar-fallback details.
+condition, scalar-fallback, strategy, and embedded-payload details. See
+[`docs/extension-author-guide.md`](../../docs/extension-author-guide.md) for
+custom strategy and codec contracts.
