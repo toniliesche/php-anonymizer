@@ -14,6 +14,7 @@ final readonly class ProfileDefinition
     private function __construct(
         private string $name,
         private array $rules,
+        private ProfileMode $mode,
     ) {}
 
     /** @param array<string, mixed> $definition */
@@ -27,8 +28,9 @@ final readonly class ProfileDefinition
             throw InvalidProfileDefinition::forProfile($name, 'keys must be exactly mode and rules');
         }
 
-        if (!array_key_exists('mode', $definition) || $definition['mode'] !== 'redact') {
-            throw InvalidProfileDefinition::forProfile($name, 'mode must be redact');
+        $mode = ProfileMode::tryFrom(is_string($definition['mode'] ?? null) ? $definition['mode'] : '');
+        if (!$mode instanceof ProfileMode) {
+            throw InvalidProfileDefinition::forProfile($name, 'mode must be redact or preserve');
         }
 
         if (!array_key_exists('rules', $definition) || !is_array($definition['rules']) || array_is_list($definition['rules']) === false || $definition['rules'] === []) {
@@ -58,7 +60,7 @@ final readonly class ProfileDefinition
             $rules[] = $ruleDefinition;
         }
 
-        return new self($name, $rules);
+        return new self($name, $rules, $mode);
     }
 
     public function name(): string
@@ -70,5 +72,10 @@ final readonly class ProfileDefinition
     public function rules(): array
     {
         return $this->rules;
+    }
+
+    public function mode(): ProfileMode
+    {
+        return $this->mode;
     }
 }

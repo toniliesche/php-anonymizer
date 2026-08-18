@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Domain;
 
+use PhpAnonymizer\Anonymizer\Domain\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\ProfileMode;
 use PhpAnonymizer\Anonymizer\Domain\RuleDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -13,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(RuleDefinition::class)]
 #[CoversClass(InvalidProfileDefinition::class)]
+#[CoversClass(ConditionDefinition::class)]
 final class ProfileDefinitionTest extends TestCase
 {
     public function testCreatesAFlatRedactionProfile(): void
@@ -24,6 +27,7 @@ final class ProfileDefinitionTest extends TestCase
 
         self::assertSame('customer', $profile->name());
         self::assertSame('email', $profile->rules()[0]->field());
+        self::assertSame(ProfileMode::REDACT, $profile->mode());
     }
 
     public function testRejectsInvalidName(): void
@@ -40,8 +44,18 @@ final class ProfileDefinitionTest extends TestCase
 
     public function testRejectsUnsupportedMode(): void
     {
-        $this->expectExceptionMessageMatches('/mode must be redact/');
-        ProfileDefinition::fromArray('customer', ['mode' => 'preserve', 'rules' => [['field' => 'email']]]);
+        $this->expectExceptionMessageMatches('/mode must be redact or preserve/');
+        ProfileDefinition::fromArray('customer', ['mode' => 'unknown', 'rules' => [['field' => 'email']]]);
+    }
+
+    public function testCreatesAPreserveProfile(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'email']],
+        ]);
+
+        self::assertSame(ProfileMode::PRESERVE, $profile->mode());
     }
 
     public function testRejectsEmptyOrAssociativeRules(): void
@@ -70,7 +84,7 @@ final class ProfileDefinitionTest extends TestCase
 
     public function testRejectsUnknownRuleKeys(): void
     {
-        $this->expectExceptionMessageMatches('/rule keys must contain exactly field/');
+        $this->expectExceptionMessageMatches('/rule keys must contain field/');
         ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'extra' => true]]]);
     }
 
@@ -142,6 +156,59 @@ final class ProfileDefinitionTest extends TestCase
         ProfileDefinition::fromArray('nested', [
             'mode' => 'redact',
             'rules' => [['field' => 'customer', 'children' => ['email']]],
+        ]);
+    }
+
+    public function testCompilesConditionsAndScalarAction(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [[
+                'field' => 'customer',
+                'children' => [['field' => 'email']],
+                'when' => ['path' => 'kind', 'in' => ['person', 'company']],
+                'on_scalar' => 'preserve',
+            ]],
+        ]);
+
+        self::assertNotNull($profile->rules()[0]->condition());
+        self::assertSame('preserve', $profile->rules()[0]->scalarAction()?->value);
+    }
+
+    public function testRejectsScalarActionOnLeaf(): void
+    {
+        $this->expectExceptionMessageMatches('/on_scalar requires children or each/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'on_scalar' => 'preserve']],
+        ]);
+    }
+
+    public function testRejectsMalformedCondition(): void
+    {
+        $this->expectExceptionMessageMatches('/condition must contain path and exactly one/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'when' => ['path' => 'kind', 'equals' => 'person', 'in' => ['person']]]],
+        ]);
+    }
+
+    public function testRejectsNonMapConditionAndInvalidScalarAction(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', [
+                'mode' => 'redact',
+                'rules' => [['field' => 'email', 'when' => 'kind']],
+            ]);
+            self::fail('Expected a condition map validation error.');
+        } catch (InvalidProfileDefinition) {
+            $this->addToAssertionCount(1);
+        }
+
+        $this->expectExceptionMessageMatches('/on_scalar must be redact or preserve/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'address', 'children' => [['field' => 'street']], 'on_scalar' => 'mask']],
         ]);
     }
 }

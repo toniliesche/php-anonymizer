@@ -1,7 +1,8 @@
 # PHP Anonymizer Core
 
 Pure PHP array anonymization with immutable profile definitions. The core
-supports flat and nested string redaction without mutating the input array.
+supports flat and nested string redaction, preserve-mode allow-lists, and
+conditional rules without mutating the input array.
 
 ```php
 $profile = ProfileDefinition::fromArray('customer', [
@@ -31,3 +32,5 @@ path-aware exceptions. Report and exception paths use RFC 6901 JSON Pointer
 notation, so `/` is encoded as `~1` and `~` as `~0`.
 
 See the repository README and iteration plan for the complete roadmap.
+See [`docs/profile-schema.md`](../../docs/profile-schema.md) for preserve-mode,
+condition, and scalar-fallback details.
