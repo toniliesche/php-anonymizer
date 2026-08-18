@@ -50,15 +50,22 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
      * @return array<string, mixed>
      */
     #[Override]
-    public function anonymize(string $profile, array $data): array
+    public function anonymize(string $profile, array|object $data): array
     {
+        if (is_object($data)) {
+            throw new InvalidArgumentException('ArrayAnonymizer accepts arrays only; configure the Symfony Serializer integration to anonymize objects.');
+        }
+
         return $this->anonymizeWithReport($profile, $data)->data();
     }
 
     /** @param array<string, mixed> $data */
     #[Override]
-    public function anonymizeWithReport(string $profile, array $data): AnonymizationResult
+    public function anonymizeWithReport(string $profile, array|object $data): AnonymizationResult
     {
+        if (is_object($data)) {
+            throw new InvalidArgumentException('ArrayAnonymizer accepts arrays only; configure the Symfony Serializer integration to anonymize objects.');
+        }
         return $this->traversal->apply($profile, $data);
     }
 

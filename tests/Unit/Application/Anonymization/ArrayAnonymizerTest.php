@@ -42,6 +42,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use stdClass;
 
 #[CoversClass(ArrayAnonymizer::class)]
 #[CoversClass(AnonymizationResult::class)]
@@ -812,5 +813,17 @@ final class ArrayAnonymizerTest extends TestCase
 
         $this->expectExceptionMessageMatches('/reference cycle detected/');
         new ArrayAnonymizer(new InMemoryProfileProvider([$first, $second]));
+    }
+
+    public function testObjectInputsAreRejectedByTheArrayEngine(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->anonymizer->anonymize('custom', new stdClass());
+    }
+
+    public function testObjectInputsAreRejectedByTheArrayReportEngine(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->anonymizer->anonymizeWithReport('custom', new stdClass());
     }
 }
