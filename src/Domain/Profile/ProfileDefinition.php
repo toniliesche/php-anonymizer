@@ -79,4 +79,9 @@ final readonly class ProfileDefinition
     {
         return $this->mode;
     }
+
+    public function fingerprint(): string
+    {
+        return hash('sha256', serialize($this));
+    }
 }

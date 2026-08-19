@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
@@ -27,6 +28,7 @@ final readonly class ArrayTraversal
         private ProfileRegistry $profiles,
         ReplacementStrategyRegistry $strategies,
         PayloadCodecRegistry $codecs,
+        private AnonymizationLimits $limits = new AnonymizationLimits(),
     ) {
         $this->embedded = new EmbeddedPayloadTraversal($codecs, $this);
         $this->rules = new RuleTreeTraversal($this->embedded);
@@ -35,7 +37,7 @@ final readonly class ArrayTraversal
     }
 
     /** @param array<string, mixed> $data */
-    public function apply(string $profile, array $data): AnonymizationResult
+    public function apply(string $profile, array $data, bool $withReport = true, ?ExecutionBudget $budget = null): AnonymizationResult
     {
         $definition = $this->profiles->get($profile);
         if (!$definition instanceof ProfileDefinition) {
@@ -44,14 +46,15 @@ final readonly class ArrayTraversal
 
         /** @var array<string, mixed> $result */
         $result = $data;
-        $report = new AnonymizationReport();
+        $report = $withReport ? AnonymizationReport::collecting() : AnonymizationReport::disabled();
+        $budget ??= new ExecutionBudget($this->limits);
         if ($definition->mode() === ProfileMode::PRESERVE) {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget);
         } else {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget);
         }
 
         /** @var array<string, mixed> $result */
-        return new AnonymizationResult($result, $report->anonymizedPaths(), $report->missingPaths());
+        return new AnonymizationResult($result, $report->anonymizedPaths(), $report->missingPaths(), $report->events());
     }
 }

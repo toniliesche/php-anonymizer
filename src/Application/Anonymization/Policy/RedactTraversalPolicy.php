@@ -59,6 +59,6 @@ final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterfa
             throw new UnsupportedValue(sprintf('Replacement strategy "%s" is not available.', $strategyId));
         }
         $value = $strategy->replace($value);
-        $report->anonymized($path);
+        $report->anonymized($path, 'replace', $strategyId);
     }
 }

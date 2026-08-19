@@ -22,41 +22,46 @@ final readonly class RuleTreeTraversal
      * @param array<mixed, mixed> $data
      * @param list<RuleDefinition> $rules
      */
-    public function apply(string $profile, array &$data, array $rules, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    public function apply(string $profile, array &$data, array $rules, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget): void
     {
-        $this->map($profile, $data, $rules, JsonPointer::root(), $policy, $report);
+        $this->map($profile, $data, $rules, JsonPointer::root(), $policy, $report, $budget, 0);
     }
 
     /**
      * @param array<mixed, mixed> $data
      * @param list<RuleDefinition> $rules
      */
-    private function map(string $profile, array &$data, array $rules, JsonPointer $parent, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    private function map(string $profile, array &$data, array $rules, JsonPointer $parent, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth): void
     {
+        $budget->visit($profile, $parent, $depth);
+        $budget->collection($profile, $parent, count($data));
         $context = $data;
         $rulesByField = [];
+        $matchesByField = [];
         foreach ($rules as $rule) {
             $rulesByField[$rule->field()] = $rule;
-            if ($this->matches($rule, $context) && !array_key_exists($rule->field(), $data)) {
+            $matchesByField[$rule->field()] = $this->matches($rule, $context);
+            if ($matchesByField[$rule->field()] && !array_key_exists($rule->field(), $data)) {
                 $report->missing($parent->append($rule->field()));
             }
         }
         foreach ($data as $field => &$value) {
             $rule = $rulesByField[(string) $field] ?? null;
             $path = $parent->append((string) $field);
-            if (!$rule instanceof RuleDefinition || !$this->matches($rule, $context)) {
+            if (!$rule instanceof RuleDefinition || !$matchesByField[$rule->field()]) {
                 $policy->unselected($value, $path, $report);
                 continue;
             }
-            $this->selected($profile, $value, $rule, $path, $policy, $report);
+            $budget->visit($profile, $path, $depth + 1);
+            $this->selected($profile, $value, $rule, $path, $policy, $report, $budget, $depth + 1);
         }
         unset($value);
     }
 
-    private function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    private function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth): void
     {
         if ($rule->embedded() instanceof EmbeddedPayloadDefinition) {
-            $this->embedded->apply($profile, $value, (string) $path, $rule->embedded()->codec(), $rule->embedded()->profile(), $report);
+            $this->embedded->apply($profile, $value, (string) $path, $rule->embedded()->codec(), $rule->embedded()->profile(), $report, $budget);
             return;
         }
         if ($rule->scalarAction() instanceof ScalarAction && !is_array($value)) {
@@ -64,50 +69,52 @@ final readonly class RuleTreeTraversal
             return;
         }
         if ($rule->hasChildren()) {
-            $this->children($profile, $value, $rule->children(), $path, $policy, $report);
+            $this->children($profile, $value, $rule->children(), $path, $policy, $report, $budget, $depth);
             return;
         }
         if ($rule->eachStrings()) {
-            $this->strings($profile, $value, $path, $policy, $report);
+            $this->strings($profile, $value, $path, $policy, $report, $budget);
             return;
         }
         if ($rule->eachRules() !== null) {
-            $this->each($profile, $value, $rule->eachRules(), $path, $policy, $report);
+            $this->each($profile, $value, $rule->eachRules(), $path, $policy, $report, $budget, $depth);
             return;
         }
         $policy->selected($profile, $value, $rule, $path, $report);
     }
 
     /** @param list<RuleDefinition> $rules */
-    private function children(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    private function children(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth): void
     {
         if (!$this->isMap($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
         /** @var array<mixed, mixed> $value */
-        $this->map($profile, $value, $rules, $path, $policy, $report);
+        $this->map($profile, $value, $rules, $path, $policy, $report, $budget, $depth + 1);
     }
 
-    private function strings(string $profile, mixed &$value, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    private function strings(string $profile, mixed &$value, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget): void
     {
         if (!is_array($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
+        $budget->collection($profile, $path, count($value));
         $policy->strings($profile, $value, $path, $report);
     }
 
     /** @param list<RuleDefinition> $rules */
-    private function each(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report): void
+    private function each(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth): void
     {
         if (!is_array($value) || !array_is_list($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
+        $budget->collection($profile, $path, count($value));
         foreach ($value as $index => &$item) {
             if (!$this->isMap($item)) {
                 throw UnsupportedValue::at($profile, (string) $path->append($index), $item);
             }
             /** @var array<mixed, mixed> $item */
-            $this->map($profile, $item, $rules, $path->append($index), $policy, $report);
+            $this->map($profile, $item, $rules, $path->append($index), $policy, $report, $budget, $depth + 1);
         }
         unset($item);
     }

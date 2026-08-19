@@ -17,9 +17,9 @@ final class AnonymizerFactory
      * @param iterable<ReplacementStrategyInterface> $strategies
      * @param iterable<PayloadCodecInterface> $codecs
      */
-    public static function fromProfiles(iterable $profiles, iterable $strategies = [], iterable $codecs = []): AnonymizerInterface
+    public static function fromProfiles(iterable $profiles, iterable $strategies = [], iterable $codecs = [], ?AnonymizationLimits $limits = null): AnonymizerInterface
     {
-        return new ArrayAnonymizer(new ProfileCollection(iterator_to_array($profiles, false)), $strategies, $codecs);
+        return new ArrayAnonymizer(new ProfileCollection(iterator_to_array($profiles, false)), $strategies, $codecs, $limits);
     }
 
     /**
@@ -27,13 +27,13 @@ final class AnonymizerFactory
      * @param iterable<ReplacementStrategyInterface> $strategies
      * @param iterable<PayloadCodecInterface> $codecs
      */
-    public static function fromArrays(array $profiles, iterable $strategies = [], iterable $codecs = []): AnonymizerInterface
+    public static function fromArrays(array $profiles, iterable $strategies = [], iterable $codecs = [], ?AnonymizationLimits $limits = null): AnonymizerInterface
     {
         $definitions = [];
         foreach ($profiles as $name => $definition) {
             $definitions[] = ProfileDefinition::fromArray($name, $definition);
         }
 
-        return self::fromProfiles($definitions, $strategies, $codecs);
+        return self::fromProfiles($definitions, $strategies, $codecs, $limits);
     }
 }

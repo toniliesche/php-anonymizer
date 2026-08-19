@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use Throwable;
@@ -20,7 +22,7 @@ final readonly class EmbeddedPayloadTraversal
 
     /**
      */
-    public function apply(string $profile, mixed &$value, string $path, string $codecId, string $nestedProfile, AnonymizationReport $report): void
+    public function apply(string $profile, mixed &$value, string $path, string $codecId, string $nestedProfile, AnonymizationReport $report, ?ExecutionBudget $budget = null): void
     {
         if (!is_string($value)) {
             throw UnsupportedValue::at($profile, $path, $value);
@@ -29,19 +31,28 @@ final readonly class EmbeddedPayloadTraversal
         if (!$codec instanceof PayloadCodecInterface) {
             throw new PayloadCodecFailure(sprintf('Payload codec "%s" is not registered.', $codecId));
         }
+        $pointer = JsonPointer::fromString($path);
+        $report->event($pointer, 'embedded', $codecId);
+        $budget ??= new ExecutionBudget(new AnonymizationLimits());
+        $budget->enterEmbedded($profile, $pointer);
+        $budget->inputBytes($profile, $path, mb_strlen($value, 'UTF-8'));
         try {
             $decoded = $codec->decode($value);
         } catch (Throwable $exception) {
+            $budget->leaveEmbedded();
             throw PayloadCodecFailure::embedded($profile, $codecId, 'decode', $path, $exception);
         }
         /** @var array<string, mixed> $decoded */
-        $result = $this->nested->apply($nestedProfile, $decoded);
+        try {
+            $result = $this->nested->apply($nestedProfile, $decoded, $report->isCollecting(), $budget);
+        } finally {
+            $budget->leaveEmbedded();
+        }
         try {
             $value = $codec->encode($result->data());
         } catch (Throwable $exception) {
             throw PayloadCodecFailure::embedded($profile, $codecId, 'encode', $path, $exception);
         }
-        $base = JsonPointer::fromString($path);
-        $report->merge($result, $base);
+        $report->merge($result, $pointer);
     }
 }

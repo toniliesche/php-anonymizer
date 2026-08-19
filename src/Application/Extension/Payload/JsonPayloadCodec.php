@@ -22,8 +22,8 @@ final class JsonPayloadCodec implements PayloadCodecInterface
     #[Override]
     public function decode(string $payload): array
     {
-        $root = json_decode($payload, false, flags: JSON_THROW_ON_ERROR);
-        if (!is_object($root)) {
+        $first = ltrim($payload)[0] ?? '';
+        if ($first !== '{') {
             throw new JsonException('JSON payload root must be an object.');
         }
 

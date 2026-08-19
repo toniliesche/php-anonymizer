@@ -106,14 +106,14 @@ final class ProfileDefinitionTest extends TestCase
         $profile = ProfileDefinition::fromArray('nested', [
             'mode' => 'redact',
             'rules' => [
-                ['field' => 'customer', 'children' => [['field' => 'email']]],
+                ['field' => 'customer', 'children' => [['field' => 'email'], ['field' => 'name']]],
                 ['field' => 'tags', 'each' => true],
                 ['field' => 'orders', 'each' => [['field' => 'reference']]],
             ],
         ]);
 
         self::assertTrue($profile->rules()[0]->hasChildren());
-        self::assertCount(1, $profile->rules()[0]->children());
+        self::assertCount(2, $profile->rules()[0]->children());
         self::assertTrue($profile->rules()[1]->eachStrings());
         self::assertNotNull($profile->rules()[2]->eachRules());
     }

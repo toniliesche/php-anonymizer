@@ -29,7 +29,7 @@ final readonly class PreserveTraversalPolicy implements RuleTraversalPolicyInter
         $paths = [];
         $this->unselectedValues->apply($value, (string) $path, $paths);
         foreach ($paths as $item) {
-            $report->anonymized($this->pointer($item));
+            $report->anonymized($this->pointer($item), 'replace', 'redact');
         }
     }
 
@@ -42,7 +42,8 @@ final readonly class PreserveTraversalPolicy implements RuleTraversalPolicyInter
         $paths = [];
         $this->stringSelection->apply($value, $rule, (string) $path, $profile, $paths);
         foreach ($paths as $item) {
-            $report->anonymized($this->pointer($item));
+            $handler = $rule->strategy();
+            $report->anonymized($this->pointer($item), 'replace', $handler);
         }
     }
 

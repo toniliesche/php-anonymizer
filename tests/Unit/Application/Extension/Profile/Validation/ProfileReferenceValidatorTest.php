@@ -48,6 +48,32 @@ final class ProfileReferenceValidatorTest extends TestCase
         );
     }
 
+    public function testReportsCompleteCyclePathAcrossMultipleProfiles(): void
+    {
+        $first = ProfileDefinition::fromArray('first', ['mode' => 'redact', 'rules' => [[
+            'field' => 'container',
+            'children' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'second']]],
+        ]]]);
+        $second = ProfileDefinition::fromArray('second', ['mode' => 'redact', 'rules' => [[
+            'field' => 'items',
+            'each' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'third']]],
+        ]]]);
+        $third = ProfileDefinition::fromArray('third', ['mode' => 'redact', 'rules' => [[
+            'field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'first'],
+        ]]]);
+
+        try {
+            new ProfileReferenceValidator()->validate(
+                new ProfileRegistry([$first, $second, $third]),
+                new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]),
+                new PayloadCodecRegistry([new JsonPayloadCodec()]),
+            );
+            self::fail('Expected embedded reference cycle.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('first -> second -> third -> first', $exception->getMessage());
+        }
+    }
+
     public function testRejectsUnknownEmbeddedProfile(): void
     {
         $profile = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'missing']]]]);

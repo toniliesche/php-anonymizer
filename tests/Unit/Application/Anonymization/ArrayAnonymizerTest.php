@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
 use InvalidArgumentException;
 use Override;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
@@ -16,6 +17,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationRepor
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
@@ -45,6 +47,8 @@ use RuntimeException;
 use stdClass;
 
 #[CoversClass(ArrayAnonymizer::class)]
+#[CoversClass(AnonymizationLimits::class)]
+#[CoversClass(ExecutionBudget::class)]
 #[CoversClass(AnonymizationResult::class)]
 #[CoversClass(ProfileNotFound::class)]
 #[CoversClass(UnsupportedValue::class)]
