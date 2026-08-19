@@ -33,8 +33,6 @@ elements as maps. Wrong runtime shapes and selected non-string values fail with
 path-aware exceptions. Report and exception paths use RFC 6901 JSON Pointer
 notation, so `/` is encoded as `~1` and `~` as `~0`.
 
-See the repository README and iteration plan for the complete roadmap.
-See [`docs/profile-schema.md`](../../docs/profile-schema.md) for preserve-mode,
-condition, scalar-fallback, strategy, and embedded-payload details. See
-[`docs/extension-author-guide.md`](../../docs/extension-author-guide.md) for
-custom strategy and codec contracts.
+The profile schema supports preserve mode, conditions, scalar fallbacks,
+strategies, and embedded payloads. Extension contracts are the public
+interfaces under `Application/Extension` and do not require a framework.
