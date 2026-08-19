@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Result;
 
-final readonly class AnonymizationResult
+use Override;
+
+final readonly class AnonymizationResult implements AnonymizationResultInterface
 {
     /**
      * @param array<string, mixed> $data
@@ -18,18 +20,21 @@ final readonly class AnonymizationResult
     ) {}
 
     /** @return array<string, mixed> */
+    #[Override]
     public function data(): array
     {
         return $this->data;
     }
 
     /** @return list<string> */
+    #[Override]
     public function anonymizedPaths(): array
     {
         return $this->anonymizedPaths;
     }
 
     /** @return list<string> */
+    #[Override]
     public function missingPaths(): array
     {
         return $this->missingPaths;

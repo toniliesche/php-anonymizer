@@ -25,7 +25,7 @@ final class InMemoryProfileProviderTest extends TestCase
         $provider = new InMemoryProfileProvider([$profile]);
 
         self::assertSame($profile, $provider->get('customer'));
-        self::assertNull($provider->get('missing'));
+        self::assertNotInstanceOf(ProfileDefinition::class, $provider->get('missing'));
         self::assertSame([$profile], array_values(iterator_to_array($provider->profiles())));
     }
 

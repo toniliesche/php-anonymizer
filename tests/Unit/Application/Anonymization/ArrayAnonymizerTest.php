@@ -91,10 +91,7 @@ final class ArrayAnonymizerTest extends TestCase
     {
         $data = ['email' => 'a@example.com', 'token' => '', 'name' => 'Ada', 'age' => 42];
 
-        self::assertSame(
-            ['email' => '[REDACTED]', 'token' => '[REDACTED]', 'name' => 'Ada', 'age' => 42],
-            $this->anonymizer->anonymize('customer', $data),
-        );
+        self::assertSame(['email' => '[REDACTED]', 'token' => '[REDACTED]', 'name' => 'Ada', 'age' => 42], $this->anonymizer->anonymize('customer', $data));
     }
 
     public function testLeavesMissingFieldsUntouched(): void
@@ -105,10 +102,11 @@ final class ArrayAnonymizerTest extends TestCase
     public function testDoesNotMutateInput(): void
     {
         $data = ['email' => 'a@example.com'];
+        $original = $data;
         $this->anonymizer->anonymize('customer', $data);
 
-        // @phpstan-ignore staticMethod.alreadyNarrowedType (documents input immutability)
-        self::assertSame('a@example.com', $data['email']);
+        // @phpstan-ignore staticMethod.alreadyNarrowedType (The assertion documents input immutability.)
+        self::assertSame($original, $data);
     }
 
     public function testReportsUnknownProfile(): void

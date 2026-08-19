@@ -111,7 +111,7 @@ final class ExtensionRegistryTest extends TestCase
         };
         $codecs = new PayloadCodecRegistry([$codec]);
         self::assertSame($codec, $codecs->get('custom'));
-        self::assertNull($codecs->get('missing'));
+        self::assertNotInstanceOf(PayloadCodecInterface::class, $codecs->get('missing'));
         self::assertSame([$codec], $codecs->all());
 
         $this->expectExceptionMessageMatches('/registered more than once/');

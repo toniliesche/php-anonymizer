@@ -175,7 +175,7 @@ final class ProfileDefinitionTest extends TestCase
             ]],
         ]);
 
-        self::assertNotNull($profile->rules()[0]->condition());
+        self::assertInstanceOf(ConditionDefinition::class, $profile->rules()[0]->condition());
         self::assertSame('preserve', $profile->rules()[0]->scalarAction()?->value);
     }
 
@@ -228,7 +228,7 @@ final class ProfileDefinitionTest extends TestCase
 
         self::assertSame('star_mask', $profile->rules()[0]->strategy());
         $embedded = $profile->rules()[1]->embedded();
-        self::assertNotNull($embedded);
+        self::assertInstanceOf(EmbeddedPayloadDefinition::class, $embedded);
         self::assertSame('json', $embedded->codec());
         self::assertSame('nested', $embedded->profile());
     }

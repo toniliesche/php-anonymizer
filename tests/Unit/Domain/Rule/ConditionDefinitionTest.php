@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Domain\Rule;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(ConditionDefinition::class)]
@@ -49,6 +50,7 @@ final class ConditionDefinitionTest extends TestCase
         ConditionDefinition::fromArray(['path' => '/kind', 'equals' => ['person']]);
     }
 
+    #[DoesNotPerformAssertions]
     public function testRejectsMalformedConditionValuesAndPaths(): void
     {
         foreach ([
@@ -65,7 +67,6 @@ final class ConditionDefinitionTest extends TestCase
                 ConditionDefinition::fromArray($definition);
                 self::fail('Expected invalid condition definition.');
             } catch (InvalidProfileDefinition) {
-                $this->addToAssertionCount(1);
             }
         }
     }
