@@ -54,6 +54,21 @@ final class RuleOptionsCompiler
     }
 
     /** @param array<string, mixed> $definition */
+    public static function keyId(array $definition): ?string
+    {
+        if (!array_key_exists('key_id', $definition)) {
+            return null;
+        }
+        if (!is_string($definition['key_id']) || $definition['key_id'] === '') {
+            throw new InvalidProfileDefinition('key_id must be a non-empty string');
+        }
+        if (!array_key_exists('strategy', $definition)) {
+            throw new InvalidProfileDefinition('key_id requires strategy');
+        }
+        return $definition['key_id'];
+    }
+
+    /** @param array<string, mixed> $definition */
     public static function embedded(array $definition): ?EmbeddedPayloadDefinition
     {
         if (!array_key_exists('embedded', $definition)) {

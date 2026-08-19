@@ -28,7 +28,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use Throwable;
 
-final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonymizerInterface, AuditAnonymizerInterface
+final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonymizerInterface, AuditAnonymizerInterface, ContextualAnonymizerInterface
 {
     private ProfileRegistry $profileRegistry;
     private PayloadCodecRegistry $codecRegistry;
@@ -65,6 +65,22 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonym
         }
 
         return $this->traversal->apply($profile, $data, false)->data();
+    }
+
+    /** @param array<string, mixed> $data
+     *  @return array<string, mixed>
+     */
+    #[Override]
+    public function anonymizeWithContext(string $profile, array $data, AnonymizationContext $context): array
+    {
+        return $this->traversal->apply($profile, $data, false, context: $context)->data();
+    }
+
+    /** @param array<string, mixed> $data */
+    #[Override]
+    public function anonymizeWithReportAndContext(string $profile, array $data, AnonymizationContext $context): AnonymizationResult
+    {
+        return $this->traversal->apply($profile, $data, context: $context);
     }
 
     /** @param array<string, mixed> $data */
@@ -109,11 +125,17 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonym
     #[Override]
     public function anonymizeWithAudit(string $profile, array $data): AuditAnonymizationResult
     {
+        return $this->buildAuditResult($profile, $data, null);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function buildAuditResult(string $profile, array $data, ?AnonymizationContext $context): AuditAnonymizationResult
+    {
         $definition = $this->profileRegistry->get($profile);
         if (!$definition instanceof ProfileDefinition) {
             throw ProfileNotFound::named($profile);
         }
-        $result = $this->traversal->apply($profile, $data);
+        $result = $this->traversal->apply($profile, $data, context: $context);
         $counts = [];
         foreach ($result->events() as $event) {
             $key = implode("\0", [$event['path'], $event['action'], $event['handler'] ?? '']);
@@ -130,6 +152,18 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonym
 
     #[Override]
     public function anonymizePayloadWithReport(string $profile, string $codec, string $payload): PayloadAnonymizationResult
+    {
+        return $this->anonymizePayloadWithReportAndContext($profile, $codec, $payload, null);
+    }
+
+    #[Override]
+    public function anonymizePayloadWithContext(string $profile, string $codec, string $payload, AnonymizationContext $context): string
+    {
+        return $this->anonymizePayloadWithReportAndContext($profile, $codec, $payload, $context)->payload();
+    }
+
+    #[Override]
+    public function anonymizePayloadWithReportAndContext(string $profile, string $codec, string $payload, ?AnonymizationContext $context): PayloadAnonymizationResult
     {
         $payloadCodec = $this->codecRegistry->get($codec);
         if (!$payloadCodec instanceof PayloadCodecInterface) {
@@ -149,7 +183,7 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonym
         }
         /** @var array<string, mixed> $data */
 
-        $result = $this->anonymizeWithReport($profile, $data);
+        $result = !$context instanceof AnonymizationContext ? $this->anonymizeWithReport($profile, $data) : $this->anonymizeWithReportAndContext($profile, $data, $context);
         try {
             $encoded = $payloadCodec->encode($result->data());
         } catch (Throwable $exception) {
@@ -157,6 +191,33 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, BatchAnonym
         }
 
         return new PayloadAnonymizationResult($encoded, $result);
+    }
+
+    /** @param iterable<mixed> $records
+     *  @return iterable<array<string, mixed>>
+     */
+    #[Override]
+    public function anonymizeRecordsWithContext(string $profile, iterable $records, AnonymizationContext $context): iterable
+    {
+        foreach ($records as $index => $record) {
+            if (!is_array($record) || array_is_list($record)) {
+                $ordinal = is_int($index) || is_string($index) ? $index : get_debug_type($index);
+                throw new InvalidArgumentException(sprintf('Batch record %s must be an associative array.', $ordinal));
+            }
+            /** @var array<string, mixed> $map */
+            $map = [];
+            foreach ($record as $key => $value) {
+                $map[(string) $key] = $value;
+            }
+            yield $this->anonymizeWithContext($profile, $map, $context);
+        }
+    }
+
+    /** @param array<string, mixed> $data */
+    #[Override]
+    public function anonymizeWithAuditAndContext(string $profile, array $data, AnonymizationContext $context): AuditAnonymizationResult
+    {
+        return $this->buildAuditResult($profile, $data, $context);
     }
 
     /** @param array<mixed, mixed> $value */

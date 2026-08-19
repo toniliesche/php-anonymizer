@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
@@ -22,7 +23,7 @@ final readonly class EmbeddedPayloadTraversal
 
     /**
      */
-    public function apply(string $profile, mixed &$value, string $path, string $codecId, string $nestedProfile, AnonymizationReport $report, ?ExecutionBudget $budget = null): void
+    public function apply(string $profile, mixed &$value, string $path, string $codecId, string $nestedProfile, AnonymizationReport $report, ?ExecutionBudget $budget = null, ?AnonymizationContext $context = null): void
     {
         if (!is_string($value)) {
             throw UnsupportedValue::at($profile, $path, $value);
@@ -44,7 +45,7 @@ final readonly class EmbeddedPayloadTraversal
         }
         /** @var array<string, mixed> $decoded */
         try {
-            $result = $this->nested->apply($nestedProfile, $decoded, $report->isCollecting(), $budget);
+            $result = $this->nested->apply($nestedProfile, $decoded, $report->isCollecting(), $budget, $context);
         } finally {
             $budget->leaveEmbedded();
         }

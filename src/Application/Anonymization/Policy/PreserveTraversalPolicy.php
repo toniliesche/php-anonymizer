@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Policy;
 
 use Override;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
@@ -24,7 +25,7 @@ final readonly class PreserveTraversalPolicy implements RuleTraversalPolicyInter
     }
 
     #[Override]
-    public function unselected(mixed &$value, JsonPointer $path, AnonymizationReport $report): void
+    public function unselected(mixed &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
         $paths = [];
         $this->unselectedValues->apply($value, (string) $path, $paths);
@@ -34,13 +35,13 @@ final readonly class PreserveTraversalPolicy implements RuleTraversalPolicyInter
     }
 
     #[Override]
-    public function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report): void
+    public function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
         if (!is_string($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
         $paths = [];
-        $this->stringSelection->apply($value, $rule, (string) $path, $profile, $paths);
+        $this->stringSelection->apply($value, $rule, (string) $path, $profile, $paths, $context);
         foreach ($paths as $item) {
             $handler = $rule->strategy();
             $report->anonymized($this->pointer($item), 'replace', $handler);
@@ -48,18 +49,18 @@ final readonly class PreserveTraversalPolicy implements RuleTraversalPolicyInter
     }
 
     #[Override]
-    public function scalar(string $profile, mixed &$value, ScalarAction $action, JsonPointer $path, AnonymizationReport $report): void
+    public function scalar(string $profile, mixed &$value, ScalarAction $action, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
         if (!is_string($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
         if ($action === ScalarAction::REDACT) {
-            $this->unselected($value, $path, $report);
+            $this->unselected($value, $path, $report, $context);
         }
     }
 
     #[Override]
-    public function strings(string $profile, array &$value, JsonPointer $path, AnonymizationReport $report): void
+    public function strings(string $profile, array &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
         if (!array_is_list($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);

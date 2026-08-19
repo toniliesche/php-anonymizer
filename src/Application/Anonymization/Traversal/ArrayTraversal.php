@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
@@ -37,7 +38,7 @@ final readonly class ArrayTraversal
     }
 
     /** @param array<string, mixed> $data */
-    public function apply(string $profile, array $data, bool $withReport = true, ?ExecutionBudget $budget = null): AnonymizationResult
+    public function apply(string $profile, array $data, bool $withReport = true, ?ExecutionBudget $budget = null, ?AnonymizationContext $context = null): AnonymizationResult
     {
         $definition = $this->profiles->get($profile);
         if (!$definition instanceof ProfileDefinition) {
@@ -49,9 +50,9 @@ final readonly class ArrayTraversal
         $report = $withReport ? AnonymizationReport::collecting() : AnonymizationReport::disabled();
         $budget ??= new ExecutionBudget($this->limits);
         if ($definition->mode() === ProfileMode::PRESERVE) {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget, $context);
         } else {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget, $context);
         }
 
         /** @var array<string, mixed> $result */

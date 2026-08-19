@@ -5,20 +5,26 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
 use InvalidArgumentException;
+use Override;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\ContextualReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactUnselectedValues;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\ReplacementContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
+use PhpAnonymizer\Anonymizer\Application\Exception\ContextRequired;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
@@ -30,6 +36,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileRef
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
@@ -44,10 +51,17 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExecutionBudget::class)]
 #[CoversClass(AuditEntry::class)]
 #[CoversClass(AuditAnonymizationResult::class)]
+#[CoversClass(ContextRequired::class)]
+#[CoversClass(AnonymizationContext::class)]
+#[CoversClass(ReplacementContext::class)]
+#[CoversClass(PreserveStringSelection::class)]
+#[CoversClass(RedactTraversalPolicy::class)]
+#[CoversClass(RuleOptionsCompiler::class)]
+#[CoversClass(ProfileReferenceValidator::class)]
+#[UsesClass(PayloadAnonymizationResult::class)]
+#[UsesClass(InvalidProfileDefinition::class)]
 #[UsesClass(JsonPointer::class)]
-#[UsesClass(PreserveStringSelection::class)]
 #[UsesClass(PreserveTraversalPolicy::class)]
-#[UsesClass(RedactTraversalPolicy::class)]
 #[UsesClass(RedactUnselectedValues::class)]
 #[UsesClass(AnonymizationReport::class)]
 #[UsesClass(AnonymizationResult::class)]
@@ -58,12 +72,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]
-#[UsesClass(ProfileReferenceValidator::class)]
 #[UsesClass(DefaultRedactionStrategy::class)]
 #[UsesClass(ReplacementStrategyRegistry::class)]
 #[UsesClass(StarMaskStrategy::class)]
 #[CoversClass(ProfileDefinition::class)]
-#[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
 #[UsesClass(ProfileNotFound::class)]
@@ -77,6 +89,165 @@ final class Iteration10Test extends TestCase
             $anonymizer->anonymizeWithReport('customer', ['email' => 'secret'])->data(),
             $anonymizer->anonymize('customer', ['email' => 'secret']),
         );
+    }
+
+    public function testContextIsPassedToAContextualStrategy(): void
+    {
+        $strategy = new class implements ContextualReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'contextual';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value;
+            }
+            #[Override]
+            public function replaceWithContext(string $value, ReplacementContext $context): string
+            {
+                return $context->profile() . ':' . $context->path() . ':' . $context->keyId() . ':' . $context->attributes()['tenant'];
+            }
+        };
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
+
+        self::assertSame(['email' => 'customer:/email:primary:acme'], $anonymizer->anonymizeWithContext('customer', ['email' => 'secret'], new AnonymizationContext(['tenant' => 'acme'])));
+    }
+
+    public function testContextualStrategyRequiresContext(): void
+    {
+        $strategy = new class implements ContextualReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'contextual';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value;
+            }
+            #[Override]
+            public function replaceWithContext(string $value, ReplacementContext $context): string
+            {
+                return $value;
+            }
+        };
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
+        $this->expectException(ContextRequired::class);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret']);
+    }
+
+    public function testContextualReportPayloadBatchAndAuditOperations(): void
+    {
+        $strategy = new class implements ContextualReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'contextual';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return 'safe';
+            }
+            #[Override]
+            public function replaceWithContext(string $value, ReplacementContext $context): string
+            {
+                return 'safe-' . $context->keyId();
+            }
+        };
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
+        $context = new AnonymizationContext(['tenant' => 'acme']);
+
+        self::assertSame(['email' => 'safe-primary'], $anonymizer->anonymizeWithReportAndContext('customer', ['email' => 'secret'], $context)->data());
+        self::assertSame('{"email":"safe-primary"}', $anonymizer->anonymizePayloadWithContext('customer', 'json', '{"email":"secret"}', $context));
+        self::assertCount(1, iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['email' => 'secret']], $context), false));
+        self::assertSame(['contextual'], array_map(static fn(AuditEntry $entry): string => (string) $entry->handler(), $anonymizer->anonymizeWithAuditAndContext('customer', ['email' => 'secret'], $context)->entries()));
+        try {
+            iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['secret']], $context), false);
+            self::fail('Expected invalid batch record.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertSame(InvalidArgumentException::class, $exception::class);
+        }
+    }
+
+    public function testContextualStrategyWorksInPreserveMode(): void
+    {
+        $strategy = new class implements ContextualReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'contextual';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value;
+            }
+            #[Override]
+            public function replaceWithContext(string $value, ReplacementContext $context): string
+            {
+                return 'pseudonym';
+            }
+        };
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'preserve', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
+        self::assertSame(['email' => 'pseudonym'], new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymizeWithContext('customer', ['email' => 'secret'], new AnonymizationContext()));
+
+        $this->expectException(ContextRequired::class);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret']);
+    }
+
+    public function testContextAndKeyIdValidation(): void
+    {
+        $this->expectException(InvalidProfileDefinition::class);
+        ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'key_id' => 'primary']]]);
+    }
+
+    public function testContextRejectsInvalidAttributesAndBatchRejectsInvalidRecords(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new AnonymizationContext([1 => 'invalid']);
+    }
+
+    public function testKeyIdMustBeNonEmptyString(): void
+    {
+        $this->expectException(InvalidProfileDefinition::class);
+        ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'redact', 'key_id' => 7]]]);
+    }
+
+    public function testKeyIdRequiresContextualStrategy(): void
+    {
+        $profile = ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'redact', 'key_id' => 'primary']]]);
+        $this->expectException(InvalidArgumentException::class);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+    }
+
+    public function testContextualStrategyRequiresKeyId(): void
+    {
+        $strategy = new class implements ContextualReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'contextual';
+            }
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value;
+            }
+            #[Override]
+            public function replaceWithContext(string $value, ReplacementContext $context): string
+            {
+                return $value;
+            }
+        };
+        $profile = ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual']]]);
+        $this->expectException(InvalidArgumentException::class);
+        new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
     }
 
     public function testBatchIsLazyAndProcessesRecordsIndependently(): void
