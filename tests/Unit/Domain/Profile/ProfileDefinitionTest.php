@@ -58,6 +58,12 @@ final class ProfileDefinitionTest extends TestCase
         ProfileDefinition::fromArray('customer', ['mode' => 'unknown', 'rules' => [['field' => 'email']]]);
     }
 
+    public function testRejectsUnsupportedRoot(): void
+    {
+        $this->expectExceptionMessageMatches('/root must be map or list/');
+        ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'root' => 'scalar', 'rules' => [['field' => 'email']]]);
+    }
+
     public function testCreatesAPreserveProfile(): void
     {
         $profile = ProfileDefinition::fromArray('customer', [

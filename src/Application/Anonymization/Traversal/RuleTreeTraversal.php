@@ -25,9 +25,9 @@ final readonly class RuleTreeTraversal
      * @param array<mixed, mixed> $data
      * @param list<RuleDefinition> $rules
      */
-    public function apply(string $profile, array &$data, array $rules, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context = null): void
+    public function apply(string $profile, array &$data, array $rules, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context = null, ?JsonPointer $parent = null): void
     {
-        $this->map($profile, $data, $rules, JsonPointer::root(), $policy, $report, $budget, 0, $context);
+        $this->map($profile, $data, $rules, $parent ?? JsonPointer::root(), $policy, $report, $budget, 0, $context);
     }
 
     /**

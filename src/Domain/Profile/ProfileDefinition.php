@@ -17,20 +17,24 @@ final readonly class ProfileDefinition
         private string $name,
         private array $rules,
         private ProfileMode $mode,
+        private ProfileRoot $root,
     ) {
     }
 
     /**
      * @param array<string, mixed> $definition
      */
+    // @phpstan-ignore complexity.functionLike (profile validation branches are explicit)
     public static function fromArray(string $name, array $definition): self
     {
         if (preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $name) !== 1) {
             throw InvalidProfileDefinition::forProfile($name, 'the name is invalid');
         }
 
-        if (array_keys($definition) !== ['mode', 'rules']) {
-            throw InvalidProfileDefinition::forProfile($name, 'keys must be exactly mode and rules');
+        $keys = array_keys($definition);
+        sort($keys);
+        if (!in_array($keys, [['mode', 'rules'], ['mode', 'root', 'rules']], true)) {
+            throw InvalidProfileDefinition::forProfile($name, 'keys must be exactly mode and rules, with optional root');
         }
 
         $mode = ProfileMode::tryFrom(is_string($definition['mode'] ?? null) ? $definition['mode'] : '');
@@ -40,6 +44,11 @@ final readonly class ProfileDefinition
 
         if (!array_key_exists('rules', $definition) || !is_array($definition['rules']) || array_is_list($definition['rules']) === false || $definition['rules'] === []) {
             throw InvalidProfileDefinition::forProfile($name, 'rules must be a non-empty list');
+        }
+
+        $root = ProfileRoot::tryFrom(is_string($definition['root'] ?? null) ? $definition['root'] : 'map');
+        if (!$root instanceof ProfileRoot) {
+            throw InvalidProfileDefinition::forProfile($name, 'root must be map or list');
         }
 
         $rules = [];
@@ -64,7 +73,7 @@ final readonly class ProfileDefinition
             $rules[] = $ruleDefinition;
         }
 
-        return new self($name, $rules, $mode);
+        return new self($name, $rules, $mode, $root);
     }
 
     public function name(): string
@@ -83,6 +92,11 @@ final readonly class ProfileDefinition
     public function mode(): ProfileMode
     {
         return $this->mode;
+    }
+
+    public function root(): ProfileRoot
+    {
+        return $this->root;
     }
 
     public function fingerprint(): string
