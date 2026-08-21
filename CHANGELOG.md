@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+## 1.5.0
+
 - Added optional ASCII key normalization and profile-local global scalar rules.
+- Added validated profile governance metadata, deterministic profile-local rule
+  fragments, canonical behavior fingerprints, and safe profile inspection.
 
 ## 1.4.0
 

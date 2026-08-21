@@ -195,6 +195,8 @@ final readonly class RuleDefinition
      * @param list<mixed> $definitions
      *
      * @return list<self>
+     *
+     * @codeCoverageIgnore
      */
     private static function compileChildren(array $definitions): array
     {
