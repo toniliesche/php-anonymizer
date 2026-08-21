@@ -63,9 +63,9 @@ final readonly class ArrayTraversal
         $report = $withReport ? AnonymizationReport::collecting() : AnonymizationReport::disabled();
         $budget ??= new ExecutionBudget($this->limits);
         if ($definition->mode() === ProfileMode::PRESERVE) {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget, $context);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget, $context, globalRules: $definition->globalRules(), normalizeKeys: $definition->keyNormalization());
         } else {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget, $context);
+            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget, $context, globalRules: $definition->globalRules(), normalizeKeys: $definition->keyNormalization());
         }
 
         /** @var array<string, mixed> $result */
@@ -115,7 +115,7 @@ final readonly class ArrayTraversal
     private function applyMap(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null): void
     {
         $policy = $definition->mode() === ProfileMode::PRESERVE ? $this->preserver : $this->redactor;
-        $this->rules->apply($profile, $data, $definition->rules(), $policy, $report, $budget, $context, $parent);
+        $this->rules->apply($profile, $data, $definition->rules(), $policy, $report, $budget, $context, $parent, $definition->globalRules(), $definition->keyNormalization());
     }
 
     private function isMap(mixed $value): bool

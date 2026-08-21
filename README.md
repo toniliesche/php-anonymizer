@@ -39,5 +39,17 @@ path-aware exceptions. Report and exception paths use RFC 6901 JSON Pointer
 notation, so `/` is encoded as `~1` and `~` as `~0`.
 
 The profile schema supports preserve mode, conditions, scalar fallbacks,
-strategies, and embedded payloads. Extension contracts are the public
-interfaces under `Application/Extension` and do not require a framework.
+strategies, embedded payloads, comparison-only key normalization, and global
+scalar rules. Extension contracts are the public interfaces under
+`Application/Extension` and do not require a framework.
+
+Global rules can target a named scalar at every map depth, including maps in
+lists, while retaining the original key spelling:
+
+```php
+$profile = ProfileDefinition::fromArray('customer', [
+    'mode' => 'redact',
+    'key_normalization' => true,
+    'global_rules' => [['field' => 'email_address']],
+]);
+```

@@ -46,6 +46,21 @@ final readonly class RuleDefinition
         return self::withTraversal($definition);
     }
 
+    /**
+     * @param array<string, mixed> $definition
+     */
+    public static function fromGlobalArray(array $definition): self
+    {
+        if (array_key_exists('children', $definition) || array_key_exists('embedded', $definition) || array_key_exists('on_scalar', $definition)) {
+            throw new InvalidProfileDefinition('global rules may not contain children, embedded, or on_scalar');
+        }
+        if (array_key_exists('each', $definition) && $definition['each'] !== true) {
+            throw new InvalidProfileDefinition('global each must be true when provided');
+        }
+
+        return self::fromArray($definition);
+    }
+
     public function field(): string
     {
         return $this->field;

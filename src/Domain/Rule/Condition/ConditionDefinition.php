@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Domain\Rule\Condition;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\KeyNormalizer;
 use function Safe\preg_match;
 
+// @phpstan-ignore complexity.classLike (condition parsing and matching are explicit)
 final readonly class ConditionDefinition
 {
     /**
@@ -72,15 +74,37 @@ final readonly class ConditionDefinition
     /**
      * @param array<mixed, mixed> $context
      */
-    public function matches(array $context): bool
+    // @phpstan-ignore complexity.functionLike (normalised condition lookup is intentionally explicit)
+    public function matches(array $context, bool $normalizeKeys = false): bool
     {
         $value = $context;
         foreach ($this->path as $segment) {
-            if (!is_array($value) || (array_is_list($value) && $value !== []) || !array_key_exists($segment, $value)) {
+            if (!is_array($value) || (array_is_list($value) && $value !== [])) {
                 return false;
             }
 
-            $value = $value[$segment];
+            if (array_key_exists($segment, $value)) {
+                $value = $value[$segment];
+
+                continue;
+            }
+            if (!$normalizeKeys) {
+                return false;
+            }
+
+            $normalized = KeyNormalizer::normalize($segment);
+            $found = false;
+            foreach ($value as $key => $candidate) {
+                if (KeyNormalizer::normalize((string) $key) === $normalized) {
+                    $value = $candidate;
+                    $found = true;
+
+                    break;
+                }
+            }
+            if (!$found) {
+                return false;
+            }
         }
 
         if (!self::isScalarValue($value)) {
