@@ -15,29 +15,38 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraver
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMode;
 
 final readonly class ArrayTraversal
 {
     private EmbeddedPayloadTraversal $embedded;
+
     private RuleTreeTraversal $rules;
+
     private RedactTraversalPolicy $redactor;
+
     private PreserveTraversalPolicy $preserver;
 
     public function __construct(
         private ProfileRegistry $profiles,
         ReplacementStrategyRegistry $strategies,
         PayloadCodecRegistry $codecs,
+        ?TransformationRegistry $transformations = null,
         private AnonymizationLimits $limits = new AnonymizationLimits(),
     ) {
+        $transformations ??= new TransformationRegistry(CoreTransformationFactory::defaults());
         $this->embedded = new EmbeddedPayloadTraversal($codecs, $this);
         $this->rules = new RuleTreeTraversal($this->embedded);
-        $this->redactor = new RedactTraversalPolicy($strategies);
-        $this->preserver = new PreserveTraversalPolicy($strategies);
+        $this->redactor = new RedactTraversalPolicy($strategies, $transformations);
+        $this->preserver = new PreserveTraversalPolicy($strategies, $transformations);
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function apply(string $profile, array $data, bool $withReport = true, ?ExecutionBudget $budget = null, ?AnonymizationContext $context = null): AnonymizationResult
     {
         $definition = $this->profiles->get($profile);

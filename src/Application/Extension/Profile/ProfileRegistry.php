@@ -13,7 +13,9 @@ final readonly class ProfileRegistry implements ProfileProviderInterface
     /** @var array<string, ProfileDefinition> */
     private array $profiles;
 
-    /** @param iterable<ProfileDefinition> $profiles */
+    /**
+     * @param iterable<ProfileDefinition> $profiles
+     */
     public function __construct(iterable $profiles)
     {
         $registered = [];
@@ -34,11 +36,12 @@ final readonly class ProfileRegistry implements ProfileProviderInterface
         return $this->profiles[$name] ?? null;
     }
 
-    /** @return iterable<ProfileDefinition> */
+    /**
+     * @return iterable<ProfileDefinition>
+     */
     #[Override]
     public function profiles(): iterable
     {
         yield from $this->profiles;
     }
-
 }

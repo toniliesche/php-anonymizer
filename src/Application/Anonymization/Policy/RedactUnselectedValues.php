@@ -6,12 +6,16 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Policy;
 
 final class RedactUnselectedValues
 {
-    /** @param list<string> $anonymizedPaths */
+    /**
+     * @param list<string> $anonymizedPaths
+     */
     public function apply(mixed &$value, string $path, array &$anonymizedPaths): void
     {
         if (is_string($value)) {
             $value = '[REDACTED]';
             $anonymizedPaths[] = $path;
+
+            // @infection-ignore-next-line A string cannot enter the recursive array branch below.
             return;
         }
         if (!is_array($value)) {

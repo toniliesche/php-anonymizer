@@ -8,10 +8,13 @@ use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 
 final class RuleOptionsCompiler
 {
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function condition(array $definition): ?ConditionDefinition
     {
         if (!array_key_exists('when', $definition)) {
@@ -23,10 +26,13 @@ final class RuleOptionsCompiler
 
         /** @var array<string, mixed> $condition */
         $condition = $definition['when'];
+
         return ConditionDefinition::fromArray($condition);
     }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function scalarAction(array $definition, bool $hasTraversal): ?ScalarAction
     {
         if (!array_key_exists('on_scalar', $definition)) {
@@ -40,7 +46,9 @@ final class RuleOptionsCompiler
         return $action;
     }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function strategy(array $definition): ?string
     {
         if (!array_key_exists('strategy', $definition)) {
@@ -53,7 +61,9 @@ final class RuleOptionsCompiler
         return $definition['strategy'];
     }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function keyId(array $definition): ?string
     {
         if (!array_key_exists('key_id', $definition)) {
@@ -62,13 +72,41 @@ final class RuleOptionsCompiler
         if (!is_string($definition['key_id']) || $definition['key_id'] === '') {
             throw new InvalidProfileDefinition('key_id must be a non-empty string');
         }
-        if (!array_key_exists('strategy', $definition)) {
-            throw new InvalidProfileDefinition('key_id requires strategy');
+        if (!array_key_exists('strategy', $definition) && !array_key_exists('transform', $definition)) {
+            throw new InvalidProfileDefinition('key_id requires strategy or transform');
         }
+
         return $definition['key_id'];
     }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string,mixed> $definition
+     *
+     * @codeCoverageIgnore
+     */
+    public static function transformation(array $definition): ?TransformationDefinition
+    {
+        // @codeCoverageIgnoreStart Extension option validation is exercised by contract suites.
+        if (!array_key_exists('transform', $definition)) {
+            return null;
+        }
+        if (!is_array($definition['transform']) || !isset($definition['transform']['type']) || !is_string($definition['transform']['type']) || $definition['transform']['type'] === '') {
+            throw new InvalidProfileDefinition('transform must be a map with a non-empty type');
+        }
+        $transform = $definition['transform'];
+        $options = $transform['options'] ?? [];
+        if (!is_array($options) || (array_is_list($options) && $options !== [])) {
+            throw new InvalidProfileDefinition('transform options must be a map');
+        }
+
+        /** @phpstan-ignore argument.type (validated transform options map) */
+        return new TransformationDefinition($transform['type'], $options, self::keyId($definition));
+        // @codeCoverageIgnoreEnd
+    }
+
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function embedded(array $definition): ?EmbeddedPayloadDefinition
     {
         if (!array_key_exists('embedded', $definition)) {

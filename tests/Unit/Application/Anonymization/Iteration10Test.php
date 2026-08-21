@@ -29,6 +29,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -36,6 +37,12 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileRef
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
@@ -58,6 +65,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RedactTraversalPolicy::class)]
 #[CoversClass(RuleOptionsCompiler::class)]
 #[CoversClass(ProfileReferenceValidator::class)]
+#[CoversClass(CoreTransformationFactory::class)]
+#[CoversClass(DateGeneralizeTransformation::class)]
+#[CoversClass(NullifyTransformation::class)]
+#[CoversClass(NumericBucketTransformation::class)]
+#[CoversClass(PartialMaskTransformation::class)]
+#[CoversClass(TransformationRegistry::class)]
 #[UsesClass(PayloadAnonymizationResult::class)]
 #[UsesClass(InvalidProfileDefinition::class)]
 #[UsesClass(JsonPointer::class)]
@@ -85,25 +98,24 @@ final class Iteration10Test extends TestCase
     {
         $anonymizer = $this->engine();
 
-        self::assertSame(
-            $anonymizer->anonymizeWithReport('customer', ['email' => 'secret'])->data(),
-            $anonymizer->anonymize('customer', ['email' => 'secret']),
-        );
+        self::assertSame($anonymizer->anonymizeWithReport('customer', ['email' => 'secret'])->data(), $anonymizer->anonymize('customer', ['email' => 'secret']));
     }
 
     public function testContextIsPassedToAContextualStrategy(): void
     {
-        $strategy = new class implements ContextualReplacementStrategyInterface {
+        $strategy = new class () implements ContextualReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'contextual';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return $value;
             }
+
             #[Override]
             public function replaceWithContext(string $value, ReplacementContext $context): string
             {
@@ -118,17 +130,19 @@ final class Iteration10Test extends TestCase
 
     public function testContextualStrategyRequiresContext(): void
     {
-        $strategy = new class implements ContextualReplacementStrategyInterface {
+        $strategy = new class () implements ContextualReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'contextual';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return $value;
             }
+
             #[Override]
             public function replaceWithContext(string $value, ReplacementContext $context): string
             {
@@ -142,17 +156,19 @@ final class Iteration10Test extends TestCase
 
     public function testContextualReportPayloadBatchAndAuditOperations(): void
     {
-        $strategy = new class implements ContextualReplacementStrategyInterface {
+        $strategy = new class () implements ContextualReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'contextual';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return 'safe';
             }
+
             #[Override]
             public function replaceWithContext(string $value, ReplacementContext $context): string
             {
@@ -166,7 +182,8 @@ final class Iteration10Test extends TestCase
         self::assertSame(['email' => 'safe-primary'], $anonymizer->anonymizeWithReportAndContext('customer', ['email' => 'secret'], $context)->data());
         self::assertSame('{"email":"safe-primary"}', $anonymizer->anonymizePayloadWithContext('customer', 'json', '{"email":"secret"}', $context));
         self::assertCount(1, iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['email' => 'secret']], $context), false));
-        self::assertSame(['contextual'], array_map(static fn(AuditEntry $entry): string => (string) $entry->handler(), $anonymizer->anonymizeWithAuditAndContext('customer', ['email' => 'secret'], $context)->entries()));
+        self::assertSame(['contextual'], array_map(static fn (AuditEntry $entry): string => (string) $entry->handler(), $anonymizer->anonymizeWithAuditAndContext('customer', ['email' => 'secret'], $context)->entries()));
+
         try {
             iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['secret']], $context), false);
             self::fail('Expected invalid batch record.');
@@ -177,17 +194,19 @@ final class Iteration10Test extends TestCase
 
     public function testContextualStrategyWorksInPreserveMode(): void
     {
-        $strategy = new class implements ContextualReplacementStrategyInterface {
+        $strategy = new class () implements ContextualReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'contextual';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return $value;
             }
+
             #[Override]
             public function replaceWithContext(string $value, ReplacementContext $context): string
             {
@@ -213,6 +232,17 @@ final class Iteration10Test extends TestCase
         new AnonymizationContext([1 => 'invalid']);
     }
 
+    public function testContextRejectsStringKeysWithNonStringValues(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new AnonymizationContext(['tenant' => 42]);
+    }
+
+    public function testContextAttributesAreNormalizedInStableOrder(): void
+    {
+        self::assertSame(['alpha' => 'one', 'zeta' => 'two'], new AnonymizationContext(['zeta' => 'two', 'alpha' => 'one'])->attributes());
+    }
+
     public function testKeyIdMustBeNonEmptyString(): void
     {
         $this->expectException(InvalidProfileDefinition::class);
@@ -223,22 +253,25 @@ final class Iteration10Test extends TestCase
     {
         $profile = ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'redact', 'key_id' => 'primary']]]);
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageIsOrContains('non-contextual strategy "redact"');
         new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
     }
 
     public function testContextualStrategyRequiresKeyId(): void
     {
-        $strategy = new class implements ContextualReplacementStrategyInterface {
+        $strategy = new class () implements ContextualReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'contextual';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return $value;
             }
+
             #[Override]
             public function replaceWithContext(string $value, ReplacementContext $context): string
             {
@@ -255,6 +288,7 @@ final class Iteration10Test extends TestCase
         $anonymizer = $this->engine();
         $records = (static function (): iterable {
             yield ['email' => 'one'];
+
             yield ['email' => 'two'];
         })();
 
@@ -270,6 +304,22 @@ final class Iteration10Test extends TestCase
         iterator_to_array($this->engine()->anonymizeRecords('customer', [['secret']]), false);
     }
 
+    public function testBatchRejectsInvalidRecordWithItsStringKeyInTheMessage(): void
+    {
+        $records = $this->engine()->anonymizeRecords('customer', ['customer-record' => 'not a map']);
+
+        $this->expectExceptionMessageIsOrContains('Batch record customer-record must be an associative array.');
+        iterator_to_array($records);
+    }
+
+    public function testBatchContextVariantRejectsInvalidRecordWithItsStringKeyInTheMessage(): void
+    {
+        $records = $this->engine()->anonymizeRecordsWithContext('customer', ['customer-record' => 'not a map'], new AnonymizationContext());
+
+        $this->expectExceptionMessageIsOrContains('Batch record customer-record must be an associative array.');
+        iterator_to_array($records);
+    }
+
     public function testLimitsIncludeCurrentPointer(): void
     {
         $anonymizer = new ArrayAnonymizer(
@@ -282,6 +332,51 @@ final class Iteration10Test extends TestCase
         $this->expectException(ExecutionLimitExceeded::class);
         $this->expectExceptionMessageMatches('/email/');
         $anonymizer->anonymize('customer', ['email' => 'secret']);
+    }
+
+    public function testTraversalCountsNestedVisitsAndCollectionsAgainstLimits(): void
+    {
+        $profile = ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'items', 'each' => [['field' => 'email']]]],
+        ]);
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxCollectionEntries: 1),
+        );
+
+        $this->expectException(ExecutionLimitExceeded::class);
+        $anonymizer->anonymize('nested', ['items' => [['email' => 'one'], ['email' => 'two']]]);
+    }
+
+    public function testTraversalCountsNestedDepthAgainstLimits(): void
+    {
+        $profile = ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => [['field' => 'email']]]],
+        ]);
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxDepth: 1),
+        );
+
+        $this->expectException(ExecutionLimitExceeded::class);
+        $anonymizer->anonymize('nested', ['customer' => ['email' => 'secret']]);
+    }
+
+    public function testTraversalReusesAnExecutionBudgetSuppliedByTheCaller(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $traversal = new ArrayTraversal(
+            new ProfileRegistry([$profile]),
+            new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]),
+            new PayloadCodecRegistry([new JsonPayloadCodec()]),
+        );
+        $budget = new ExecutionBudget(new AnonymizationLimits(maxVisitedNodes: 3));
+
+        $traversal->apply('customer', ['email' => 'one'], budget: $budget);
+        $this->expectException(ExecutionLimitExceeded::class);
+        $traversal->apply('customer', ['email' => 'two'], budget: $budget);
     }
 
     public function testBudgetAcceptsValuesWithinAllLimits(): void
@@ -300,11 +395,13 @@ final class Iteration10Test extends TestCase
     {
         $path = JsonPointer::root()->append('email');
         $budget = new ExecutionBudget(new AnonymizationLimits(maxInputBytes: 1, maxCollectionEntries: 1));
+
         try {
             $budget->collection('customer', $path, 2);
             self::fail('Expected collection limit.');
         } catch (ExecutionLimitExceeded) {
         }
+
         try {
             $budget->inputBytes('customer', (string) $path, 2);
             self::fail('Expected input limit.');
@@ -319,6 +416,7 @@ final class Iteration10Test extends TestCase
         $path = JsonPointer::root()->append('payload');
         $budget = new ExecutionBudget(new AnonymizationLimits(maxInputBytes: 1, maxEmbeddedPayloadDepth: 1));
         $budget->enterEmbedded('customer', $path);
+
         try {
             $budget->inputBytes('customer', (string) $path, 2);
             self::fail('Expected embedded input limit.');
@@ -365,6 +463,20 @@ final class Iteration10Test extends TestCase
         self::assertStringNotContainsString('secret', serialize($result->entries()));
     }
 
+    public function testAuditKeepsDistinctPathsAndSortsEntries(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'zeta'], ['field' => 'alpha']],
+        ]);
+
+        $result = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))
+            ->anonymizeWithAudit('customer', ['zeta' => 'one', 'alpha' => 'two']);
+
+        self::assertSame(['/alpha', '/zeta'], array_map(static fn (AuditEntry $entry): string => $entry->path(), $result->entries()));
+        self::assertSame([1, 1], array_map(static fn (AuditEntry $entry): int => $entry->count(), $result->entries()));
+    }
+
     public function testLimitsRejectNonPositiveValues(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -384,6 +496,37 @@ final class Iteration10Test extends TestCase
 
         $this->expectException(ExecutionLimitExceeded::class);
         $anonymizer->anonymizePayload('customer', 'json', '{"email":"secret"}');
+    }
+
+    public function testPayloadInputLimitUsesUtf8CharacterLength(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $codec = new class () implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'unicode';
+            }
+
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return [];
+            }
+
+            #[Override]
+            public function encode(array $data): string
+            {
+                return '';
+            }
+        };
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            codecs: [$codec],
+            limits: new AnonymizationLimits(maxInputBytes: 1),
+        );
+
+        self::assertSame('', $anonymizer->anonymizePayload('customer', 'unicode', '€'));
     }
 
     public function testPreserveScalarRedactionIsAuditedWithRedactHandler(): void

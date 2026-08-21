@@ -11,9 +11,12 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 final class ExecutionBudget
 {
     private int $visitedNodes = 0;
+
     private int $embeddedDepth = 0;
 
-    public function __construct(private readonly AnonymizationLimits $limits) {}
+    public function __construct(private readonly AnonymizationLimits $limits)
+    {
+    }
 
     public function visit(string $profile, JsonPointer $path, int $depth): void
     {

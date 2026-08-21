@@ -17,7 +17,9 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
 final readonly class RuleTreeTraversal
 {
-    public function __construct(private EmbeddedPayloadTraversal $embedded) {}
+    public function __construct(private EmbeddedPayloadTraversal $embedded)
+    {
+    }
 
     /**
      * @param array<mixed, mixed> $data
@@ -51,6 +53,7 @@ final readonly class RuleTreeTraversal
             $path = $parent->append((string) $field);
             if (!$rule instanceof RuleDefinition || !$matchesByField[$rule->field()]) {
                 $policy->unselected($value, $path, $report, $context);
+
                 continue;
             }
             $budget->visit($profile, $path, $depth + 1);
@@ -63,33 +66,41 @@ final readonly class RuleTreeTraversal
     {
         if ($rule->embedded() instanceof EmbeddedPayloadDefinition) {
             $this->embedded->apply($profile, $value, (string) $path, $rule->embedded()->codec(), $rule->embedded()->profile(), $report, $budget, $context);
+
             return;
         }
         if ($rule->scalarAction() instanceof ScalarAction && !is_array($value)) {
             $policy->scalar($profile, $value, $rule->scalarAction(), $path, $report, $context);
+
             return;
         }
         if ($rule->hasChildren()) {
             $this->children($profile, $value, $rule->children(), $path, $policy, $report, $budget, $depth, $context);
+
             return;
         }
         if ($rule->eachStrings()) {
             $this->strings($profile, $value, $path, $policy, $report, $budget, $context);
+
             return;
         }
         if ($rule->eachRules() !== null) {
             $this->each($profile, $value, $rule->eachRules(), $path, $policy, $report, $budget, $depth, $context);
+
             return;
         }
         $policy->selected($profile, $value, $rule, $path, $report, $context);
     }
 
-    /** @param list<RuleDefinition> $rules */
+    /**
+     * @param list<RuleDefinition> $rules
+     */
     private function children(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth, ?AnonymizationContext $context): void
     {
         if (!$this->isMap($value)) {
             throw UnsupportedValue::at($profile, (string) $path, $value);
         }
+
         /** @var array<mixed, mixed> $value */
         $this->map($profile, $value, $rules, $path, $policy, $report, $budget, $depth + 1, $context);
     }
@@ -103,7 +114,9 @@ final readonly class RuleTreeTraversal
         $policy->strings($profile, $value, $path, $report, $context);
     }
 
-    /** @param list<RuleDefinition> $rules */
+    /**
+     * @param list<RuleDefinition> $rules
+     */
     private function each(string $profile, mixed &$value, array $rules, JsonPointer $path, RuleTraversalPolicyInterface $policy, AnonymizationReport $report, ExecutionBudget $budget, int $depth, ?AnonymizationContext $context): void
     {
         if (!is_array($value) || !array_is_list($value)) {
@@ -114,16 +127,20 @@ final readonly class RuleTreeTraversal
             if (!$this->isMap($item)) {
                 throw UnsupportedValue::at($profile, (string) $path->append($index), $item);
             }
+
             /** @var array<mixed, mixed> $item */
             $this->map($profile, $item, $rules, $path->append($index), $policy, $report, $budget, $depth + 1, $context);
         }
         unset($item);
     }
 
-    /** @param array<mixed, mixed> $context */
+    /**
+     * @param array<mixed, mixed> $context
+     */
     private function matches(RuleDefinition $rule, array $context): bool
     {
         $condition = $rule->condition();
+
         return !$condition instanceof ConditionDefinition || $condition->matches($context);
     }
 

@@ -19,10 +19,9 @@ final readonly class EmbeddedPayloadTraversal
     public function __construct(
         private PayloadCodecRegistry $codecs,
         private ArrayTraversal $nested,
-    ) {}
+    ) {
+    }
 
-    /**
-     */
     public function apply(string $profile, mixed &$value, string $path, string $codecId, string $nestedProfile, AnonymizationReport $report, ?ExecutionBudget $budget = null, ?AnonymizationContext $context = null): void
     {
         if (!is_string($value)) {
@@ -37,18 +36,22 @@ final readonly class EmbeddedPayloadTraversal
         $budget ??= new ExecutionBudget(new AnonymizationLimits());
         $budget->enterEmbedded($profile, $pointer);
         $budget->inputBytes($profile, $path, mb_strlen($value, 'UTF-8'));
+
         try {
             $decoded = $codec->decode($value);
         } catch (Throwable $exception) {
             $budget->leaveEmbedded();
+
             throw PayloadCodecFailure::embedded($profile, $codecId, 'decode', $path, $exception);
         }
+
         /** @var array<string, mixed> $decoded */
         try {
             $result = $this->nested->apply($nestedProfile, $decoded, $report->isCollecting(), $budget, $context);
         } finally {
             $budget->leaveEmbedded();
         }
+
         try {
             $value = $codec->encode($result->data());
         } catch (Throwable $exception) {

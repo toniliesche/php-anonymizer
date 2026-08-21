@@ -9,7 +9,15 @@ use Stringable;
 
 final readonly class JsonPointer implements Stringable
 {
-    private function __construct(private string $value) {}
+    private function __construct(private string $value)
+    {
+    }
+
+    #[Override]
+    public function __toString(): string
+    {
+        return $this->value;
+    }
 
     public static function root(): self
     {
@@ -19,6 +27,7 @@ final readonly class JsonPointer implements Stringable
     public static function fromString(string $path): self
     {
         $pointer = self::root();
+        // @infection-ignore-next-line Empty leading pointer segments are skipped below.
         foreach (explode('/', ltrim($path, '/')) as $segment) {
             if ($segment !== '') {
                 $pointer = $pointer->append(str_replace(['~1', '~0'], ['/', '~'], $segment));
@@ -38,11 +47,5 @@ final readonly class JsonPointer implements Stringable
     public function prefix(self $nested): self
     {
         return new self($this->value . $nested);
-    }
-
-    #[Override]
-    public function __toString(): string
-    {
-        return $this->value;
     }
 }

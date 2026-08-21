@@ -27,6 +27,7 @@ final class AnonymizationLimitsTest extends TestCase
         foreach (range(0, 4) as $index) {
             $values = [1, 1, 1, 1, 1];
             $values[$index] = 0;
+
             try {
                 new AnonymizationLimits(...$values);
                 self::fail('Expected zero limit to be rejected.');

@@ -10,23 +10,44 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\ContextualReplacementStra
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ReplacementContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\ValueTransformationContext;
 use PhpAnonymizer\Anonymizer\Application\Exception\ContextRequired;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ContextualValueTransformationInterface;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 
 final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterface
 {
-    public function __construct(private ReplacementStrategyRegistry $strategies) {}
+    private TransformationRegistry $transformations;
+
+    public function __construct(private ReplacementStrategyRegistry $strategies, ?TransformationRegistry $transformations = null)
+    {
+        $this->transformations = $transformations ?? new TransformationRegistry(CoreTransformationFactory::defaults());
+    }
 
     #[Override]
-    public function unselected(mixed &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void {}
+    public function unselected(mixed &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
+    {
+    }
 
+    /**
+     * @codeCoverageIgnore
+     */
     #[Override]
     public function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
+        if ($rule->transformation() instanceof TransformationDefinition) {
+            $this->transform($profile, $value, $rule, $path, $report, $context);
+
+            return;
+        }
         $this->replace($profile, $value, $path, $rule->strategy() ?? 'redact', $rule->keyId(), $report, $context);
     }
 
@@ -51,6 +72,29 @@ final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterfa
             $this->replace($profile, $item, $path->append($index), 'redact', null, $report, $context);
         }
         unset($item);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function transform(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context): void
+    {
+        $definition = $rule->transformation();
+        if (!$definition instanceof TransformationDefinition) {
+            throw new UnsupportedValue('Missing value transformation definition.');
+        } $transformation = $this->transformations->get($definition->type());
+        if (!$transformation instanceof ValueTransformationInterface) {
+            throw new UnsupportedValue(sprintf('Value transformation "%s" is not available.', $definition->type()));
+        }
+        $transformation->validateOptions($definition->options());
+        if ($transformation instanceof ContextualValueTransformationInterface) {
+            if (!$context instanceof AnonymizationContext) {
+                throw ContextRequired::forStrategy($profile, (string) $path, $definition->type());
+            } $value = $transformation->transformWithContext($value, $definition->options(), new ValueTransformationContext($profile, $path, $definition->keyId(), $context));
+        } else {
+            $value = $transformation->transform($value, $definition->options());
+        }
+        $report->anonymized($path, 'transform', $definition->type());
     }
 
     private function replace(string $profile, mixed &$value, JsonPointer $path, string $strategyId, ?string $keyId, AnonymizationReport $report, ?AnonymizationContext $context): void

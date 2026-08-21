@@ -6,12 +6,18 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Result;
 
 interface AnonymizationResultInterface
 {
-    /** @return array<string, mixed>|object */
+    /**
+     * @return array<string, mixed>|object
+     */
     public function data(): array|object;
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function anonymizedPaths(): array;
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function missingPaths(): array;
 }

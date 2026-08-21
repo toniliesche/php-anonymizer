@@ -14,7 +14,9 @@ final class InMemoryProfileProvider implements ProfileProviderInterface
     /** @var array<string, ProfileDefinition> */
     private array $profiles = [];
 
-    /** @param list<ProfileDefinition> $profiles */
+    /**
+     * @param list<ProfileDefinition> $profiles
+     */
     public function __construct(array $profiles)
     {
         foreach ($profiles as $profile) {

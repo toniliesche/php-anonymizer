@@ -18,6 +18,8 @@ interface RuleTraversalPolicyInterface
 
     public function scalar(string $profile, mixed &$value, ScalarAction $action, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void;
 
-    /** @param array<mixed, mixed> $value */
+    /**
+     * @param array<mixed, mixed> $value
+     */
     public function strings(string $profile, array &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void;
 }

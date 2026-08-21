@@ -9,7 +9,8 @@ final readonly class PayloadAnonymizationResult
     public function __construct(
         private string $payload,
         private AnonymizationResult $anonymizationResult,
-    ) {}
+    ) {
+    }
 
     public function payload(): string
     {

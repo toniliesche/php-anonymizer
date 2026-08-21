@@ -19,30 +19,39 @@ final readonly class AnonymizationResult implements AnonymizationResultInterface
         private array $missingPaths,
         /** @var list<array{path: string, action: string, handler: ?string}> */
         private array $events = [],
-    ) {}
+    ) {
+    }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     #[Override]
     public function data(): array
     {
         return $this->data;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     #[Override]
     public function anonymizedPaths(): array
     {
         return $this->anonymizedPaths;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     #[Override]
     public function missingPaths(): array
     {
         return $this->missingPaths;
     }
 
-    /** @return list<array{path: string, action: string, handler: ?string}> */
+    /**
+     * @return list<array{path: string, action: string, handler: ?string}>
+     */
     public function events(): array
     {
         return $this->events;

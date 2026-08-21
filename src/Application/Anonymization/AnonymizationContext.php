@@ -11,7 +11,9 @@ final readonly class AnonymizationContext
     /** @var array<string, string> */
     private array $attributes;
 
-    /** @param array<mixed, mixed> $attributes */
+    /**
+     * @param array<mixed, mixed> $attributes
+     */
     public function __construct(array $attributes = [])
     {
         /** @var array<string, string> $normalized */
@@ -26,7 +28,9 @@ final readonly class AnonymizationContext
         $this->attributes = $normalized;
     }
 
-    /** @return array<string, string> */
+    /**
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
         return $this->attributes;

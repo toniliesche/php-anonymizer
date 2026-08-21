@@ -9,7 +9,8 @@ final readonly class EmbeddedPayloadDefinition
     public function __construct(
         private string $codec,
         private string $profile,
-    ) {}
+    ) {
+    }
 
     public function codec(): string
     {

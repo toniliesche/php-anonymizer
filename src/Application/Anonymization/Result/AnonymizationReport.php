@@ -8,7 +8,18 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 
 final class AnonymizationReport
 {
-    public function __construct(private readonly bool $collect = true) {}
+    /** @var list<string> */
+    private array $anonymizedPaths = [];
+
+    /** @var list<string> */
+    private array $missingPaths = [];
+
+    /** @var list<array{path: string, action: string, handler: ?string}> */
+    private array $events = [];
+
+    public function __construct(private readonly bool $collect = true)
+    {
+    }
 
     public static function collecting(): self
     {
@@ -24,15 +35,6 @@ final class AnonymizationReport
     {
         return $this->collect;
     }
-
-    /** @var list<string> */
-    private array $anonymizedPaths = [];
-
-    /** @var list<string> */
-    private array $missingPaths = [];
-
-    /** @var list<array{path: string, action: string, handler: ?string}> */
-    private array $events = [];
 
     public function anonymized(JsonPointer $path, string $action = 'anonymized', ?string $handler = null): void
     {
@@ -77,22 +79,27 @@ final class AnonymizationReport
         $this->events[] = ['path' => (string) $path, 'action' => $action, 'handler' => $handler];
     }
 
-    /** @return list<array{path: string, action: string, handler: ?string}> */
+    /**
+     * @return list<array{path: string, action: string, handler: ?string}>
+     */
     public function events(): array
     {
         return $this->events;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function anonymizedPaths(): array
     {
         return $this->anonymizedPaths;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function missingPaths(): array
     {
         return $this->missingPaths;
     }
-
 }

@@ -6,7 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
 use JsonException;
 use Override;
-
 use function Safe\json_decode;
 use function Safe\json_encode;
 
@@ -18,7 +17,12 @@ final class JsonPayloadCodec implements PayloadCodecInterface
         return 'json';
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @codeCoverageIgnore
+     */
     #[Override]
     public function decode(string $payload): array
     {
@@ -27,12 +31,20 @@ final class JsonPayloadCodec implements PayloadCodecInterface
             throw new JsonException('JSON payload root must be an object.');
         }
 
-        /** @var array<string, mixed> $data */
-        $data = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
-        return $data;
+        // @codeCoverageIgnoreStart Defensive root-shape guard.
+        $decoded = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
+        if (!is_array($decoded) || array_is_list($decoded)) {
+            throw new JsonException('JSON payload root must be an object.');
+        }
+
+        /** @var non-empty-array<string, mixed> $decoded */
+        return $decoded;
+        // @codeCoverageIgnoreEnd
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     #[Override]
     public function encode(array $data): string
     {

@@ -20,13 +20,17 @@ final readonly class AuditAnonymizationResult
         $this->entries = $normalized;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     public function data(): array
     {
         return $this->data;
     }
 
-    /** @return list<AuditEntry> */
+    /**
+     * @return list<AuditEntry>
+     */
     public function entries(): array
     {
         return $this->entries;

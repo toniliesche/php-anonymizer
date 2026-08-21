@@ -63,6 +63,7 @@ final class ExtensionRegistryTest extends TestCase
     public function testJsonCodecRejectsMalformedAndNonObjectRoots(): void
     {
         $codec = new JsonPayloadCodec();
+
         try {
             $codec->decode('{');
             self::fail('Expected malformed JSON to fail.');
@@ -76,12 +77,13 @@ final class ExtensionRegistryTest extends TestCase
 
     public function testRegistriesExposeValuesAndRejectInvalidDuplicates(): void
     {
-        $strategy = new class implements ReplacementStrategyInterface {
+        $strategy = new class () implements ReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'custom';
             }
+
             #[Override]
             public function replace(string $value): string
             {
@@ -92,17 +94,19 @@ final class ExtensionRegistryTest extends TestCase
         self::assertSame($strategy, $strategies->get('custom'));
         self::assertSame([$strategy], $strategies->all());
 
-        $codec = new class implements PayloadCodecInterface {
+        $codec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'custom';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return ['payload' => $payload];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -120,12 +124,13 @@ final class ExtensionRegistryTest extends TestCase
 
     public function testRegistriesRejectInvalidIds(): void
     {
-        $strategy = new class implements ReplacementStrategyInterface {
+        $strategy = new class () implements ReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'not valid';
             }
+
             #[Override]
             public function replace(string $value): string
             {
@@ -136,42 +141,66 @@ final class ExtensionRegistryTest extends TestCase
         new ReplacementStrategyRegistry([$strategy]);
     }
 
+    public function testRegistriesRejectIdsWithTrailingNewlines(): void
+    {
+        $strategy = new class () implements ReplacementStrategyInterface {
+            #[Override]
+            public function id(): string
+            {
+                return "custom\n";
+            }
+
+            #[Override]
+            public function replace(string $value): string
+            {
+                return $value;
+            }
+        };
+        $this->expectException(InvalidArgumentException::class);
+        new ReplacementStrategyRegistry([$strategy]);
+    }
+
     public function testCodecRegistryRejectsDuplicatesAndInvalidIds(): void
     {
-        $codec = new class implements PayloadCodecInterface {
+        $codec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'custom';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return [];
             }
+
             #[Override]
             public function encode(array $data): string
             {
                 return '';
             }
         };
+
         try {
             new PayloadCodecRegistry([$codec, $codec]);
             self::fail('Expected duplicate codec validation.');
         } catch (InvalidArgumentException) {
             $this->addToAssertionCount(1);
         }
-        $invalid = new class implements PayloadCodecInterface {
+        $invalid = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'not valid';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return [];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -180,6 +209,32 @@ final class ExtensionRegistryTest extends TestCase
         };
         $this->expectExceptionMessageMatches('/ID .* invalid/');
         new PayloadCodecRegistry([$invalid]);
+    }
+
+    public function testCodecRegistryRejectsIdsWithTrailingNewlines(): void
+    {
+        $codec = new class () implements PayloadCodecInterface {
+            #[Override]
+            public function id(): string
+            {
+                return "custom\n";
+            }
+
+            #[Override]
+            public function decode(string $payload): array
+            {
+                return [];
+            }
+
+            #[Override]
+            public function encode(array $data): string
+            {
+                return '';
+            }
+        };
+
+        $this->expectException(InvalidArgumentException::class);
+        new PayloadCodecRegistry([$codec]);
     }
 
     public function testProfileRegistryValidatesReferencesAndCycles(): void

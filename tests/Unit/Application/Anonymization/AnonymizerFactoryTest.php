@@ -26,6 +26,12 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileRef
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
@@ -58,6 +64,12 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(ProfileCollection::class)]
+#[UsesClass(CoreTransformationFactory::class)]
+#[UsesClass(DateGeneralizeTransformation::class)]
+#[UsesClass(NullifyTransformation::class)]
+#[UsesClass(NumericBucketTransformation::class)]
+#[UsesClass(PartialMaskTransformation::class)]
+#[UsesClass(TransformationRegistry::class)]
 final class AnonymizerFactoryTest extends TestCase
 {
     public function testItCreatesAnAnonymizerFromNamedArrays(): void

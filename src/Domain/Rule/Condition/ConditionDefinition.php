@@ -5,22 +5,24 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Domain\Rule\Condition;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
-
 use function Safe\preg_match;
 
 final readonly class ConditionDefinition
 {
     /**
      * @param list<string> $path
-     * @param list<bool|float|int|string|null> $expected
+     * @param list<null|bool|float|int|string> $expected
      */
     private function __construct(
         private array $path,
         private string $operator,
         private array $expected,
-    ) {}
+    ) {
+    }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function fromArray(array $definition): self
     {
         if (!array_key_exists('path', $definition) || !is_string($definition['path'])) {
@@ -41,9 +43,10 @@ final readonly class ConditionDefinition
             }
 
             /** @var list<string> $path */
-            /** @var bool|float|int|string|null $value */
-            /** @var list<bool|float|int|string|null> $expected */
+            /** @var null|bool|float|int|string $value */
+            /** @var list<null|bool|float|int|string> $expected */
             $expected = [$value];
+
             return new self($path, $operator, $expected);
         }
 
@@ -51,13 +54,14 @@ final readonly class ConditionDefinition
             throw new InvalidProfileDefinition('condition in value must be a non-empty list');
         }
 
-        /** @var list<bool|float|int|string|null> $expected */
+        /** @var list<null|bool|float|int|string> $expected */
         $expected = [];
         foreach ($value as $item) {
             if (!self::isScalarValue($item)) {
                 throw new InvalidProfileDefinition('condition in values must be scalar or null');
             }
-            /** @var bool|float|int|string|null $item */
+
+            /** @var null|bool|float|int|string $item */
             $expected[] = $item;
         }
 
@@ -65,7 +69,9 @@ final readonly class ConditionDefinition
         return new self($path, $operator, $expected);
     }
 
-    /** @param array<mixed, mixed> $context */
+    /**
+     * @param array<mixed, mixed> $context
+     */
     public function matches(array $context): bool
     {
         $value = $context;
@@ -84,16 +90,21 @@ final readonly class ConditionDefinition
         if ($this->operator === 'equals') {
             return $value === $this->expected[0];
         }
-        return array_any($this->expected, fn(bool|float|int|string|null $expected): bool => $value === $expected);
+
+        return array_any($this->expected, fn (bool|float|int|string|null $expected): bool => $value === $expected);
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function path(): array
     {
         return $this->path;
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     private static function parsePath(string $path): array
     {
         if ($path === '' || str_starts_with($path, '/') || str_ends_with($path, '/')) {

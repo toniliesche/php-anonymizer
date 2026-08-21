@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
 use InvalidArgumentException;
-
 use function Safe\preg_match;
 
 final readonly class PayloadCodecRegistry
@@ -13,7 +12,9 @@ final readonly class PayloadCodecRegistry
     /** @var array<string, PayloadCodecInterface> */
     private array $codecs;
 
-    /** @param iterable<PayloadCodecInterface> $codecs */
+    /**
+     * @param iterable<PayloadCodecInterface> $codecs
+     */
     public function __construct(iterable $codecs)
     {
         $registered = [];
@@ -37,7 +38,9 @@ final readonly class PayloadCodecRegistry
         return $this->codecs[$id] ?? null;
     }
 
-    /** @return list<PayloadCodecInterface> */
+    /**
+     * @return list<PayloadCodecInterface>
+     */
     public function all(): array
     {
         return array_values($this->codecs);

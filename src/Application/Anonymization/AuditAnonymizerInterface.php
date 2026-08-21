@@ -8,6 +8,8 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymization
 
 interface AuditAnonymizerInterface
 {
-    /** @param array<string, mixed> $data */
+    /**
+     * @param array<string, mixed> $data
+     */
     public function anonymizeWithAudit(string $profile, array $data): AuditAnonymizationResult;
 }

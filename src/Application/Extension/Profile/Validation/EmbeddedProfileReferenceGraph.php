@@ -13,7 +13,9 @@ final readonly class EmbeddedProfileReferenceGraph
     /** @var array<string, list<string>> */
     private array $edges;
 
-    /** @param iterable<ProfileDefinition> $profiles */
+    /**
+     * @param iterable<ProfileDefinition> $profiles
+     */
     public function __construct(iterable $profiles)
     {
         /** @var array<string, list<string>> $edges */
@@ -48,6 +50,7 @@ final readonly class EmbeddedProfileReferenceGraph
 
     /**
      * @param list<RuleDefinition> $rules
+     *
      * @return list<string>
      */
     private function embeddedProfiles(array $rules): array
@@ -59,6 +62,7 @@ final readonly class EmbeddedProfileReferenceGraph
             }
             $profiles = [...$profiles, ...$this->embeddedProfiles($rule->children()), ...$this->embeddedProfiles($rule->eachRules() ?? [])];
         }
+
         return $profiles;
     }
 }

@@ -13,7 +13,8 @@ final readonly class AuditEntry
         private string $action,
         private ?string $handler,
         private int $count,
-    ) {}
+    ) {
+    }
 
     public function profile(): string
     {

@@ -40,6 +40,12 @@ final class ProfileDefinitionTest extends TestCase
         ProfileDefinition::fromArray('not valid', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
     }
 
+    public function testRejectsNameWithTrailingNewline(): void
+    {
+        $this->expectException(InvalidProfileDefinition::class);
+        ProfileDefinition::fromArray("customer\n", ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+    }
+
     public function testRejectsUnexpectedTopLevelKeys(): void
     {
         $this->expectExceptionMessageMatches('/keys must be exactly mode and rules/');
@@ -66,6 +72,12 @@ final class ProfileDefinitionTest extends TestCase
     {
         $this->expectException(InvalidProfileDefinition::class);
         ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => ['email' => ['field' => 'email']]]);
+    }
+
+    public function testRejectsMissingRules(): void
+    {
+        $this->expectExceptionMessageMatches('/keys must be exactly mode and rules/');
+        ProfileDefinition::fromArray('customer', ['mode' => 'redact']);
     }
 
     public function testRejectsMalformedRule(): void
@@ -107,15 +119,23 @@ final class ProfileDefinitionTest extends TestCase
             'mode' => 'redact',
             'rules' => [
                 ['field' => 'customer', 'children' => [['field' => 'email'], ['field' => 'name']]],
-                ['field' => 'tags', 'each' => true],
-                ['field' => 'orders', 'each' => [['field' => 'reference']]],
+                ['field' => 'tags', 'each' => true, 'on_scalar' => 'preserve'],
+                ['field' => 'orders', 'each' => [['field' => 'reference']], 'on_scalar' => 'redact'],
             ],
         ]);
 
         self::assertTrue($profile->rules()[0]->hasChildren());
+        self::assertFalse($profile->rules()[0]->eachStrings());
+        self::assertNull($profile->rules()[0]->eachRules());
         self::assertCount(2, $profile->rules()[0]->children());
         self::assertTrue($profile->rules()[1]->eachStrings());
+        self::assertSame('preserve', $profile->rules()[1]->scalarAction()?->value);
+        self::assertNull($profile->rules()[1]->eachRules());
+        self::assertFalse($profile->rules()[1]->hasChildren());
         self::assertNotNull($profile->rules()[2]->eachRules());
+        self::assertSame('redact', $profile->rules()[2]->scalarAction()?->value);
+        self::assertFalse($profile->rules()[2]->eachStrings());
+        self::assertFalse($profile->rules()[2]->hasChildren());
     }
 
     public function testRejectsBothTraversalForms(): void
@@ -267,7 +287,18 @@ final class ProfileDefinitionTest extends TestCase
 
     public function testRejectsInvalidEmbeddedValueTypes(): void
     {
-        $this->expectExceptionMessageMatches('/embedded codec and profile must be non-empty strings/');
-        ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 42, 'profile' => 'nested']]]]);
+        foreach ([
+            ['codec' => 42, 'profile' => 'nested'],
+            ['codec' => 'json', 'profile' => 42],
+            ['codec' => '', 'profile' => 'nested'],
+            ['codec' => 'json', 'profile' => ''],
+        ] as $embedded) {
+            try {
+                ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => $embedded]]]);
+                self::fail('Expected invalid embedded value types to be rejected.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertStringContainsString('embedded codec and profile must be non-empty strings', $exception->getMessage());
+            }
+        }
     }
 }

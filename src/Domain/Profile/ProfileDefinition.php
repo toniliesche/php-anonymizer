@@ -6,19 +6,23 @@ namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
-
 use function Safe\preg_match;
 
 final readonly class ProfileDefinition
 {
-    /** @param list<RuleDefinition> $rules */
+    /**
+     * @param list<RuleDefinition> $rules
+     */
     private function __construct(
         private string $name,
         private array $rules,
         private ProfileMode $mode,
-    ) {}
+    ) {
+    }
 
-    /** @param array<string, mixed> $definition */
+    /**
+     * @param array<string, mixed> $definition
+     */
     public static function fromArray(string $name, array $definition): self
     {
         if (preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $name) !== 1) {
@@ -46,7 +50,6 @@ final readonly class ProfileDefinition
             }
 
             /** @var array<string, mixed> $rule */
-
             try {
                 $ruleDefinition = RuleDefinition::fromArray($rule);
             } catch (InvalidProfileDefinition $exception) {
@@ -69,7 +72,9 @@ final readonly class ProfileDefinition
         return $this->name;
     }
 
-    /** @return list<RuleDefinition> */
+    /**
+     * @return list<RuleDefinition>
+     */
     public function rules(): array
     {
         return $this->rules;

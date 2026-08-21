@@ -33,6 +33,12 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
@@ -68,6 +74,12 @@ use stdClass;
 #[CoversClass(DefaultRedactionStrategy::class)]
 #[CoversClass(StarMaskStrategy::class)]
 #[CoversClass(JsonPayloadCodec::class)]
+#[CoversClass(CoreTransformationFactory::class)]
+#[CoversClass(DateGeneralizeTransformation::class)]
+#[CoversClass(NullifyTransformation::class)]
+#[CoversClass(NumericBucketTransformation::class)]
+#[CoversClass(PartialMaskTransformation::class)]
+#[CoversClass(TransformationRegistry::class)]
 #[UsesClass(ConditionDefinition::class)]
 #[UsesClass(ProfileDefinition::class)]
 #[UsesClass(RuleDefinition::class)]
@@ -499,6 +511,7 @@ final class ArrayAnonymizerTest extends TestCase
     public function testPreserveModeReportsPreciseListErrorPaths(): void
     {
         $strings = ProfileDefinition::fromArray('strings', ['mode' => 'preserve', 'rules' => [['field' => 'tags', 'each' => true]]]);
+
         try {
             new ArrayAnonymizer(new InMemoryProfileProvider([$strings]))->anonymize('strings', ['tags' => [42]]);
             self::fail('Expected a list element error.');
@@ -507,6 +520,7 @@ final class ArrayAnonymizerTest extends TestCase
         }
 
         $maps = ProfileDefinition::fromArray('maps', ['mode' => 'preserve', 'rules' => [['field' => 'orders', 'each' => [['field' => 'id']]]]]);
+
         try {
             new ArrayAnonymizer(new InMemoryProfileProvider([$maps]))->anonymize('maps', ['orders' => [42]]);
             self::fail('Expected a map element error.');
@@ -566,17 +580,19 @@ final class ArrayAnonymizerTest extends TestCase
 
     public function testEmbeddedCodecEncodeFailuresAreContextual(): void
     {
-        $codec = new class implements PayloadCodecInterface {
+        $codec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'failing';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return ['email' => 'secret'];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -587,6 +603,33 @@ final class ArrayAnonymizerTest extends TestCase
         $outer = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'failing', 'profile' => 'nested']]]]);
         $this->expectExceptionMessageMatches('/failed to encode embedded payload at "\/payload"/');
         new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]), [], [$codec])->anonymize('outer', ['payload' => 'encoded']);
+    }
+
+    public function testEmbeddedDepthIsRestoredWhenNestedTraversalFails(): void
+    {
+        $nested = ProfileDefinition::fromArray('nested', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => [['field' => 'email']]]],
+        ]);
+        $outer = ProfileDefinition::fromArray('outer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'nested']]],
+        ]);
+        $profiles = new ProfileRegistry([$nested, $outer]);
+        $strategies = new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]);
+        $codecs = new PayloadCodecRegistry([new JsonPayloadCodec()]);
+        $traversal = new ArrayTraversal($profiles, $strategies, $codecs);
+        $budget = new ExecutionBudget(new AnonymizationLimits(maxEmbeddedPayloadDepth: 1));
+
+        try {
+            $traversal->apply('outer', ['payload' => '{"customer":"invalid"}'], budget: $budget);
+            self::fail('Expected the nested traversal to reject the invalid customer shape.');
+        } catch (UnsupportedValue) {
+            self::addToAssertionCount(1);
+        }
+
+        $result = $traversal->apply('outer', ['payload' => '{"customer":{"email":"secret"}}'], budget: $budget);
+        self::assertSame(['payload' => '{"customer":{"email":"[REDACTED]"}}'], $result->data());
     }
 
     public function testPreserveModeCanUseAnExplicitStrategy(): void
@@ -605,29 +648,32 @@ final class ArrayAnonymizerTest extends TestCase
 
     public function testCustomStrategyAndCodecAreUsed(): void
     {
-        $strategy = new class implements ReplacementStrategyInterface {
+        $strategy = new class () implements ReplacementStrategyInterface {
             #[Override]
             public function id(): string
             {
                 return 'suffix';
             }
+
             #[Override]
             public function replace(string $value): string
             {
                 return $value . '-masked';
             }
         };
-        $codec = new class implements PayloadCodecInterface {
+        $codec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'pipe';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return ['email' => $payload];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -645,6 +691,7 @@ final class ArrayAnonymizerTest extends TestCase
     {
         $profile = ProfileDefinition::fromArray('payload', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+
         try {
             $anonymizer->anonymizePayload('payload', 'json', '{');
             self::fail('Expected a payload codec failure.');
@@ -658,10 +705,18 @@ final class ArrayAnonymizerTest extends TestCase
         new ArrayAnonymizer(new InMemoryProfileProvider([$nested, $outer]))->anonymize('outer', ['payload' => '{']);
     }
 
+    public function testExpectedMapFailureNamesEmbeddedPayloads(): void
+    {
+        $exception = PayloadCodecFailure::expectedMap('outer', 'json', '/payload');
+
+        self::assertStringContainsString('embedded payload at "/payload"', $exception->getMessage());
+    }
+
     public function testTopLevelPayloadRejectsUnknownCodecNonMapAndEncodeFailures(): void
     {
         $profile = ProfileDefinition::fromArray('payload', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+
         try {
             $anonymizer->anonymizePayload('payload', 'missing', '{}');
             self::fail('Expected an unknown codec failure.');
@@ -669,17 +724,19 @@ final class ArrayAnonymizerTest extends TestCase
             $this->addToAssertionCount(1);
         }
 
-        $listCodec = new class implements PayloadCodecInterface {
+        $listCodec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'list';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return [0 => 'not-a-map'];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -687,24 +744,28 @@ final class ArrayAnonymizerTest extends TestCase
             }
         };
         $listAnonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [], [$listCodec]);
+
         try {
             $listAnonymizer->anonymizePayload('payload', 'list', '{}');
             self::fail('Expected a non-map failure.');
-        } catch (PayloadCodecFailure) {
+        } catch (PayloadCodecFailure $exception) {
+            self::assertStringContainsString('non-map payload', $exception->getMessage());
             $this->addToAssertionCount(1);
         }
 
-        $failingCodec = new class implements PayloadCodecInterface {
+        $failingCodec = new class () implements PayloadCodecInterface {
             #[Override]
             public function id(): string
             {
                 return 'failing';
             }
+
             #[Override]
             public function decode(string $payload): array
             {
                 return ['email' => 'secret'];
             }
+
             #[Override]
             public function encode(array $data): string
             {
@@ -732,6 +793,7 @@ final class ArrayAnonymizerTest extends TestCase
         $embedded = new EmbeddedPayloadTraversal($codecs, $traversal);
         $value = '{}';
         $report = new AnonymizationReport();
+
         try {
             $embedded->apply('outer', $value, '/payload', 'missing', 'nested', $report);
             self::fail('Expected missing codec failure.');

@@ -17,9 +17,13 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
 final readonly class PreserveStringSelection
 {
-    public function __construct(private ReplacementStrategyRegistry $strategies) {}
+    public function __construct(private ReplacementStrategyRegistry $strategies)
+    {
+    }
 
-    /** @param list<string> $anonymizedPaths */
+    /**
+     * @param list<string> $anonymizedPaths
+     */
     public function apply(string &$value, RuleDefinition $rule, string $path, string $profile, array &$anonymizedPaths, ?AnonymizationContext $context = null): void
     {
         $strategyId = $rule->strategy();
@@ -30,6 +34,7 @@ final readonly class PreserveStringSelection
             if ($rule->hasChildren() || $rule->eachStrings() || $rule->eachRules() !== null) {
                 throw UnsupportedValue::at($profile, $path, $value);
             }
+
             return;
         }
         $strategy = $this->strategies->get($strategyId);
@@ -47,6 +52,7 @@ final readonly class PreserveStringSelection
         if (!$context instanceof AnonymizationContext || $rule->keyId() === null) {
             throw ContextRequired::forStrategy($profile, $path, $strategy->id());
         }
+
         return $strategy->replaceWithContext($value, new ReplacementContext($profile, JsonPointer::fromString($path), $rule->keyId(), $context));
     }
 }

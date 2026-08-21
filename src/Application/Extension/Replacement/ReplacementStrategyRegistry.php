@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Replacement;
 
 use InvalidArgumentException;
-
 use function Safe\preg_match;
 
 final readonly class ReplacementStrategyRegistry
@@ -13,7 +12,9 @@ final readonly class ReplacementStrategyRegistry
     /** @var array<string, ReplacementStrategyInterface> */
     private array $strategies;
 
-    /** @param iterable<ReplacementStrategyInterface> $strategies */
+    /**
+     * @param iterable<ReplacementStrategyInterface> $strategies
+     */
     public function __construct(iterable $strategies)
     {
         $registered = [];
@@ -35,7 +36,9 @@ final readonly class ReplacementStrategyRegistry
         return $this->strategies[$id] ?? null;
     }
 
-    /** @return list<ReplacementStrategyInterface> */
+    /**
+     * @return list<ReplacementStrategyInterface>
+     */
     public function all(): array
     {
         return array_values($this->strategies);

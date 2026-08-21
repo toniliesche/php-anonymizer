@@ -22,6 +22,7 @@ final class PayloadCodecFailure extends RuntimeException
     public static function expectedMap(string $profile, string $codec, string $path = ''): self
     {
         $location = $path === '' ? 'payload' : sprintf('embedded payload at "%s"', $path);
+
         return new self(sprintf('Codec "%s" returned a non-map %s for profile "%s".', $codec, $location, $profile));
     }
 }

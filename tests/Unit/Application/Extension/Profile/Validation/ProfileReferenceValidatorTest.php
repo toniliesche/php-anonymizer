@@ -74,6 +74,23 @@ final class ProfileReferenceValidatorTest extends TestCase
         }
     }
 
+    public function testChecksAllEmbeddedReferencesAtOneRuleLevel(): void
+    {
+        $first = ProfileDefinition::fromArray('first', ['mode' => 'redact', 'rules' => [
+            ['field' => 'safe', 'embedded' => ['codec' => 'json', 'profile' => 'second']],
+            ['field' => 'cyclic', 'embedded' => ['codec' => 'json', 'profile' => 'third']],
+        ]]);
+        $second = ProfileDefinition::fromArray('second', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $third = ProfileDefinition::fromArray('third', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'first']]]]);
+
+        $this->expectExceptionMessageMatches('/first -> third -> first/');
+        new ProfileReferenceValidator()->validate(
+            new ProfileRegistry([$first, $second, $third]),
+            new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]),
+            new PayloadCodecRegistry([new JsonPayloadCodec()]),
+        );
+    }
+
     public function testRejectsUnknownEmbeddedProfile(): void
     {
         $profile = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'missing']]]]);

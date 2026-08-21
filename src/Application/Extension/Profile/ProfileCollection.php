@@ -8,13 +8,17 @@ use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
-/** Immutable profile collection used by application-level construction APIs. */
+/**
+ * Immutable profile collection used by application-level construction APIs.
+ */
 final class ProfileCollection implements ProfileProviderInterface
 {
     /** @var array<string, ProfileDefinition> */
     private array $profiles = [];
 
-    /** @param list<ProfileDefinition> $profiles */
+    /**
+     * @param list<ProfileDefinition> $profiles
+     */
     public function __construct(array $profiles)
     {
         foreach ($profiles as $profile) {
