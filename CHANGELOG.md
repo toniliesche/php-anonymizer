@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+## 1.7.0
+
+- Added `AnonymizerFactory::fromProfileProviders()` with deterministic provider
+  flattening and existing profile validation semantics.
+
+## 1.6.0
+
+- Added validated profile governance metadata, deterministic profile-local rule
+  fragments, canonical behavior fingerprints, and safe profile inspection.
+
 ## 1.5.0
 
 - Added optional ASCII key normalization and profile-local global scalar rules.
-- Added validated profile governance metadata, deterministic profile-local rule
-  fragments, canonical behavior fingerprints, and safe profile inspection.
 
 ## 1.4.0
 

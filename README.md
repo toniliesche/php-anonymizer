@@ -28,9 +28,10 @@ $result->missingPaths();      // []
 ```
 
 `AnonymizerInterface` is the single public service contract. Use
-`AnonymizerFactory::fromArrays()` or `fromProfiles()` when constructing the
-core outside Symfony; concrete engines and profile collections remain
-implementation details.
+`AnonymizerFactory::fromArrays()`, `fromProfiles()`, or
+`fromProfileProviders()` when constructing the core outside Symfony; concrete
+engines and profile collections remain implementation details. Providers must
+be registered explicitly and return immutable profile definitions.
 
 `children` traverses an associative map, while `each` traverses a PHP list.
 `each: true` redacts every string list element; `each: [rules]` traverses list
