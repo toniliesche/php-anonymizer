@@ -7,12 +7,8 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Transformation;
 use InvalidArgumentException;
 use function Safe\preg_match;
 
-/**
- * @codeCoverageIgnore
- */
 final readonly class TransformationRegistry
 {
-    // @codeCoverageIgnoreStart Registry diagnostics are covered by extension contract tests.
     /** @var array<string,ValueTransformationInterface> */
     private array $transformations;
 
@@ -48,4 +44,3 @@ final readonly class TransformationRegistry
         return array_values($this->transformations);
     }
 }
-// @codeCoverageIgnoreEnd

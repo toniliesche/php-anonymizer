@@ -7,7 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
-use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFactory;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
@@ -48,7 +48,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(NullifyTransformation::class)]
 #[CoversClass(DateGeneralizeTransformation::class)]
 #[UsesClass(AnonymizationLimits::class)]
-#[UsesClass(AnonymizerFactory::class)]
+#[UsesClass(AnonymizerBuilder::class)]
 #[UsesClass(ArrayAnonymizer::class)]
 #[UsesClass(JsonPointer::class)]
 #[UsesClass(PreserveStringSelection::class)]
@@ -86,12 +86,12 @@ final class TypedTransformationTest extends TestCase
 
     public function testCoreTransformations(): void
     {
-        $anonymizer = AnonymizerFactory::fromArrays(['p' => ['mode' => 'redact', 'rules' => [
+        $anonymizer = AnonymizerBuilder::create()->withProfile(ProfileDefinition::fromArray('p', ['mode' => 'redact', 'rules' => [
             ['field' => 'name', 'transform' => ['type' => 'partial_mask', 'options' => ['suffix' => 2]]],
             ['field' => 'age', 'transform' => ['type' => 'numeric_bucket', 'options' => ['size' => 10]]],
             ['field' => 'secret', 'transform' => ['type' => 'nullify', 'options' => []]],
             ['field' => 'when', 'transform' => ['type' => 'date_generalize', 'options' => ['unit' => 'month']]],
-        ]]]);
+        ]]))->build();
         $result = $anonymizer->anonymize('p', ['name' => 'abcdef', 'age' => 27, 'secret' => 'x', 'when' => '2025-04-17T12:30:00+02:00']);
         self::assertSame(['name' => '****ef', 'age' => 20, 'secret' => null, 'when' => '2025-04-01T00:00:00.000+02:00'], $result);
     }
@@ -132,10 +132,13 @@ final class TypedTransformationTest extends TestCase
                 return 'custom:' . $value;
             }
         };
-        $anonymizer = AnonymizerFactory::fromArrays([
-            'redact' => ['mode' => 'redact', 'rules' => [['field' => 'value', 'transform' => ['type' => 'custom', 'options' => []]]]],
-            'preserve' => ['mode' => 'preserve', 'rules' => [['field' => 'value', 'transform' => ['type' => 'custom', 'options' => []]]]],
-        ], transformations: [$transformation]);
+        $anonymizer = AnonymizerBuilder::create()
+            ->withProfiles([
+                ProfileDefinition::fromArray('redact', ['mode' => 'redact', 'rules' => [['field' => 'value', 'transform' => ['type' => 'custom', 'options' => []]]]]),
+                ProfileDefinition::fromArray('preserve', ['mode' => 'preserve', 'rules' => [['field' => 'value', 'transform' => ['type' => 'custom', 'options' => []]]]]),
+            ])
+            ->withValueTransformation($transformation)
+            ->build();
 
         self::assertSame(['value' => 'custom:secret'], $anonymizer->anonymize('redact', ['value' => 'secret']));
         self::assertSame(['value' => 'custom:secret'], $anonymizer->anonymize('preserve', ['value' => 'secret']));

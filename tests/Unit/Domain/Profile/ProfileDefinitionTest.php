@@ -205,6 +205,49 @@ final class ProfileDefinitionTest extends TestCase
         self::assertSame('preserve', $profile->rules()[0]->scalarAction()?->value);
     }
 
+    public function testCompilesTransformationOptions(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [[
+                'field' => 'email',
+                'transform' => ['type' => 'custom', 'options' => ['mode' => 'strict']],
+            ]],
+        ]);
+
+        $transformation = $profile->rules()[0]->transformation();
+        self::assertNotNull($transformation);
+        self::assertSame('custom', $transformation->type());
+        self::assertSame(['mode' => 'strict'], $transformation->options());
+    }
+
+    public function testRejectsMalformedTransformationOptions(): void
+    {
+        $this->expectExceptionMessageMatches('/transform options must be a map/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'transform' => ['type' => 'custom', 'options' => ['strict']]]],
+        ]);
+    }
+
+    public function testRejectsMalformedTransformationDefinition(): void
+    {
+        $this->expectExceptionMessageMatches('/transform must be a map with a non-empty type/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'transform' => ['options' => []]]],
+        ]);
+    }
+
+    public function testRejectsTransformationOptionsWithNonStringKeys(): void
+    {
+        $this->expectExceptionMessageMatches('/transform options must be a map with string keys/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'transform' => ['type' => 'custom', 'options' => [0 => 'strict', 'mode' => 'safe']]]],
+        ]);
+    }
+
     public function testRejectsScalarActionOnLeaf(): void
     {
         $this->expectExceptionMessageMatches('/on_scalar requires children or each/');

@@ -28,6 +28,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadata;
@@ -63,6 +64,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ReplacementStrategyRegistry::class)]
 #[UsesClass(StarMaskStrategy::class)]
 #[UsesClass(CoreTransformationFactory::class)]
+#[UsesClass(TransformationRegistry::class)]
 #[UsesClass(InvalidProfileDefinition::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]

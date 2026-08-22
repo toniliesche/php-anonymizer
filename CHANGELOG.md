@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Selectively removed coverage suppressions from JSON payload validation and
+  transformation registration/option compilation, with focused validation
+  tests and stricter string-keyed transformation options.
+- Removed the transitional `AnonymizerFactory`; use `AnonymizerBuilder` for
+  fluent construction and extension modules.
 - Added `AnonymizerBuilder`, the unified façade operation contract, immutable
   object requests, and the object/extension module ports.
 

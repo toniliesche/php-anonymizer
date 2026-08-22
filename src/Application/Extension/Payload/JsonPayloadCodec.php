@@ -20,9 +20,6 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
     /**
      * @return array<string, mixed>
      */
-    /**
-     * @codeCoverageIgnore
-     */
     #[Override]
     public function decode(string $payload): array
     {
@@ -31,7 +28,6 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
             throw new JsonException('JSON payload root must be an object.');
         }
 
-        // @codeCoverageIgnoreStart Defensive root-shape guard.
         $decoded = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
         if (!is_array($decoded) || array_is_list($decoded)) {
             throw new JsonException('JSON payload root must be an object.');
@@ -39,7 +35,6 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
 
         /** @var non-empty-array<string, mixed> $decoded */
         return $decoded;
-        // @codeCoverageIgnoreEnd
     }
 
     /**

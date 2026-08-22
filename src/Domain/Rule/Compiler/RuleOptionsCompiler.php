@@ -81,12 +81,9 @@ final class RuleOptionsCompiler
 
     /**
      * @param array<string,mixed> $definition
-     *
-     * @codeCoverageIgnore
      */
     public static function transformation(array $definition): ?TransformationDefinition
     {
-        // @codeCoverageIgnoreStart Extension option validation is exercised by contract suites.
         if (!array_key_exists('transform', $definition)) {
             return null;
         }
@@ -98,10 +95,12 @@ final class RuleOptionsCompiler
         if (!is_array($options) || (array_is_list($options) && $options !== [])) {
             throw new InvalidProfileDefinition('transform options must be a map');
         }
+        if (array_filter(array_keys($options), static fn (int|string $key): bool => !is_string($key)) !== []) {
+            throw new InvalidProfileDefinition('transform options must be a map with string keys');
+        }
 
-        /** @phpstan-ignore argument.type (validated transform options map) */
+        /** @var array<string, mixed> $options */
         return new TransformationDefinition($transform['type'], $options, self::keyId($definition));
-        // @codeCoverageIgnoreEnd
     }
 
     /**

@@ -27,7 +27,7 @@ final readonly class JsonPointer implements Stringable
     public static function fromString(string $path): self
     {
         $pointer = self::root();
-        // @infection-ignore-next-line Empty leading pointer segments are skipped below.
+        // @infection-ignore-next-line Removing ltrim is equivalent because empty segments are skipped below.
         foreach (explode('/', ltrim($path, '/')) as $segment) {
             if ($segment !== '') {
                 $pointer = $pointer->append(str_replace(['~1', '~0'], ['/', '~'], $segment));

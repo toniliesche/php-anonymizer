@@ -19,6 +19,8 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
@@ -32,6 +34,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(JsonPayloadCodec::class)]
 #[CoversClass(ReplacementStrategyRegistry::class)]
 #[CoversClass(PayloadCodecRegistry::class)]
+#[CoversClass(TransformationRegistry::class)]
 #[CoversClass(ProfileRegistry::class)]
 #[CoversClass(ProfileReferenceValidator::class)]
 #[CoversClass(EmbeddedProfileReferenceGraph::class)]
@@ -73,6 +76,20 @@ final class ExtensionRegistryTest extends TestCase
 
         $this->expectException(JsonException::class);
         $codec->decode('[]');
+    }
+
+    public function testJsonCodecRejectsScalarRoots(): void
+    {
+        $this->expectExceptionMessageMatches('/JSON payload root must be an object/');
+
+        new JsonPayloadCodec()->decode('null');
+    }
+
+    public function testJsonCodecRejectsEmptyObjectRoots(): void
+    {
+        $this->expectExceptionMessageMatches('/JSON payload root must be an object/');
+
+        new JsonPayloadCodec()->decode('{}');
     }
 
     public function testRegistriesExposeValuesAndRejectInvalidDuplicates(): void
@@ -139,6 +156,85 @@ final class ExtensionRegistryTest extends TestCase
         };
         $this->expectExceptionMessageMatches('/ID .* invalid/');
         new ReplacementStrategyRegistry([$strategy]);
+    }
+
+    public function testTransformationRegistryRejectsInvalidIdsAndDuplicates(): void
+    {
+        $transformation = new class () implements ValueTransformationInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'custom';
+            }
+
+            #[Override]
+            public function supportedTypes(): array
+            {
+                return ['string'];
+            }
+
+            #[Override]
+            public function outputType(): string
+            {
+                return 'string';
+            }
+
+            #[Override]
+            public function validateOptions(array $options): void
+            {
+            }
+
+            #[Override]
+            public function transform(mixed $value, array $options): mixed
+            {
+                return $value;
+            }
+        };
+
+        $registry = new TransformationRegistry([$transformation]);
+        self::assertSame($transformation, $registry->get('custom'));
+        self::assertSame([$transformation], $registry->all());
+
+        try {
+            new TransformationRegistry([$transformation, $transformation]);
+            self::fail('Expected duplicate transformation validation.');
+        } catch (InvalidArgumentException) {
+            $this->addToAssertionCount(1);
+        }
+
+        $invalid = new class () implements ValueTransformationInterface {
+            #[Override]
+            public function id(): string
+            {
+                return 'not valid';
+            }
+
+            #[Override]
+            public function supportedTypes(): array
+            {
+                return [];
+            }
+
+            #[Override]
+            public function outputType(): string
+            {
+                return 'string';
+            }
+
+            #[Override]
+            public function validateOptions(array $options): void
+            {
+            }
+
+            #[Override]
+            public function transform(mixed $value, array $options): mixed
+            {
+                return $value;
+            }
+        };
+
+        $this->expectExceptionMessageMatches('/ID .* invalid/');
+        new TransformationRegistry([$invalid]);
     }
 
     public function testRegistriesRejectIdsWithTrailingNewlines(): void

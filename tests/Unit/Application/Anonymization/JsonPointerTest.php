@@ -27,4 +27,9 @@ final class JsonPointerTest extends TestCase
         self::assertSame(['/a~1b~0c/email'], $report->anonymizedPaths());
         self::assertSame(['/a~1b~0c/missing'], $report->missingPaths());
     }
+
+    public function testNormalizesEmptyPointerSegments(): void
+    {
+        self::assertSame('/a/b', (string) JsonPointer::fromString('///a//b/'));
+    }
 }
