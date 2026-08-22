@@ -62,11 +62,7 @@ final readonly class ArrayTraversal
         $result = $data;
         $report = $withReport ? AnonymizationReport::collecting() : AnonymizationReport::disabled();
         $budget ??= new ExecutionBudget($this->limits);
-        if ($definition->mode() === ProfileMode::PRESERVE) {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->preserver, $report, $budget, $context, globalRules: $definition->globalRules(), normalizeKeys: $definition->keyNormalization());
-        } else {
-            $this->rules->apply($profile, $result, $definition->rules(), $this->redactor, $report, $budget, $context, globalRules: $definition->globalRules(), normalizeKeys: $definition->keyNormalization());
-        }
+        $this->rules->apply($result, $this->context($profile, $definition, $report, $budget, $context));
 
         /** @var array<string, mixed> $result */
         return new AnonymizationResult($result, $report->anonymizedPaths(), $report->missingPaths(), $report->events());
@@ -75,7 +71,6 @@ final readonly class ArrayTraversal
     /**
      * @param array<mixed, mixed> $data
      */
-    // @phpstan-ignore complexity.functionLike (document root dispatch is intentionally explicit)
     public function applyDocument(string $profile, array $data, ?AnonymizationContext $context = null): DocumentAnonymizationResult
     {
         $definition = $this->profiles->get($profile);
@@ -85,26 +80,9 @@ final readonly class ArrayTraversal
 
         $report = AnonymizationReport::collecting();
         $budget = new ExecutionBudget($this->limits);
-        if ($definition->root() === ProfileRoot::MAP) {
-            if (!$this->isMap($data)) {
-                throw new InvalidArgumentException(sprintf('Profile "%s" requires a map document root.', $profile));
-            }
-            $this->applyMap($profile, $data, $definition, $report, $budget, $context);
-        } else {
-            if (!array_is_list($data)) {
-                throw new InvalidArgumentException(sprintf('Profile "%s" requires a list document root.', $profile));
-            }
-            $budget->collection($profile, JsonPointer::root(), count($data));
-            foreach ($data as $index => &$item) {
-                if (!$this->isMap($item) || !is_array($item)) {
-                    throw new InvalidArgumentException(sprintf('Profile "%s" requires list items to be associative maps at /%s.', $profile, (string) $index));
-                }
-
-                /** @var array<mixed, mixed> $item */
-                $this->applyMap($profile, $item, $definition, $report, $budget, $context, JsonPointer::root()->append((string) $index));
-            }
-            unset($item);
-        }
+        $definition->root() === ProfileRoot::MAP
+            ? $this->applyDocumentMap($profile, $data, $definition, $report, $budget, $context)
+            : $this->applyDocumentList($profile, $data, $definition, $report, $budget, $context);
 
         return new DocumentAnonymizationResult($data, $report->anonymizedPaths(), $report->missingPaths(), $report->events());
     }
@@ -114,8 +92,45 @@ final readonly class ArrayTraversal
      */
     private function applyMap(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null): void
     {
+        $this->rules->apply($data, $this->context($profile, $definition, $report, $budget, $context, $parent));
+    }
+
+    /**
+     * @param array<mixed, mixed> $data
+     */
+    private function applyDocumentMap(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context): void
+    {
+        if (!$this->isMap($data)) {
+            throw new InvalidArgumentException(sprintf('Profile "%s" requires a map document root.', $profile));
+        }
+        $this->applyMap($profile, $data, $definition, $report, $budget, $context);
+    }
+
+    /**
+     * @param array<mixed, mixed> $data
+     */
+    private function applyDocumentList(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context): void
+    {
+        if (!array_is_list($data)) {
+            throw new InvalidArgumentException(sprintf('Profile "%s" requires a list document root.', $profile));
+        }
+        $budget->collection($profile, JsonPointer::root(), count($data));
+        foreach ($data as $index => &$item) {
+            if (!$this->isMap($item) || !is_array($item)) {
+                throw new InvalidArgumentException(sprintf('Profile "%s" requires list items to be associative maps at /%s.', $profile, (string) $index));
+            }
+
+            /** @var array<mixed, mixed> $item */
+            $this->applyMap($profile, $item, $definition, $report, $budget, $context, JsonPointer::root()->append((string) $index));
+        }
+        unset($item);
+    }
+
+    private function context(string $profile, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null): TraversalExecutionContext
+    {
         $policy = $definition->mode() === ProfileMode::PRESERVE ? $this->preserver : $this->redactor;
-        $this->rules->apply($profile, $data, $definition->rules(), $policy, $report, $budget, $context, $parent, $definition->globalRules(), $definition->keyNormalization());
+
+        return new TraversalExecutionContext($profile, $definition->rules(), $definition->globalRules(), $policy, $report, $budget, $parent ?? JsonPointer::root(), 0, $context, $definition->keyNormalization());
     }
 
     private function isMap(mixed $value): bool

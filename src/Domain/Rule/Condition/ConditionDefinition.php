@@ -8,7 +8,6 @@ use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\KeyNormalizer;
 use function Safe\preg_match;
 
-// @phpstan-ignore complexity.classLike (condition parsing and matching are explicit)
 final readonly class ConditionDefinition
 {
     /**
@@ -74,48 +73,14 @@ final readonly class ConditionDefinition
     /**
      * @param array<mixed, mixed> $context
      */
-    // @phpstan-ignore complexity.functionLike (normalised condition lookup is intentionally explicit)
     public function matches(array $context, bool $normalizeKeys = false): bool
     {
-        $value = $context;
-        foreach ($this->path as $segment) {
-            if (!is_array($value) || (array_is_list($value) && $value !== [])) {
-                return false;
-            }
-
-            if (array_key_exists($segment, $value)) {
-                $value = $value[$segment];
-
-                continue;
-            }
-            if (!$normalizeKeys) {
-                return false;
-            }
-
-            $normalized = KeyNormalizer::normalize($segment);
-            $found = false;
-            foreach ($value as $key => $candidate) {
-                if (KeyNormalizer::normalize((string) $key) === $normalized) {
-                    $value = $candidate;
-                    $found = true;
-
-                    break;
-                }
-            }
-            if (!$found) {
-                return false;
-            }
-        }
-
+        $value = $this->lookup($context, $normalizeKeys);
         if (!self::isScalarValue($value)) {
             return false;
         }
 
-        if ($this->operator === 'equals') {
-            return $value === $this->expected[0];
-        }
-
-        return array_any($this->expected, fn (bool|float|int|string|null $expected): bool => $value === $expected);
+        return $this->operator === 'equals' ? $value === $this->expected[0] : array_any($this->expected, static fn (bool|float|int|string|null $expected): bool => $value === $expected);
     }
 
     /**
@@ -124,6 +89,46 @@ final readonly class ConditionDefinition
     public function path(): array
     {
         return $this->path;
+    }
+
+    /**
+     * @param array<mixed, mixed> $context
+     */
+    private function lookup(array $context, bool $normalizeKeys): mixed
+    {
+        $value = $context;
+        foreach ($this->path as $segment) {
+            [$found, $value] = $this->segment($value, $segment, $normalizeKeys);
+            if (!$found) {
+                return null;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return array{0: bool, 1: mixed}
+     */
+    private function segment(mixed $value, string $segment, bool $normalizeKeys): array
+    {
+        if (!is_array($value) || (array_is_list($value) && $value !== [])) {
+            return [false, null];
+        }
+        if (array_key_exists($segment, $value)) {
+            return [true, $value[$segment]];
+        }
+        if (!$normalizeKeys) {
+            return [false, null];
+        }
+        $normalized = KeyNormalizer::normalize($segment);
+        foreach ($value as $key => $candidate) {
+            if (KeyNormalizer::normalize((string) $key) === $normalized) {
+                return [true, $candidate];
+            }
+        }
+
+        return [false, null];
     }
 
     /**

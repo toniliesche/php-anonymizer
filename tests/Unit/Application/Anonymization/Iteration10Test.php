@@ -125,7 +125,7 @@ final class Iteration10Test extends TestCase
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
 
-        self::assertSame(['email' => 'customer:/email:primary:acme'], $anonymizer->anonymizeWithContext('customer', ['email' => 'secret'], new AnonymizationContext(['tenant' => 'acme'])));
+        self::assertSame(['email' => 'customer:/email:primary:acme'], $anonymizer->anonymize('customer', ['email' => 'secret'], new AnonymizationContext(['tenant' => 'acme'])));
     }
 
     public function testContextualStrategyRequiresContext(): void
@@ -179,13 +179,13 @@ final class Iteration10Test extends TestCase
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
         $context = new AnonymizationContext(['tenant' => 'acme']);
 
-        self::assertSame(['email' => 'safe-primary'], $anonymizer->anonymizeWithReportAndContext('customer', ['email' => 'secret'], $context)->data());
-        self::assertSame('{"email":"safe-primary"}', $anonymizer->anonymizePayloadWithContext('customer', 'json', '{"email":"secret"}', $context));
-        self::assertCount(1, iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['email' => 'secret']], $context), false));
-        self::assertSame(['contextual'], array_map(static fn (AuditEntry $entry): string => (string) $entry->handler(), $anonymizer->anonymizeWithAuditAndContext('customer', ['email' => 'secret'], $context)->entries()));
+        self::assertSame(['email' => 'safe-primary'], $anonymizer->anonymizeWithReport('customer', ['email' => 'secret'], $context)->data());
+        self::assertSame('{"email":"safe-primary"}', $anonymizer->anonymizePayload('customer', 'json', '{"email":"secret"}', $context));
+        self::assertCount(1, iterator_to_array($anonymizer->anonymizeRecords('customer', [['email' => 'secret']], $context), false));
+        self::assertSame(['contextual'], array_map(static fn (AuditEntry $entry): string => (string) $entry->handler(), $anonymizer->anonymizeWithAudit('customer', ['email' => 'secret'], $context)->entries()));
 
         try {
-            iterator_to_array($anonymizer->anonymizeRecordsWithContext('customer', [['secret']], $context), false);
+            iterator_to_array($anonymizer->anonymizeRecords('customer', [['secret']], $context), false);
             self::fail('Expected invalid batch record.');
         } catch (InvalidArgumentException $exception) {
             self::assertSame(InvalidArgumentException::class, $exception::class);
@@ -214,7 +214,7 @@ final class Iteration10Test extends TestCase
             }
         };
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'preserve', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
-        self::assertSame(['email' => 'pseudonym'], new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymizeWithContext('customer', ['email' => 'secret'], new AnonymizationContext()));
+        self::assertSame(['email' => 'pseudonym'], new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret'], new AnonymizationContext()));
 
         $this->expectException(ContextRequired::class);
         new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret']);
@@ -314,7 +314,7 @@ final class Iteration10Test extends TestCase
 
     public function testBatchContextVariantRejectsInvalidRecordWithItsStringKeyInTheMessage(): void
     {
-        $records = $this->engine()->anonymizeRecordsWithContext('customer', ['customer-record' => 'not a map'], new AnonymizationContext());
+        $records = $this->engine()->anonymizeRecords('customer', ['customer-record' => 'not a map'], new AnonymizationContext());
 
         $this->expectExceptionMessageIsOrContains('Batch record customer-record must be an associative array.');
         iterator_to_array($records);

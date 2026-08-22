@@ -47,30 +47,42 @@ final class DateGeneralizeTransformation implements ValueTransformationInterface
     /**
      * @param array<string,mixed> $options
      */
-    // @phpstan-ignore complexity.functionLike (bounded generalization units)
     #[Override]
     public function transform(mixed $value, array $options): mixed
     {
         $isString = is_string($value);
+        $date = $this->date($value, $isString);
+        $date = $this->generalize($date, $options['unit']);
+
+        return $isString ? $date->format(DateTimeInterface::RFC3339_EXTENDED) : $date;
+    }
+
+    private function date(mixed $value, bool $isString): DateTimeImmutable
+    {
+        if ($isString && !is_string($value)) {
+            throw new InvalidArgumentException('date_generalize requires a valid RFC 3339 date or DateTimeInterface.');
+        }
 
         try {
             // @phpstan-ignore theCodingMachineSafe.class (guarded conversion)
             $date = $isString ? new DateTimeImmutable($value) : ($value instanceof DateTimeInterface ? DateTimeImmutable::createFromInterface($value) : null);
         } catch (Throwable) {
             throw new InvalidArgumentException('date_generalize requires a valid RFC 3339 date or DateTimeInterface.');
-        } if (!$date instanceof DateTimeImmutable || ($isString && preg_match('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/D', $value) !== 1)) {
+        }
+        if (!$date instanceof DateTimeImmutable || ($isString && preg_match('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/D', $value) !== 1)) {
             throw new InvalidArgumentException('date_generalize requires a valid RFC 3339 date or DateTimeInterface.');
-        } $unit = $options['unit'];
-        if ($unit === 'year') {
-            $date = $date->setDate((int) $date->format('Y'), 1, 1)->setTime(0, 0);
-        } elseif ($unit === 'month') {
-            $date = $date->setDate((int) $date->format('Y'), (int) $date->format('m'), 1)->setTime(0, 0);
-        } elseif ($unit === 'day') {
-            $date = $date->setTime(0, 0);
-        } else {
-            $date = $date->setTime((int) $date->format('H'), 0);
         }
 
-return $isString ? $date->format(DateTimeInterface::RFC3339_EXTENDED) : $date;
+        return $date;
+    }
+
+    private function generalize(DateTimeImmutable $date, mixed $unit): DateTimeImmutable
+    {
+        return match ($unit) {
+            'year' => $date->setDate((int) $date->format('Y'), 1, 1)->setTime(0, 0),
+            'month' => $date->setDate((int) $date->format('Y'), (int) $date->format('m'), 1)->setTime(0, 0),
+            'day' => $date->setTime(0, 0),
+            default => $date->setTime((int) $date->format('H'), 0),
+        };
     }
 }

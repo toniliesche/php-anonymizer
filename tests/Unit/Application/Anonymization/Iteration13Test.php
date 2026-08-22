@@ -177,13 +177,13 @@ final class Iteration13Test extends TestCase
         ]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
 
-        self::assertSame('[{"email":"[REDACTED]"}]', $anonymizer->anonymizeDocumentWithContext('records', 'json', '[{"email":"secret"}]', new AnonymizationContext(['tenant' => 'acme'])));
+        self::assertSame('[{"email":"[REDACTED]"}]', $anonymizer->anonymizeDocument('records', 'json', '[{"email":"secret"}]', new AnonymizationContext(['tenant' => 'acme'])));
     }
 
     public function testContextualNdjsonMethodProcessesRecords(): void
     {
         $profile = ProfileDefinition::fromArray('records', ['mode' => 'redact', 'root' => 'list', 'rules' => [['field' => 'email']]]);
-        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))->anonymizeNdjsonWithContext('records', ['{"email":"secret"}'], new AnonymizationContext(['tenant' => 'acme']));
+        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))->anonymizeNdjson('records', ['{"email":"secret"}'], new AnonymizationContext(['tenant' => 'acme']));
 
         self::assertSame(['{"email":"[REDACTED]"}'], iterator_to_array($stream->lines(), false));
     }

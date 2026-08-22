@@ -11,9 +11,15 @@ use function Safe\preg_match;
 /**
  * @internal
  */
-// @phpstan-ignore complexity.classLike (composition validation is intentionally explicit)
-final class ProfileCompositionCompiler
+final readonly class ProfileCompositionCompiler
 {
+    private ProfileRuleAppender $appender;
+
+    public function __construct()
+    {
+        $this->appender = new ProfileRuleAppender();
+    }
+
     /**
      * @param array<string, mixed> $definition
      *
@@ -71,7 +77,6 @@ final class ProfileCompositionCompiler
      *
      * @return list<array<string, mixed>>
      */
-    // @phpstan-ignore complexity.functionLike (composition branches are intentionally explicit)
     private function expandList(string $profile, array $entries, array $fragments, array $stack, string $path, bool $direct): array
     {
         $result = [];
@@ -80,85 +85,81 @@ final class ProfileCompositionCompiler
         $fields = [];
 
         foreach ($entries as $index => $entry) {
-            if (!is_array($entry)) {
-                if (str_contains($path, '.children') || str_contains($path, '.each')) {
-                    throw new InvalidProfileDefinition(sprintf('nested rule %s must be a map', $index));
-                }
-
-                throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] must be a map', $path, $index));
+            $entryIsFragment = is_array($entry) && array_key_exists('use', $entry);
+            foreach ($this->expandEntry($profile, $entry, $fragments, $stack, $path, $index, $direct) as $rule) {
+                $this->appender->append($result, $fields, $rule, $direct && !$entryIsFragment);
             }
-
-            if (array_key_exists('use', $entry)) {
-                if (array_keys($entry) !== ['use'] || !is_string($entry['use']) || $entry['use'] === '') {
-                    throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] must contain only a non-empty use name', $path, $index));
-                }
-                $name = $entry['use'];
-                if (!array_key_exists($name, $fragments)) {
-                    throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] references missing fragment "%s"', $path, $index, $name));
-                }
-                if (in_array($name, $stack, true)) {
-                    throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] creates fragment cycle: %s -> %s', $path, $index, implode(' -> ', [...$stack, $name]), $name));
-                }
-                $expanded = $this->expandList($profile, $fragments[$name], $fragments, [...$stack, $name], $path . '.use(' . $name . ')', false);
-
-                /** @var array<string, mixed> $rule */
-                foreach ($expanded as $rule) {
-                    $this->append($result, $fields, $rule, false);
-                }
-
-                continue;
-            }
-
-            /** @var array<string, mixed> $rule */
-            $rule = $entry;
-            if (array_key_exists('children', $rule)) {
-                if (is_array($rule['children']) && array_is_list($rule['children'])) {
-                    $rule['children'] = $this->expandList($profile, $rule['children'], $fragments, $stack, $path . '[' . $index . '].children', $direct);
-                }
-            } elseif (array_key_exists('each', $rule) && is_array($rule['each']) && array_is_list($rule['each'])) {
-                $rule['each'] = $this->expandList($profile, $rule['each'], $fragments, $stack, $path . '[' . $index . '].each', $direct);
-            }
-            $this->append($result, $fields, $rule, $direct);
         }
 
         return $result;
     }
 
     /**
-     * @param list<array<string, mixed>> $result
-     * @param array<string, array{index: int, direct: bool}> $fields
-     * @param array<string, mixed> $rule
+     * @param array<string, list<mixed>> $fragments
+     * @param list<string> $stack
+     *
+     * @return list<array<string, mixed>>
      */
-    private function append(array &$result, array &$fields, array $rule, bool $direct): void
+    private function expandEntry(string $profile, mixed $entry, array $fragments, array $stack, string $path, int|string $index, bool $direct): array
     {
-        $field = $rule['field'] ?? null;
-        if (!is_string($field) || $field === '') {
-            $result[] = $rule;
-
-            return;
+        if (!is_array($entry)) {
+            $this->invalidEntry($profile, $path, $index);
         }
 
-        if (!array_key_exists($field, $fields)) {
-            $fields[$field] = ['index' => count($result), 'direct' => $direct];
-            $result[] = $rule;
-
-            return;
+        /** @var array<string, mixed> $entry */
+        if (array_key_exists('use', $entry)) {
+            return $this->expandFragment($profile, $entry, $fragments, $stack, $path, $index);
         }
 
-        $existing = $fields[$field];
-        if ($direct && !$existing['direct']) {
-            $result[$existing['index']] = $rule;
-            $fields[$field]['direct'] = true;
+        return [$this->expandNested($entry, $profile, $fragments, $stack, $path, $index, $direct)];
+    }
 
-            return;
+    /** @param array<string, mixed> $rule
+     * @param array<string, list<mixed>> $fragments
+     * @param list<string> $stack
+     *
+     * @return array<string, mixed> */
+    private function expandNested(array $rule, string $profile, array $fragments, array $stack, string $path, int|string $index, bool $direct): array
+    {
+        if (array_key_exists('children', $rule) && is_array($rule['children']) && array_is_list($rule['children'])) {
+            $rule['children'] = $this->expandList($profile, $rule['children'], $fragments, $stack, $path . '[' . $index . '].children', $direct);
+        } elseif (array_key_exists('each', $rule) && is_array($rule['each']) && array_is_list($rule['each'])) {
+            $rule['each'] = $this->expandList($profile, $rule['each'], $fragments, $stack, $path . '[' . $index . '].each', $direct);
         }
 
-        // Preserve duplicate direct rules for the existing RuleDefinition/
-        // ProfileDefinition diagnostics, while fragment collisions are
-        // intentionally resolved by first declaration.
-        if ($direct) {
-            $result[] = $rule;
+        return $rule;
+    }
+
+    private function invalidEntry(string $profile, string $path, int|string $index): never
+    {
+        if (str_contains($path, '.children') || str_contains($path, '.each')) {
+            throw new InvalidProfileDefinition(sprintf('nested rule %s must be a map', $index));
         }
+
+        throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] must be a map', $path, $index));
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     * @param array<string, list<mixed>> $fragments
+     * @param list<string> $stack
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function expandFragment(string $profile, array $entry, array $fragments, array $stack, string $path, int|string $index): array
+    {
+        if (array_keys($entry) !== ['use'] || !is_string($entry['use'] ?? null) || $entry['use'] === '') {
+            throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] must contain only a non-empty use name', $path, $index));
+        }
+        $name = $entry['use'];
+        if (!array_key_exists($name, $fragments)) {
+            throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] references missing fragment "%s"', $path, $index, $name));
+        }
+        if (in_array($name, $stack, true)) {
+            throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] creates fragment cycle: %s -> %s', $path, $index, implode(' -> ', [...$stack, $name]), $name));
+        }
+
+        return $this->expandList($profile, $fragments[$name], $fragments, [...$stack, $name], $path . '.use(' . $name . ')', false);
     }
 }
 // @codeCoverageIgnoreEnd

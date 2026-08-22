@@ -6,7 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization;
 
 use LogicException;
 use Override;
-use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResultInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentPayloadAnonymizationResult;
@@ -20,7 +19,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\ObjectAnonymizerInterface;
  *
  * @codeCoverageIgnore Wiring façade; behavior is covered through the façade contract.
  */
-final readonly class AnonymizerFacade implements AnonymizerInterface, ContextualAnonymizerInterface, ContextualDocumentAnonymizerInterface, ContextualNdjsonAnonymizerInterface
+final readonly class AnonymizerFacade implements AnonymizerInterface
 {
     private ArrayAnonymizer $arrayAnonymizer;
 
@@ -95,63 +94,6 @@ final readonly class AnonymizerFacade implements AnonymizerInterface, Contextual
     public function anonymizeNdjson(string $profile, iterable $lines, ?AnonymizationContext $context = null): NdjsonAnonymizationResult
     {
         return $this->arrayAnonymizer->anonymizeNdjson($profile, $lines, $context);
-    }
-
-    #[Override]
-    public function anonymizeWithContext(string $profile, array $data, AnonymizationContext $context): array
-    {
-        return $this->arrayAnonymizer->anonymizeWithContext($profile, $data, $context);
-    }
-
-    #[Override]
-    public function anonymizeWithReportAndContext(string $profile, array $data, AnonymizationContext $context): AnonymizationResult
-    {
-        return $this->arrayAnonymizer->anonymizeWithReportAndContext($profile, $data, $context);
-    }
-
-    #[Override]
-    public function anonymizePayloadWithContext(string $profile, string $codec, string $payload, AnonymizationContext $context): string
-    {
-        return $this->arrayAnonymizer->anonymizePayloadWithContext($profile, $codec, $payload, $context);
-    }
-
-    #[Override]
-    public function anonymizePayloadWithReportAndContext(string $profile, string $codec, string $payload, AnonymizationContext $context): PayloadAnonymizationResult
-    {
-        return $this->arrayAnonymizer->anonymizePayloadWithReportAndContext($profile, $codec, $payload, $context);
-    }
-
-    /**
-     * @return iterable<array<string, mixed>>
-     */
-    #[Override]
-    public function anonymizeRecordsWithContext(string $profile, iterable $records, AnonymizationContext $context): iterable
-    {
-        return $this->arrayAnonymizer->anonymizeRecordsWithContext($profile, $records, $context);
-    }
-
-    #[Override]
-    public function anonymizeWithAuditAndContext(string $profile, array $data, AnonymizationContext $context): AuditAnonymizationResult
-    {
-        return $this->arrayAnonymizer->anonymizeWithAuditAndContext($profile, $data, $context);
-    }
-
-    #[Override]
-    public function anonymizeDocumentWithContext(string $profile, string $codec, string $payload, AnonymizationContext $context): string
-    {
-        return $this->arrayAnonymizer->anonymizeDocumentWithContext($profile, $codec, $payload, $context);
-    }
-
-    #[Override]
-    public function anonymizeDocumentWithReportAndContext(string $profile, string $codec, string $payload, AnonymizationContext $context): DocumentPayloadAnonymizationResult
-    {
-        return $this->arrayAnonymizer->anonymizeDocumentWithReportAndContext($profile, $codec, $payload, $context);
-    }
-
-    #[Override]
-    public function anonymizeNdjsonWithContext(string $profile, iterable $lines, AnonymizationContext $context): NdjsonAnonymizationResult
-    {
-        return $this->arrayAnonymizer->anonymizeNdjsonWithContext($profile, $lines, $context);
     }
 
     #[Override]

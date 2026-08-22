@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFacade;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFactory;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
@@ -88,7 +89,7 @@ final class AnonymizerFactoryTest extends TestCase
             ],
         ]);
 
-        self::assertInstanceOf(ArrayAnonymizer::class, $anonymizer);
+        self::assertInstanceOf(AnonymizerFacade::class, $anonymizer);
         self::assertSame(['email' => '[REDACTED]'], $anonymizer->anonymize('default', ['email' => 'secret']));
     }
 
