@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.0
+
 - Iteration 22: extracted `RuleIndex` and the deferred NDJSON audit provider,
   renamed and reorganized structural tests, and consolidated reusable test
   extension fixtures without changing anonymization behavior.
@@ -12,6 +14,11 @@
   fluent construction and extension modules.
 - Added `AnonymizerBuilder`, the unified façade operation contract, immutable
   object requests, and the object/extension module ports.
+- Added the core user and migration documentation for the 2.0 public boundary.
+- Added runnable profile-schema and façade examples for fragments, normalized
+  global rules, list documents, batches, and NDJSON.
+- Documented the complete core profile grammar, recursive traversal forms,
+  fragment composition, and rule validation behavior.
 
 ## 1.7.0
 

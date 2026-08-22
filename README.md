@@ -62,3 +62,6 @@ $profile = ProfileDefinition::fromArray('customer', [
     'global_rules' => [['field' => 'email_address']],
 ]);
 ```
+
+See the package-local [user guide](docs/user-guide.md) and
+[2.0 migration extract](docs/migration-v2.md).
