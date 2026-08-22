@@ -70,7 +70,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TransformationRegistry::class)]
 #[UsesClass(AnonymizationResult::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
-final class Iteration14Test extends TestCase
+final class TraversalPolicyTest extends TestCase
 {
     public function testNormalizedKeysMatchWithoutRenamingOutputOrReportPaths(): void
     {

@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Result;
 
-use Closure;
-
 final readonly class NdjsonAnonymizationResult
 {
     /**
      * @param iterable<string> $lines
-     * @param Closure(): NdjsonAuditResult $auditFactory
      */
-    public function __construct(private iterable $lines, private Closure $auditFactory)
+    public function __construct(private iterable $lines, private NdjsonAuditProviderInterface $auditProvider)
     {
     }
 
@@ -26,6 +23,6 @@ final readonly class NdjsonAnonymizationResult
 
     public function audit(): NdjsonAuditResult
     {
-        return ($this->auditFactory)();
+        return $this->auditProvider->audit();
     }
 }

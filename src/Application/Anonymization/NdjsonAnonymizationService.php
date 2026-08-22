@@ -7,9 +7,10 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization;
 
 use InvalidArgumentException;
-use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DeferredNdjsonAuditProvider;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditProviderInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
@@ -45,28 +46,19 @@ final readonly class NdjsonAnonymizationService
         }
 
         $counts = [];
-        $complete = false;
-        $audit = null;
-        $output = $this->stream($profile, $definition, $lines, $context, $counts, $complete, $audit);
+        $auditProvider = new DeferredNdjsonAuditProvider();
+        $output = $this->stream($profile, $definition, $lines, $context, $counts, $auditProvider);
 
-        return new NdjsonAnonymizationResult($output, static function () use (&$complete, &$audit): NdjsonAuditResult {
-            if (!$complete) {
-                throw new LogicException('NDJSON audit is available only after successful stream exhaustion.');
-            }
-
-            return $audit;
-        });
+        return new NdjsonAnonymizationResult($output, $auditProvider);
     }
 
     /**
      * @param iterable<mixed> $lines
      * @param array<string, array{path: string, action: string, handler: ?string, count: int}> $counts
      *
-     * @param-out NdjsonAuditResult $audit
-     *
      * @return iterable<string>
      */
-    private function stream(string $profile, ProfileDefinition $definition, iterable $lines, ?AnonymizationContext $context, array &$counts, bool &$complete, ?NdjsonAuditResult &$audit): iterable
+    private function stream(string $profile, ProfileDefinition $definition, iterable $lines, ?AnonymizationContext $context, array &$counts, NdjsonAuditProviderInterface $auditProvider): iterable
     {
         $json = new JsonPayloadCodec();
         foreach ($lines as $ordinal => $line) {
@@ -77,8 +69,7 @@ final readonly class NdjsonAnonymizationService
         foreach ($counts as $entry) {
             $entries[] = new AuditEntry($profile, $definition->fingerprint(), $entry['path'], $entry['action'], $entry['handler'], $entry['count']);
         }
-        $audit = new NdjsonAuditResult($entries);
-        $complete = true;
+        $auditProvider->complete(new NdjsonAuditResult($entries));
     }
 
     /**

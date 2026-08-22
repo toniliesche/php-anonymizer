@@ -24,13 +24,11 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileReferenceValidator;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
-use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
@@ -46,10 +44,11 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticReplacementStrategy;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 use stdClass;
 
 #[CoversClass(ArrayAnonymizer::class)]
@@ -580,25 +579,7 @@ final class ArrayAnonymizerTest extends TestCase
 
     public function testEmbeddedCodecEncodeFailuresAreContextual(): void
     {
-        $codec = new class () implements PayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'failing';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return ['email' => 'secret'];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                throw new RuntimeException('embedded encode failed');
-            }
-        };
+        $codec = new StaticPayloadCodec('failing', ['email' => 'secret'], 'email', 'embedded encode failed');
         $nested = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
         $outer = ProfileDefinition::fromArray('outer', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'failing', 'profile' => 'nested']]]]);
         $this->expectExceptionMessageMatches('/failed to encode embedded payload at "\/payload"/');
@@ -648,38 +629,8 @@ final class ArrayAnonymizerTest extends TestCase
 
     public function testCustomStrategyAndCodecAreUsed(): void
     {
-        $strategy = new class () implements ReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'suffix';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return $value . '-masked';
-            }
-        };
-        $codec = new class () implements PayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'pipe';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return ['email' => $payload];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                return is_string($data['email'] ?? null) ? $data['email'] : '';
-            }
-        };
+        $strategy = new StaticReplacementStrategy('suffix', suffix: '-masked');
+        $codec = new StaticPayloadCodec('pipe', decodeKey: 'email');
         $profile = ProfileDefinition::fromArray('custom', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'suffix']]]);
 
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy], [$codec]);
@@ -724,25 +675,7 @@ final class ArrayAnonymizerTest extends TestCase
             $this->addToAssertionCount(1);
         }
 
-        $listCodec = new class () implements PayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'list';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return [0 => 'not-a-map'];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                return '';
-            }
-        };
+        $listCodec = new StaticPayloadCodec('list', [0 => 'not-a-map']);
         $listAnonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [], [$listCodec]);
 
         try {
@@ -753,25 +686,7 @@ final class ArrayAnonymizerTest extends TestCase
             $this->addToAssertionCount(1);
         }
 
-        $failingCodec = new class () implements PayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'failing';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return ['email' => 'secret'];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                throw new RuntimeException('encode failed');
-            }
-        };
+        $failingCodec = new StaticPayloadCodec('failing', ['email' => 'secret'], 'email', 'encode failed');
         $this->expectExceptionMessageMatches('/failed to encode payload/');
         new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [], [$failingCodec])->anonymizePayload('payload', 'failing', '{}');
     }

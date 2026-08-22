@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
 use InvalidArgumentException;
-use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
-use PhpAnonymizer\Anonymizer\Application\Anonymization\ContextualReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
@@ -29,7 +27,6 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -48,6 +45,9 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
+use PhpAnonymizer\Anonymizer\Tests\Support\Records;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -92,7 +92,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
 #[UsesClass(ProfileNotFound::class)]
-final class Iteration10Test extends TestCase
+final class AnonymizationRuntimeTest extends TestCase
 {
     public function testNoReportPathReturnsSameTransformation(): void
     {
@@ -103,25 +103,7 @@ final class Iteration10Test extends TestCase
 
     public function testContextIsPassedToAContextualStrategy(): void
     {
-        $strategy = new class () implements ContextualReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'contextual';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return $value;
-            }
-
-            #[Override]
-            public function replaceWithContext(string $value, ReplacementContext $context): string
-            {
-                return $context->profile() . ':' . $context->path() . ':' . $context->keyId() . ':' . $context->attributes()['tenant'];
-            }
-        };
+        $strategy = new StaticContextualReplacementStrategy(mode: 'describe');
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
 
@@ -130,25 +112,7 @@ final class Iteration10Test extends TestCase
 
     public function testContextualStrategyRequiresContext(): void
     {
-        $strategy = new class () implements ContextualReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'contextual';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return $value;
-            }
-
-            #[Override]
-            public function replaceWithContext(string $value, ReplacementContext $context): string
-            {
-                return $value;
-            }
-        };
+        $strategy = new StaticContextualReplacementStrategy();
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
         $this->expectException(ContextRequired::class);
         new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret']);
@@ -156,25 +120,7 @@ final class Iteration10Test extends TestCase
 
     public function testContextualReportPayloadBatchAndAuditOperations(): void
     {
-        $strategy = new class () implements ContextualReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'contextual';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return 'safe';
-            }
-
-            #[Override]
-            public function replaceWithContext(string $value, ReplacementContext $context): string
-            {
-                return 'safe-' . $context->keyId();
-            }
-        };
+        $strategy = new StaticContextualReplacementStrategy(mode: 'key', fixed: 'safe-');
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
         $context = new AnonymizationContext(['tenant' => 'acme']);
@@ -194,25 +140,7 @@ final class Iteration10Test extends TestCase
 
     public function testContextualStrategyWorksInPreserveMode(): void
     {
-        $strategy = new class () implements ContextualReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'contextual';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return $value;
-            }
-
-            #[Override]
-            public function replaceWithContext(string $value, ReplacementContext $context): string
-            {
-                return 'pseudonym';
-            }
-        };
+        $strategy = new StaticContextualReplacementStrategy(mode: 'fixed', fixed: 'pseudonym');
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'preserve', 'rules' => [['field' => 'email', 'strategy' => 'contextual', 'key_id' => 'primary']]]);
         self::assertSame(['email' => 'pseudonym'], new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy])->anonymize('customer', ['email' => 'secret'], new AnonymizationContext()));
 
@@ -259,25 +187,7 @@ final class Iteration10Test extends TestCase
 
     public function testContextualStrategyRequiresKeyId(): void
     {
-        $strategy = new class () implements ContextualReplacementStrategyInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'contextual';
-            }
-
-            #[Override]
-            public function replace(string $value): string
-            {
-                return $value;
-            }
-
-            #[Override]
-            public function replaceWithContext(string $value, ReplacementContext $context): string
-            {
-                return $value;
-            }
-        };
+        $strategy = new StaticContextualReplacementStrategy();
         $profile = ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'contextual']]]);
         $this->expectException(InvalidArgumentException::class);
         new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), [$strategy]);
@@ -286,11 +196,7 @@ final class Iteration10Test extends TestCase
     public function testBatchIsLazyAndProcessesRecordsIndependently(): void
     {
         $anonymizer = $this->engine();
-        $records = (static function (): iterable {
-            yield ['email' => 'one'];
-
-            yield ['email' => 'two'];
-        })();
+        $records = new Records([['email' => 'one'], ['email' => 'two']]);
 
         self::assertSame([
             ['email' => '[REDACTED]'],
@@ -501,25 +407,7 @@ final class Iteration10Test extends TestCase
     public function testPayloadInputLimitUsesUtf8CharacterLength(): void
     {
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
-        $codec = new class () implements PayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'unicode';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return [];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                return '';
-            }
-        };
+        $codec = new StaticPayloadCodec('unicode', []);
         $anonymizer = new ArrayAnonymizer(
             new InMemoryProfileProvider([$profile]),
             codecs: [$codec],

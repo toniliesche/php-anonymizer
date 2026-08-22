@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
+namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Extension\Transformation;
 
-use InvalidArgumentException;
-use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
@@ -34,11 +32,11 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransfo
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
-use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -75,7 +73,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ProfileDefinition::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]
-final class TypedTransformationTest extends TestCase
+final class CoreTransformationTest extends TestCase
 {
     public function testCoreTransformationFactoryExposesAllBuiltins(): void
     {
@@ -98,40 +96,7 @@ final class TypedTransformationTest extends TestCase
 
     public function testCustomTransformationIsUsedInBothTraversalModes(): void
     {
-        $transformation = new class () implements ValueTransformationInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'custom';
-            }
-
-            #[Override]
-            public function supportedTypes(): array
-            {
-                return ['string'];
-            }
-
-            #[Override]
-            public function outputType(): string
-            {
-                return 'string';
-            }
-
-            #[Override]
-            public function validateOptions(array $options): void
-            {
-            }
-
-            #[Override]
-            public function transform(mixed $value, array $options): mixed
-            {
-                if (!is_string($value)) {
-                    throw new InvalidArgumentException('Expected a string.');
-                }
-
-                return 'custom:' . $value;
-            }
-        };
+        $transformation = new StaticValueTransformation('custom', prefix: 'custom:');
         $anonymizer = AnonymizerBuilder::create()
             ->withProfiles([
                 ProfileDefinition::fromArray('redact', ['mode' => 'redact', 'rules' => [['field' => 'value', 'transform' => ['type' => 'custom', 'options' => []]]]]),

@@ -6,7 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
 use InvalidArgumentException;
 use LogicException;
-use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
@@ -27,7 +26,6 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTravers
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\DocumentPayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
@@ -44,6 +42,7 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ConditionalDocumentPayloadCodec;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -86,7 +85,7 @@ use Throwable;
 #[UsesClass(ExecutionLimitExceeded::class)]
 #[UsesClass(PayloadCodecFailure::class)]
 #[UsesClass(ProfileNotFound::class)]
-final class Iteration13Test extends TestCase
+final class DocumentAnonymizationTest extends TestCase
 {
     public function testDocumentListRootIsExplicitAndReported(): void
     {
@@ -200,37 +199,7 @@ final class Iteration13Test extends TestCase
         } catch (InvalidArgumentException) {
         }
 
-        $shapeCodec = new class () implements DocumentPayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'shape';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return ['email' => 'x'];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                return '{}';
-            }
-
-            #[Override]
-            public function decodeDocument(string $payload): array
-            {
-                return $payload === 'list' ? [['email' => 'x']] : ['email' => 'x'];
-            }
-
-            #[Override]
-            public function encodeDocument(array $data): string
-            {
-                return '{}';
-            }
-        };
+        $shapeCodec = new ConditionalDocumentPayloadCodec();
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$mapProfile, $listProfile]), codecs: [$shapeCodec]);
 
         try {
@@ -278,37 +247,7 @@ final class Iteration13Test extends TestCase
             self::fail('Unknown profile must fail.');
         } catch (RuntimeException) {
         }
-        $failingCodec = new class () implements DocumentPayloadCodecInterface {
-            #[Override]
-            public function id(): string
-            {
-                return 'failing';
-            }
-
-            #[Override]
-            public function decode(string $payload): array
-            {
-                return [];
-            }
-
-            #[Override]
-            public function encode(array $data): string
-            {
-                return '';
-            }
-
-            #[Override]
-            public function decodeDocument(string $payload): array
-            {
-                return ['email' => 'x'];
-            }
-
-            #[Override]
-            public function encodeDocument(array $data): string
-            {
-                throw new RuntimeException('encode failed');
-            }
-        };
+        $failingCodec = new ConditionalDocumentPayloadCodec('failing', true);
         $this->expectException(PayloadCodecFailure::class);
         new ArrayAnonymizer($provider, codecs: [$failingCodec])->anonymizeDocument('map', 'failing', '{}');
     }

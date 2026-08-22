@@ -69,7 +69,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
-final class Iteration15Test extends TestCase
+final class ProfileCompositionTest extends TestCase
 {
     public function testMetadataAndFragmentNamesAreInspectable(): void
     {

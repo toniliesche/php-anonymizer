@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Iteration 22: extracted `RuleIndex` and the deferred NDJSON audit provider,
+  renamed and reorganized structural tests, and consolidated reusable test
+  extension fixtures without changing anonymization behavior.
 - Selectively removed coverage suppressions from JSON payload validation and
   transformation registration/option compilation, with focused validation
   tests and stricter string-keyed transformation options.
