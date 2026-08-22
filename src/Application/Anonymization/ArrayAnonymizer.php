@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResultInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentPayloadAnonymizationResult;
@@ -17,6 +18,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizati
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
+use PhpAnonymizer\Anonymizer\Application\Exception\ObjectAnonymizationUnavailable;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\DocumentPayloadCodecInterface;
@@ -37,7 +39,10 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use Throwable;
 
-// @phpstan-ignore complexity.classLike (the facade intentionally owns the additive anonymization ports)
+/**
+ * @internal use AnonymizerBuilder to obtain the unified façade
+ */
+// @phpstan-ignore complexity.classLike (cohesion extraction is scheduled for Iteration 20)
 final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonymizerInterface, BatchAnonymizerInterface, ContextualAnonymizerInterface, ContextualDocumentAnonymizerInterface, ContextualNdjsonAnonymizerInterface, DocumentAnonymizerInterface, NdjsonAnonymizerInterface
 {
     private ProfileRegistry $profileRegistry;
@@ -53,8 +58,16 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @param iterable<PayloadCodecInterface> $codecs
      * @param iterable<ValueTransformationInterface> $transformations
      */
-    public function __construct(ProfileProviderInterface $profiles, iterable $strategies = [], iterable $codecs = [], ?AnonymizationLimits $limits = null, iterable $transformations = [])
+    public function __construct(ProfileProviderInterface|AnonymizerRuntime $profiles, iterable $strategies = [], iterable $codecs = [], ?AnonymizationLimits $limits = null, iterable $transformations = [])
     {
+        if ($profiles instanceof AnonymizerRuntime) {
+            $runtime = $profiles;
+            $profiles = $runtime->profiles;
+            $strategies = $runtime->strategies;
+            $codecs = $runtime->codecs;
+            $limits = $runtime->limits;
+            $transformations = $runtime->transformations;
+        }
         $this->limits = $limits ?? new AnonymizationLimits();
         $this->profileRegistry = new ProfileRegistry($profiles->profiles());
 
@@ -78,14 +91,14 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @return array<string, mixed>
      */
     #[Override]
-    public function anonymize(string $profile, array|object $data): array
+    public function anonymize(string $profile, array|object $data, ?AnonymizationContext $context = null): array
     {
         if (is_object($data)) {
             throw new InvalidArgumentException('ArrayAnonymizer accepts arrays only; configure the Symfony Serializer integration to anonymize objects.');
         }
 
         // @infection-ignore-next-line Report collection does not affect anonymized data output.
-        return $this->traversal->apply($profile, $data, false)->data();
+        return $context instanceof AnonymizationContext ? $this->anonymizeWithContext($profile, $data, $context) : $this->traversal->apply($profile, $data, false)->data();
     }
 
     /** @param array<string, mixed> $data
@@ -111,19 +124,19 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @param array<string, mixed> $data
      */
     #[Override]
-    public function anonymizeWithReport(string $profile, array|object $data): AnonymizationResult
+    public function anonymizeWithReport(string $profile, array|object $data, ?AnonymizationContext $context = null): AnonymizationResult
     {
         if (is_object($data)) {
             throw new InvalidArgumentException('ArrayAnonymizer accepts arrays only; configure the Symfony Serializer integration to anonymize objects.');
         }
 
-        return $this->traversal->apply($profile, $data);
+        return $context instanceof AnonymizationContext ? $this->anonymizeWithReportAndContext($profile, $data, $context) : $this->traversal->apply($profile, $data);
     }
 
     #[Override]
-    public function anonymizePayload(string $profile, string $codec, string $payload): string
+    public function anonymizePayload(string $profile, string $codec, string $payload, ?AnonymizationContext $context = null): string
     {
-        return $this->anonymizePayloadWithReport($profile, $codec, $payload)->payload();
+        return $this->anonymizePayloadWithReport($profile, $codec, $payload, $context)->payload();
     }
 
     /**
@@ -132,7 +145,7 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @return iterable<array<string, mixed>>
      */
     #[Override]
-    public function anonymizeRecords(string $profile, iterable $records): iterable
+    public function anonymizeRecords(string $profile, iterable $records, ?AnonymizationContext $context = null): iterable
     {
         foreach ($records as $index => $record) {
             if (!is_array($record) || array_is_list($record)) {
@@ -148,7 +161,7 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
                 $map[(string) $key] = $value;
             }
 
-            yield $this->anonymize($profile, $map);
+            yield $this->anonymize($profile, $map, $context);
         }
     }
 
@@ -156,15 +169,15 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @param array<string, mixed> $data
      */
     #[Override]
-    public function anonymizeWithAudit(string $profile, array $data): AuditAnonymizationResult
+    public function anonymizeWithAudit(string $profile, array $data, ?AnonymizationContext $context = null): AuditAnonymizationResult
     {
-        return $this->buildAuditResult($profile, $data, null);
+        return $this->buildAuditResult($profile, $data, $context);
     }
 
     #[Override]
-    public function anonymizePayloadWithReport(string $profile, string $codec, string $payload): PayloadAnonymizationResult
+    public function anonymizePayloadWithReport(string $profile, string $codec, string $payload, ?AnonymizationContext $context = null): PayloadAnonymizationResult
     {
-        return $this->anonymizePayloadWithReportAndContext($profile, $codec, $payload, null);
+        return $this->anonymizePayloadWithReportAndContext($profile, $codec, $payload, $context);
     }
 
     #[Override]
@@ -206,15 +219,15 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
     }
 
     #[Override]
-    public function anonymizeDocument(string $profile, string $codec, string $payload): string
+    public function anonymizeDocument(string $profile, string $codec, string $payload, ?AnonymizationContext $context = null): string
     {
-        return $this->anonymizeDocumentWithReportAndContextInternal($profile, $codec, $payload, null)->payload();
+        return $this->anonymizeDocumentWithReportAndContextInternal($profile, $codec, $payload, $context)->payload();
     }
 
     #[Override]
-    public function anonymizeDocumentWithReport(string $profile, string $codec, string $payload): DocumentPayloadAnonymizationResult
+    public function anonymizeDocumentWithReport(string $profile, string $codec, string $payload, ?AnonymizationContext $context = null): DocumentPayloadAnonymizationResult
     {
-        return $this->anonymizeDocumentWithReportAndContextInternal($profile, $codec, $payload, null);
+        return $this->anonymizeDocumentWithReportAndContextInternal($profile, $codec, $payload, $context);
     }
 
     #[Override]
@@ -233,9 +246,9 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
      * @param iterable<mixed> $lines
      */
     #[Override]
-    public function anonymizeNdjson(string $profile, iterable $lines): NdjsonAnonymizationResult
+    public function anonymizeNdjson(string $profile, iterable $lines, ?AnonymizationContext $context = null): NdjsonAnonymizationResult
     {
-        return $this->anonymizeNdjsonInternal($profile, $lines, null);
+        return $this->anonymizeNdjsonInternal($profile, $lines, $context);
     }
 
     /**
@@ -278,6 +291,24 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface, AuditAnonym
     public function anonymizeWithAuditAndContext(string $profile, array $data, AnonymizationContext $context): AuditAnonymizationResult
     {
         return $this->buildAuditResult($profile, $data, $context);
+    }
+
+    /**
+     * @codeCoverageIgnore Transitional array adapter intentionally rejects object roots.
+     */
+    #[Override]
+    public function anonymizeObject(ObjectAnonymizationRequest $request): object
+    {
+        throw ObjectAnonymizationUnavailable::forObject($request->object());
+    }
+
+    /**
+     * @codeCoverageIgnore Transitional array adapter intentionally rejects object roots.
+     */
+    #[Override]
+    public function anonymizeObjectWithReport(ObjectAnonymizationRequest $request): AnonymizationResultInterface
+    {
+        throw ObjectAnonymizationUnavailable::forObject($request->object());
     }
 
     private function anonymizeDocumentWithReportAndContextInternal(string $profile, string $codec, string $payload, ?AnonymizationContext $context): DocumentPayloadAnonymizationResult

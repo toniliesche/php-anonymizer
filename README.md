@@ -28,8 +28,8 @@ $result->missingPaths();      // []
 ```
 
 `AnonymizerInterface` is the single public service contract. Use
-`AnonymizerFactory::fromArrays()`, `fromProfiles()`, or
-`fromProfileProviders()` when constructing the core outside Symfony; concrete
+`AnonymizerBuilder::create()` with `withProfiles()` or
+`withProfileProviders()` when constructing the core outside Symfony; concrete
 engines and profile collections remain implementation details. Providers must
 be registered explicitly and return immutable profile definitions.
 

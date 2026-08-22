@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `AnonymizerBuilder`, the unified façade operation contract, immutable
+  object requests, and the object/extension module ports.
+
 ## 1.7.0
 
 - Added `AnonymizerFactory::fromProfileProviders()` with deterministic provider

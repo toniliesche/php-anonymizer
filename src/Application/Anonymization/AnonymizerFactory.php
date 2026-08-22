@@ -13,7 +13,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransform
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
 /**
- * Creates the default array anonymizer without exposing its wiring details.
+ * @internal Transitional v1 construction helper; use AnonymizerBuilder.
  */
 final class AnonymizerFactory
 {
