@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Centralized runtime assembly behind the immutable builder while preserving
+  the internal direct `ArrayAnonymizer` compatibility path.
 - Added stable string-path accessors for contextual replacement and
   transformation values, plus provider-free NDJSON result construction.
 

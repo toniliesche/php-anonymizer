@@ -16,18 +16,10 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizati
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Exception\ObjectAnonymizationUnavailable;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileProviderInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
-use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileReferenceValidator;
-use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
-use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
-use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
-use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
-use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
@@ -38,15 +30,11 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
 {
     private ProfileRegistry $profileRegistry;
 
-    private PayloadCodecRegistry $codecRegistry;
-
     private ArrayTraversal $traversal;
 
     private NdjsonAnonymizationService $ndjson;
 
     private PayloadAnonymizationService $payloads;
-
-    private AnonymizationLimits $limits;
 
     /**
      * @param iterable<ReplacementStrategyInterface> $strategies
@@ -55,31 +43,13 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
      */
     public function __construct(ProfileProviderInterface|AnonymizerRuntime $profiles, iterable $strategies = [], iterable $codecs = [], ?AnonymizationLimits $limits = null, iterable $transformations = [])
     {
-        if ($profiles instanceof AnonymizerRuntime) {
-            $runtime = $profiles;
-            $profiles = $runtime->profiles;
-            $strategies = $runtime->strategies;
-            $codecs = $runtime->codecs;
-            $limits = $runtime->limits;
-            $transformations = $runtime->transformations;
-        }
-        $this->limits = $limits ?? new AnonymizationLimits();
-        $this->profileRegistry = new ProfileRegistry($profiles->profiles());
-
-        /** @var list<PayloadCodecInterface> $registeredCodecs */
-        // @infection-ignore-next-line Registries consume codec values and never expose iterable keys.
-        $registeredCodecs = [new JsonPayloadCodec(), ...iterator_to_array($codecs, false)];
-        $this->codecRegistry = new PayloadCodecRegistry($registeredCodecs);
-
-        /** @var list<ReplacementStrategyInterface> $registeredStrategies */
-        // @infection-ignore-next-line Registries consume strategy values and never expose iterable keys.
-        $registeredStrategies = [new DefaultRedactionStrategy(), new StarMaskStrategy(), ...iterator_to_array($strategies, false)];
-        $strategyRegistry = new ReplacementStrategyRegistry($registeredStrategies);
-        $transformationRegistry = new TransformationRegistry([...CoreTransformationFactory::defaults(), ...iterator_to_array($transformations, false)]);
-        new ProfileReferenceValidator()->validate($this->profileRegistry, $strategyRegistry, $this->codecRegistry, $transformationRegistry);
-        $this->traversal = new ArrayTraversal($this->profileRegistry, $strategyRegistry, $this->codecRegistry, $transformationRegistry, $this->limits);
-        $this->ndjson = new NdjsonAnonymizationService($this->profileRegistry, $this->traversal);
-        $this->payloads = new PayloadAnonymizationService($this->codecRegistry, $this->profileRegistry, $this->traversal, $this->limits);
+        $runtime = $profiles instanceof AnonymizerRuntime
+            ? $profiles
+            : new RuntimeAssembler()->assemble($profiles, $strategies, $codecs, $limits, $transformations);
+        $this->profileRegistry = $runtime->profiles;
+        $this->traversal = $runtime->traversal;
+        $this->ndjson = $runtime->ndjson;
+        $this->payloads = $runtime->payloads;
     }
 
     /**

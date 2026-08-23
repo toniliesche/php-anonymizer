@@ -4,29 +4,28 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization;
 
-use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
-use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileProviderInterface;
-use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
-use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 
 /**
- * @internal builder-produced engine configuration
+ * @internal assembled builder-produced runtime graph
  *
  * @codeCoverageIgnore Immutable wiring value.
  */
 final readonly class AnonymizerRuntime
 {
-    /**
-     * @param list<ReplacementStrategyInterface> $strategies
-     * @param list<PayloadCodecInterface> $codecs
-     * @param list<ValueTransformationInterface> $transformations
-     */
     public function __construct(
-        public ProfileProviderInterface $profiles,
-        public array $strategies = [],
-        public array $codecs = [],
-        public ?AnonymizationLimits $limits = null,
-        public array $transformations = [],
+        public ProfileRegistry $profiles,
+        public ReplacementStrategyRegistry $strategies,
+        public PayloadCodecRegistry $codecs,
+        public TransformationRegistry $transformations,
+        public ArrayTraversal $traversal,
+        public NdjsonAnonymizationService $ndjson,
+        public PayloadAnonymizationService $payloads,
+        public AnonymizationLimits $limits,
     ) {
     }
 }

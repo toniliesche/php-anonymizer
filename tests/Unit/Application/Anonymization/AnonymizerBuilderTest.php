@@ -9,6 +9,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerBuilder;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFacade;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ObjectAnonymizationRequest;
 use PhpAnonymizer\Anonymizer\Application\Exception\ObjectAnonymizationUnavailable;
 use PhpAnonymizer\Anonymizer\Application\Extension\ObjectAnonymizerInterface;
@@ -95,6 +96,30 @@ final class AnonymizerBuilderTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         AnonymizerBuilder::create()->withProfileProviders([new stdClass()]);
+    }
+
+    public function testDirectAndBuilderRuntimesExposeEquivalentOperations(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $direct = new ArrayAnonymizer(new StaticProfileProvider([$profile]));
+        $built = AnonymizerBuilder::create()->withProfile($profile)->build();
+
+        self::assertSame($direct->anonymize('customer', ['email' => 'secret']), $built->anonymize('customer', ['email' => 'secret']));
+        self::assertSame($direct->anonymizeWithReport('customer', ['email' => 'secret'])->data(), $built->anonymizeWithReport('customer', ['email' => 'secret'])->data());
+        self::assertSame($direct->anonymizePayload('customer', 'json', '{"email":"secret"}'), $built->anonymizePayload('customer', 'json', '{"email":"secret"}'));
+        self::assertSame($direct->anonymizeDocument('customer', 'json', '{"email":"secret"}'), $built->anonymizeDocument('customer', 'json', '{"email":"secret"}'));
+        self::assertSame(iterator_to_array($direct->anonymizeRecords('customer', [['email' => 'secret']]), false), iterator_to_array($built->anonymizeRecords('customer', [['email' => 'secret']]), false));
+        $directAudit = $direct->anonymizeWithAudit('customer', ['email' => 'secret'])->entries();
+        $builtAudit = $built->anonymizeWithAudit('customer', ['email' => 'secret'])->entries();
+        self::assertCount(count($directAudit), $builtAudit);
+        foreach ($directAudit as $index => $entry) {
+            self::assertSame($entry->profile(), $builtAudit[$index]->profile());
+            self::assertSame($entry->fingerprint(), $builtAudit[$index]->fingerprint());
+            self::assertSame($entry->path(), $builtAudit[$index]->path());
+            self::assertSame($entry->action(), $builtAudit[$index]->action());
+            self::assertSame($entry->handler(), $builtAudit[$index]->handler());
+            self::assertSame($entry->count(), $builtAudit[$index]->count());
+        }
     }
 
     public function testItRejectsMultipleObjectAdapters(): void

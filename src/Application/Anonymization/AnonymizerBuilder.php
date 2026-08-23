@@ -151,7 +151,7 @@ final readonly class AnonymizerBuilder
             }
         }
 
-        $runtime = new AnonymizerRuntime(
+        $runtime = new RuntimeAssembler()->assemble(
             new ProfileCollection($profiles),
             $this->strategies,
             $this->codecs,
