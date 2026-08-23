@@ -28,6 +28,7 @@ use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 #[CoversClass(DefaultRedactionStrategy::class)]
 #[CoversClass(StarMaskStrategy::class)]
@@ -114,6 +115,30 @@ final class ExtensionRegistryTest extends TestCase
         $strategy = new StaticReplacementStrategy('not valid');
         $this->expectExceptionMessageMatches('/ID .* invalid/');
         new ReplacementStrategyRegistry([$strategy]);
+    }
+
+    public function testRegistriesRejectValuesOutsideTheirExtensionContracts(): void
+    {
+        $this->expectExceptionMessageMatches('/Profile registry entries must implement/');
+        new ProfileRegistry([new stdClass()]);
+    }
+
+    public function testReplacementRegistryRejectsValuesOutsideItsExtensionContract(): void
+    {
+        $this->expectExceptionMessageMatches('/Replacement strategy registry entries must implement/');
+        new ReplacementStrategyRegistry([new stdClass()]);
+    }
+
+    public function testCodecRegistryRejectsValuesOutsideItsExtensionContract(): void
+    {
+        $this->expectExceptionMessageMatches('/Payload codec registry entries must implement/');
+        new PayloadCodecRegistry([new stdClass()]);
+    }
+
+    public function testTransformationRegistryRejectsValuesOutsideItsExtensionContract(): void
+    {
+        $this->expectExceptionMessageMatches('/Transformation registry entries must implement/');
+        new TransformationRegistry([new stdClass()]);
     }
 
     public function testTransformationRegistryRejectsInvalidIdsAndDuplicates(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Replacement;
 
 use InvalidArgumentException;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 // @internal
@@ -14,12 +15,13 @@ final readonly class ReplacementStrategyRegistry
     private array $strategies;
 
     /**
-     * @param iterable<ReplacementStrategyInterface> $strategies
+     * @param iterable<mixed> $strategies
      */
     public function __construct(iterable $strategies)
     {
         $registered = [];
         foreach ($strategies as $strategy) {
+            Assert::isInstanceOf($strategy, ReplacementStrategyInterface::class, sprintf('Replacement strategy registry entries must implement %s.', ReplacementStrategyInterface::class));
             $id = $strategy->id();
             $this->assertId($id, 'strategy');
             if (isset($registered[$id])) {

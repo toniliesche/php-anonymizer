@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Domain\Rule\Condition;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\KeyNormalizer;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 final readonly class ConditionDefinition
@@ -36,6 +37,8 @@ final readonly class ConditionDefinition
             throw new InvalidProfileDefinition('condition must contain path and exactly one of equals or in');
         }
 
+        Assert::isList($path);
+
         $operator = $operators[0];
         $value = $definition[$operator];
         if ($operator === 'equals') {
@@ -43,7 +46,6 @@ final readonly class ConditionDefinition
                 throw new InvalidProfileDefinition('condition equals value must be scalar or null');
             }
 
-            /** @var list<string> $path */
             /** @var null|bool|float|int|string $value */
             /** @var list<null|bool|float|int|string> $expected */
             $expected = [$value];
@@ -66,7 +68,8 @@ final readonly class ConditionDefinition
             $expected[] = $item;
         }
 
-        /** @var list<string> $path */
+        Assert::isList($path);
+
         return new self($path, $operator, $expected);
     }
 

@@ -8,6 +8,7 @@ use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
+use Webmozart\Assert\Assert;
 
 final readonly class RuleDefinition
 {
@@ -130,8 +131,8 @@ final readonly class RuleDefinition
      */
     private static function withTraversal(array $definition): self
     {
-        /** @var string $field */
         $field = $definition['field'];
+        Assert::string($field);
         $hasChildren = array_key_exists('children', $definition);
         $hasEach = array_key_exists('each', $definition);
         $hasStrategy = array_key_exists('strategy', $definition);
@@ -207,7 +208,7 @@ final readonly class RuleDefinition
                 throw new InvalidProfileDefinition(sprintf('nested rule %s must be a map', $index));
             }
 
-            /** @var array<string, mixed> $definition */
+            Assert::isMap($definition);
             $rule = self::fromArray($definition);
             if (isset($fields[$rule->field()])) {
                 throw new InvalidProfileDefinition(sprintf('nested rule %s duplicates field "%s"', $index, $rule->field()));

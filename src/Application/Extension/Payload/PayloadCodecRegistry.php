@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
 use InvalidArgumentException;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 // @internal
@@ -14,12 +15,13 @@ final readonly class PayloadCodecRegistry
     private array $codecs;
 
     /**
-     * @param iterable<PayloadCodecInterface> $codecs
+     * @param iterable<mixed> $codecs
      */
     public function __construct(iterable $codecs)
     {
         $registered = [];
         foreach ($codecs as $codec) {
+            Assert::isInstanceOf($codec, PayloadCodecInterface::class, sprintf('Payload codec registry entries must implement %s.', PayloadCodecInterface::class));
             $id = $codec->id();
             if (preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $id) !== 1) {
                 throw new InvalidArgumentException(sprintf('The payload codec ID "%s" is invalid.', $id));

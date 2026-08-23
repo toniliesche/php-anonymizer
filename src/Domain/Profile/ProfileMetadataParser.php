@@ -8,6 +8,7 @@ namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use Webmozart\Assert\Assert;
 
 /**
  * @internal metadata schema parser
@@ -29,7 +30,7 @@ final class ProfileMetadataParser
             throw InvalidProfileDefinition::forProfile($name, 'metadata must be a non-empty map when provided');
         }
 
-        /** @var non-empty-array<string, mixed> $value */
+        Assert::isNonEmptyMap($value);
         if (array_diff(array_keys($value), ['schema_version', 'profile_version', 'owner', 'status', 'purpose']) !== []) {
             throw InvalidProfileDefinition::forProfile($name, 'metadata contains an unknown key');
         }

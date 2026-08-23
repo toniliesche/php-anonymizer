@@ -16,7 +16,6 @@ final readonly class AnonymizationContext
      */
     public function __construct(array $attributes = [])
     {
-        /** @var array<string, string> $normalized */
         $normalized = [];
         foreach ($attributes as $name => $value) {
             if (!is_string($name) || $name === '' || !is_string($value)) {

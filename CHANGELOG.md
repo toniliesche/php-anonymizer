@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Iteration 29: validated extension registry entries at runtime and removed
+  unsafe iterable type claims from registry and provider registration paths.
 - Iteration 26: compiled immutable exact and normalized traversal lookups,
   centralized snapshot-scoped rule selection, and honored conditions on global
   rules while preserving output and report semantics.

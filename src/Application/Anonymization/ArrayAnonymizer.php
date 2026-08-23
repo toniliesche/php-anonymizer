@@ -102,7 +102,6 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
                 throw new InvalidArgumentException(sprintf('Batch record %s must be an associative array.', $ordinal));
             }
 
-            /** @var array<string, mixed> $map */
             $map = [];
             foreach ($record as $key => $value) {
                 // @infection-ignore-next-line PHP canonicalizes numeric string array keys to the same integer key.

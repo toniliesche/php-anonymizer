@@ -13,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileProviderInterf
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransformationInterface;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use Webmozart\Assert\Assert;
 
 /**
  * @codeCoverageIgnore Builder wiring is exercised through the public façade contract.
@@ -69,16 +70,11 @@ final readonly class AnonymizerBuilder
      */
     public function withProfileProviders(iterable $providers): self
     {
-        /** @var list<mixed> $registered */
         $registered = iterator_to_array($providers, false);
 
-        /** @var list<ProfileProviderInterface> $validated */
         $validated = [];
         foreach ($registered as $provider) {
-            if (!$provider instanceof ProfileProviderInterface) {
-                throw new InvalidArgumentException(sprintf('Profile provider must implement %s, got %s.', ProfileProviderInterface::class, get_debug_type($provider)));
-            }
-            $validated[] = $provider;
+            $validated[] = Assert::isInstanceOf($provider, ProfileProviderInterface::class, sprintf('Profile provider must implement %s, got %s.', ProfileProviderInterface::class, get_debug_type($provider)));
         }
 
         return new self($this->profiles, [...$this->providers, ...$validated], $this->strategies, $this->codecs, $this->limits, $this->transformations, $this->objectAnonymizer);

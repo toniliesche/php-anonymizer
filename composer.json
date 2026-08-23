@@ -6,7 +6,8 @@
     "require": {
         "php": "^8.5",
         "ext-mbstring": "*",
-        "thecodingmachine/safe": "^3.4"
+        "thecodingmachine/safe": "^3.4",
+        "webmozart/assert": "^2.4"
     },
     "autoload": {
         "psr-4": {

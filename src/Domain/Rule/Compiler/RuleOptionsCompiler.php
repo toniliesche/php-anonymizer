@@ -9,6 +9,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
+use Webmozart\Assert\Assert;
 
 // @internal
 final class RuleOptionsCompiler
@@ -25,8 +26,8 @@ final class RuleOptionsCompiler
             throw new InvalidProfileDefinition('when must be a map');
         }
 
-        /** @var array<string, mixed> $condition */
         $condition = $definition['when'];
+        Assert::isMap($condition);
 
         return ConditionDefinition::fromArray($condition);
     }
@@ -100,7 +101,8 @@ final class RuleOptionsCompiler
             throw new InvalidProfileDefinition('transform options must be a map with string keys');
         }
 
-        /** @var array<string, mixed> $options */
+        Assert::isMap($options);
+
         return new TransformationDefinition($transform['type'], $options, self::keyId($definition));
     }
 

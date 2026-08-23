@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 // @codeCoverageIgnoreStart
@@ -28,8 +29,8 @@ final readonly class ProfileCompositionCompiler
         $fragments = $this->fragments($profile, $definition['fragments'] ?? null);
         $fragmentNames = array_keys($fragments);
 
-        /** @var list<mixed> $rules */
         $rules = $definition['rules'] ?? [];
+        Assert::isList($rules);
         $expanded = $this->expandList($profile, $rules, $fragments, [], 'rules', true);
 
         return ['rules' => $expanded, 'fragments' => $fragmentNames];
@@ -104,7 +105,7 @@ final readonly class ProfileCompositionCompiler
             $this->invalidEntry($profile, $path, $index);
         }
 
-        /** @var array<string, mixed> $entry */
+        Assert::isMap($entry);
         if (array_key_exists('use', $entry)) {
             return $this->expandFragment($profile, $entry, $fragments, $stack, $path, $index);
         }

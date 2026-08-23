@@ -17,6 +17,7 @@ final readonly class AuditAnonymizationResult
     {
         /** @var list<AuditEntry> $normalized */
         $normalized = $entries;
+
         $this->entries = $normalized;
     }
 

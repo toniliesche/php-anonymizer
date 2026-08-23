@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
 use JsonException;
 use Override;
+use Webmozart\Assert\Assert;
 use function Safe\json_decode;
 use function Safe\json_encode;
 
@@ -34,7 +35,8 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
             throw new JsonException('JSON payload root must be an object.');
         }
 
-        /** @var non-empty-array<string, mixed> $decoded */
+        Assert::isNonEmptyMap($decoded);
+
         return $decoded;
     }
 

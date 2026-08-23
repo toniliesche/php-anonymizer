@@ -20,6 +20,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 /**
  * @internal payload and document operations extracted from the core engine
@@ -53,7 +54,7 @@ final readonly class PayloadAnonymizationService
             throw PayloadCodecFailure::expectedMap($profile, $codec);
         }
 
-        /** @var array<string, mixed> $data */
+        Assert::isMap($data);
         $result = $this->traversal->apply($profile, $data, true, context: $context);
 
         try {

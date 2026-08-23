@@ -8,6 +8,7 @@ namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 /**
@@ -31,8 +32,8 @@ final class ProfileDefinitionParser
         $composition = new ProfileCompositionCompiler()->compile($name, $definition);
         $rules = $this->rules($name, $composition['rules']);
 
-        /** @var list<mixed> $globalDefinitions */
         $globalDefinitions = $definition['global_rules'] ?? [];
+        Assert::isList($globalDefinitions);
         $globalRules = $this->globalRules($name, $globalDefinitions);
 
         return new ProfileDefinitionData($name, $rules, $mode, $root, (bool) ($definition['key_normalization'] ?? false), $globalRules, $metadata, $composition['fragments']);
@@ -133,7 +134,8 @@ final class ProfileDefinitionParser
                 throw InvalidProfileDefinition::at($name, sprintf('global_rules[%s] must be a map', $index));
             }
 
-            /** @var array<string, mixed> $definition */
+            Assert::isMap($definition);
+
             try {
                 $rule = RuleDefinition::fromGlobalArray($definition);
             } catch (InvalidProfileDefinition $exception) {

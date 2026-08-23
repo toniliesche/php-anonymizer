@@ -42,13 +42,13 @@ final class RuntimeAssembler
         $limits ??= new AnonymizationLimits();
         $profileRegistry = new ProfileRegistry($profiles->profiles());
 
-        /** @var list<PayloadCodecInterface> $registeredCodecs */
         // @infection-ignore-next-line Registries consume codec values and never expose iterable keys.
+        /** @var list<PayloadCodecInterface> $registeredCodecs */
         $registeredCodecs = [new JsonPayloadCodec(), ...iterator_to_array($codecs, false)];
         $codecRegistry = new PayloadCodecRegistry($registeredCodecs);
 
-        /** @var list<ReplacementStrategyInterface> $registeredStrategies */
         // @infection-ignore-next-line Registries consume strategy values and never expose iterable keys.
+        /** @var list<ReplacementStrategyInterface> $registeredStrategies */
         $registeredStrategies = [new DefaultRedactionStrategy(), new StarMaskStrategy(), ...iterator_to_array($strategies, false)];
         $strategyRegistry = new ReplacementStrategyRegistry($registeredStrategies);
         $transformationRegistry = new TransformationRegistry([...CoreTransformationFactory::defaults(), ...iterator_to_array($transformations, false)]);

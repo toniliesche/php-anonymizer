@@ -13,6 +13,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 // @internal
 final readonly class EmbeddedPayloadTraversal
@@ -46,7 +47,8 @@ final readonly class EmbeddedPayloadTraversal
             throw PayloadCodecFailure::embedded($profile, $codecId, 'decode', $path, $exception);
         }
 
-        /** @var array<string, mixed> $decoded */
+        Assert::isMap($decoded);
+
         try {
             $result = $this->nested->apply($nestedProfile, $decoded, $report->isCollecting(), $budget, $context);
         } finally {

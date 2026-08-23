@@ -20,6 +20,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use Throwable;
+use Webmozart\Assert\Assert;
 
 /**
  * @internal NDJSON operation extracted from the core engine
@@ -88,7 +89,7 @@ final readonly class NdjsonAnonymizationService
             throw new InvalidArgumentException(sprintf('NDJSON record %s must be a JSON object.', $this->formatOrdinal($ordinal)));
         }
 
-        /** @var array<string, mixed> $map */
+        Assert::isMap($decoded);
         $map = $decoded;
         $result = $this->traversal->apply($profile, $map, true, context: $context);
         foreach ($result->events() as $event) {

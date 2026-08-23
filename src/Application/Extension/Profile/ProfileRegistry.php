@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Profile;
 use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use Webmozart\Assert\Assert;
 
 // @internal
 final readonly class ProfileRegistry implements ProfileProviderInterface
@@ -15,12 +16,13 @@ final readonly class ProfileRegistry implements ProfileProviderInterface
     private array $profiles;
 
     /**
-     * @param iterable<ProfileDefinition> $profiles
+     * @param iterable<mixed> $profiles
      */
     public function __construct(iterable $profiles)
     {
         $registered = [];
         foreach ($profiles as $profile) {
+            Assert::isInstanceOf($profile, ProfileDefinition::class, sprintf('Profile registry entries must implement %s.', ProfileDefinition::class));
             $name = $profile->name();
             if (isset($registered[$name])) {
                 throw new InvalidArgumentException(sprintf('Profile "%s" is registered more than once.', $name));

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Transformation;
 
 use InvalidArgumentException;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 // @internal
@@ -14,12 +15,13 @@ final readonly class TransformationRegistry
     private array $transformations;
 
     /**
-     * @param iterable<ValueTransformationInterface> $transformations
+     * @param iterable<mixed> $transformations
      */
     public function __construct(iterable $transformations)
     {
         $registered = [];
         foreach ($transformations as $transformation) {
+            Assert::isInstanceOf($transformation, ValueTransformationInterface::class, sprintf('Transformation registry entries must implement %s.', ValueTransformationInterface::class));
             $id = $transformation->id();
             if (preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $id) !== 1) {
                 throw new InvalidArgumentException(sprintf('The transformation ID "%s" is invalid.', $id));
