@@ -10,6 +10,8 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
 /**
  * Immutable profile collection used by application-level construction APIs.
+ *
+ * @internal
  */
 final class ProfileCollection implements ProfileProviderInterface
 {

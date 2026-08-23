@@ -26,6 +26,11 @@ final readonly class ReplacementContext
         return $this->path;
     }
 
+    public function pathString(): string
+    {
+        return (string) $this->path;
+    }
+
     public function keyId(): string
     {
         return $this->keyId;

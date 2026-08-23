@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added stable string-path accessors for contextual replacement and
+  transformation values, plus provider-free NDJSON result construction.
+
 ## 2.0.0
 
 - Iteration 22: extracted `RuleIndex` and the deferred NDJSON audit provider,

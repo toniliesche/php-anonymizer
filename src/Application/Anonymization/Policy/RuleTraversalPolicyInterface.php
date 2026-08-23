@@ -10,6 +10,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationRepor
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
+// @internal
 interface RuleTraversalPolicyInterface
 {
     public function unselected(mixed &$value, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void;

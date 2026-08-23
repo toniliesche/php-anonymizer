@@ -24,6 +24,7 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMode;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 
+// @internal
 final readonly class ArrayTraversal
 {
     private EmbeddedPayloadTraversal $embedded;

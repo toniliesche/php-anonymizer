@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Replacement;
 use InvalidArgumentException;
 use function Safe\preg_match;
 
+// @internal
 final readonly class ReplacementStrategyRegistry
 {
     /** @var array<string, ReplacementStrategyInterface> */

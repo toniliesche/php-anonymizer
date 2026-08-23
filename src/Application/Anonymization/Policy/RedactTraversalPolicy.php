@@ -23,6 +23,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 
+// @internal
 final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterface
 {
     private TransformationRegistry $transformations;

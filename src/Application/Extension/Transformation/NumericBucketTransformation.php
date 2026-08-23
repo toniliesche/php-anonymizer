@@ -10,6 +10,7 @@ use Override;
 /**
  * @codeCoverageIgnore
  */
+// @internal
 final class NumericBucketTransformation implements ValueTransformationInterface
 {
     #[Override]

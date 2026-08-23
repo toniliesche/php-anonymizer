@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Policy;
 
+// @internal
 final class RedactUnselectedValues
 {
     /**

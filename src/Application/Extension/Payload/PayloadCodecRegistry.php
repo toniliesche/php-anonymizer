@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 use InvalidArgumentException;
 use function Safe\preg_match;
 
+// @internal
 final readonly class PayloadCodecRegistry
 {
     /** @var array<string, PayloadCodecInterface> */

@@ -14,6 +14,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use Throwable;
 
+// @internal
 final readonly class EmbeddedPayloadTraversal
 {
     public function __construct(

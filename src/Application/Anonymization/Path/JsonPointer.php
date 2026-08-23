@@ -7,6 +7,9 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Path;
 use Override;
 use Stringable;
 
+/**
+ * Transitional pointer value; prefer string paths in new integrations.
+ */
 final readonly class JsonPointer implements Stringable
 {
     private function __construct(private string $value)

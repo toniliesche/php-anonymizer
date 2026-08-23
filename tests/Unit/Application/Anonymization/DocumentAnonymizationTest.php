@@ -102,6 +102,20 @@ final class DocumentAnonymizationTest extends TestCase
         self::assertSame(['/0/email', '/1/email'], $result->anonymizationResult()->anonymizedPaths());
     }
 
+    public function testNdjsonResultCanUseAProviderFreeAuditFactory(): void
+    {
+        $result = NdjsonAnonymizationResult::fromLines([], static fn (): NdjsonAuditResult => new NdjsonAuditResult([]));
+
+        self::assertSame([], $result->audit()->entries());
+    }
+
+    public function testNdjsonResultRejectsAnInvalidAuditFactoryResult(): void
+    {
+        $this->expectException(LogicException::class);
+
+        NdjsonAnonymizationResult::fromLines([], static fn (): mixed => null)->audit();
+    }
+
     public function testMapDocumentRetainsLegacyShape(): void
     {
         $profile = ProfileDefinition::fromArray('customer', [

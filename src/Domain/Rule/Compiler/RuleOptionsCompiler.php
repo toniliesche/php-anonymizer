@@ -10,6 +10,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 
+// @internal
 final class RuleOptionsCompiler
 {
     /**

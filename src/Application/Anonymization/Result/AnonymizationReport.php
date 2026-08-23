@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Result;
 
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 
+// @internal
 final class AnonymizationReport
 {
     /** @var list<string> */

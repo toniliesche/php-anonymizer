@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Profile;
 use Override;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
+// @internal
 final readonly class ProfileInspector implements ProfileInspectorInterface
 {
     private ProfileRegistry $registry;

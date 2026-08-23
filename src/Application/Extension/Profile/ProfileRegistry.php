@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Override;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
+// @internal
 final readonly class ProfileRegistry implements ProfileProviderInterface
 {
     /** @var array<string, ProfileDefinition> */

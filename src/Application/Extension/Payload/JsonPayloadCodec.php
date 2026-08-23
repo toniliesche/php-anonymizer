@@ -9,6 +9,7 @@ use Override;
 use function Safe\json_decode;
 use function Safe\json_encode;
 
+// @internal
 final class JsonPayloadCodec implements DocumentPayloadCodecInterface
 {
     #[Override]

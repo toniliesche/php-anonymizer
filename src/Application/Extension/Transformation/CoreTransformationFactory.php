@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Transformation;
 
+// @internal
 final class CoreTransformationFactory
 {
     /**

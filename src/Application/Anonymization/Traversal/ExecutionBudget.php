@@ -8,6 +8,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 
+// @internal
 final class ExecutionBudget
 {
     private int $visitedNodes = 0;

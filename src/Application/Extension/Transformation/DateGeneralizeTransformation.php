@@ -14,6 +14,7 @@ use function Safe\preg_match;
 /**
  * @codeCoverageIgnore
  */
+// @internal
 final class DateGeneralizeTransformation implements ValueTransformationInterface
 {
     #[Override]

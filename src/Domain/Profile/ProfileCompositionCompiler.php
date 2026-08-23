@@ -8,9 +8,7 @@ use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use function Safe\preg_match;
 
 // @codeCoverageIgnoreStart
-/**
- * @internal
- */
+// @internal
 final readonly class ProfileCompositionCompiler
 {
     private ProfileRuleAppender $appender;

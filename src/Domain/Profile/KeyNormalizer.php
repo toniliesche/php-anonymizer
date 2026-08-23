@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use function Safe\preg_replace;
 
+// @internal
 final class KeyNormalizer
 {
     public static function normalize(string $key): string

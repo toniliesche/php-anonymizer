@@ -9,6 +9,7 @@ use Override;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileProviderInterface;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 
+// @internal
 final class InMemoryProfileProvider implements ProfileProviderInterface
 {
     /** @var array<string, ProfileDefinition> */

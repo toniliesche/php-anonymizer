@@ -110,6 +110,14 @@ final class AnonymizationRuntimeTest extends TestCase
         self::assertSame(['email' => 'customer:/email:primary:acme'], $anonymizer->anonymize('customer', ['email' => 'secret'], new AnonymizationContext(['tenant' => 'acme'])));
     }
 
+    public function testContextProvidesAStableStringPathAlongsideTheLegacyPointer(): void
+    {
+        $context = new ReplacementContext('customer', JsonPointer::fromString('/email'), 'primary', new AnonymizationContext());
+
+        self::assertSame('/email', $context->pathString());
+        self::assertSame('/email', (string) $context->path());
+    }
+
     public function testContextualStrategyRequiresContext(): void
     {
         $strategy = new StaticContextualReplacementStrategy();

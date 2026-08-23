@@ -15,6 +15,7 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrate
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
+// @internal
 final readonly class PreserveStringSelection
 {
     public function __construct(private ReplacementStrategyRegistry $strategies)

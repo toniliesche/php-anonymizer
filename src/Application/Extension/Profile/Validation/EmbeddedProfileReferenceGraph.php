@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 
+// @internal
 final readonly class EmbeddedProfileReferenceGraph
 {
     /** @var array<string, list<string>> */

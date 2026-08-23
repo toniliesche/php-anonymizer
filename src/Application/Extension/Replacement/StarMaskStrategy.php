@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Replacement;
 
 use Override;
 
+// @internal
 final class StarMaskStrategy implements ReplacementStrategyInterface
 {
     #[Override]

@@ -7,6 +7,7 @@ namespace PhpAnonymizer\Anonymizer\Application\Extension\Transformation;
 use InvalidArgumentException;
 use function Safe\preg_match;
 
+// @internal
 final readonly class TransformationRegistry
 {
     /** @var array<string,ValueTransformationInterface> */
