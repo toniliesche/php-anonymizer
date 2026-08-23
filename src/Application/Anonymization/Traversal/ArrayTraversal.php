@@ -35,6 +35,9 @@ final readonly class ArrayTraversal
 
     private PreserveTraversalPolicy $preserver;
 
+    /** @var array<string, CompiledProfile> */
+    private array $compiledProfiles;
+
     public function __construct(
         private ProfileRegistry $profiles,
         ReplacementStrategyRegistry $strategies,
@@ -47,6 +50,11 @@ final readonly class ArrayTraversal
         $this->rules = new RuleTreeTraversal($this->embedded);
         $this->redactor = new RedactTraversalPolicy($strategies, $transformations);
         $this->preserver = new PreserveTraversalPolicy($strategies, $transformations);
+        $compiledProfiles = [];
+        foreach ($profiles->profiles() as $profile) {
+            $compiledProfiles[$profile->name()] = new CompiledProfile($profile);
+        }
+        $this->compiledProfiles = $compiledProfiles;
     }
 
     /**
@@ -131,7 +139,9 @@ final readonly class ArrayTraversal
     {
         $policy = $definition->mode() === ProfileMode::PRESERVE ? $this->preserver : $this->redactor;
 
-        return new TraversalExecutionContext($profile, $definition->rules(), $definition->globalRules(), $policy, $report, $budget, $parent ?? JsonPointer::root(), 0, $context, $definition->keyNormalization());
+        $compiled = $this->compiledProfiles[$profile];
+
+        return new TraversalExecutionContext($profile, $compiled->rules, $compiled->globalRules, $compiled->emptyRules, $policy, $report, $budget, $parent ?? JsonPointer::root(), 0, $context, $definition->keyNormalization());
     }
 
     private function isMap(mixed $value): bool

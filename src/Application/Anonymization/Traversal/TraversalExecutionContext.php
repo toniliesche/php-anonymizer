@@ -10,25 +10,19 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RuleTraversalPolicyInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
-use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 
 /**
  * @internal immutable state shared by one recursive traversal
  *
  * @codeCoverageIgnore Internal execution value.
- *
- * @phpstan-type RuleList list<RuleDefinition>
  */
 final readonly class TraversalExecutionContext
 {
-    /**
-     * @param RuleList $rules
-     * @param RuleList $globalRules
-     */
     public function __construct(
         public string $profile,
-        public array $rules,
-        public array $globalRules,
+        public CompiledRuleList $rules,
+        public CompiledRuleList $globalRules,
+        public CompiledRuleList $emptyRules,
         public RuleTraversalPolicyInterface $policy,
         public AnonymizationReport $report,
         public ExecutionBudget $budget,
@@ -39,15 +33,13 @@ final readonly class TraversalExecutionContext
     ) {
     }
 
-    /**
-     * @param null|RuleList $rules
-     */
-    public function descend(JsonPointer $pointer, int $depth, ?array $rules = null): self
+    public function descend(JsonPointer $pointer, int $depth, ?CompiledRuleList $rules = null): self
     {
         return new self(
             $this->profile,
             $rules ?? $this->rules,
             $this->globalRules,
+            $this->emptyRules,
             $this->policy,
             $this->report,
             $this->budget,

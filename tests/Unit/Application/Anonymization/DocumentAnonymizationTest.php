@@ -21,8 +21,12 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentPayloadAno
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
@@ -69,6 +73,10 @@ use Throwable;
 #[CoversClass(ArrayTraversal::class)]
 #[UsesClass(ExecutionBudget::class)]
 #[UsesClass(RuleTreeTraversal::class)]
+#[UsesClass(CompiledProfile::class)]
+#[UsesClass(CompiledRuleList::class)]
+#[UsesClass(RuleSelector::class)]
+#[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]

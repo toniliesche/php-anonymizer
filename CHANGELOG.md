@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Iteration 26: compiled immutable exact and normalized traversal lookups,
+  centralized snapshot-scoped rule selection, and honored conditions on global
+  rules while preserving output and report semantics.
 - Centralized runtime assembly behind the immutable builder while preserving
   the internal direct `ArrayAnonymizer` compatibility path.
 - Added stable string-path accessors for contextual replacement and

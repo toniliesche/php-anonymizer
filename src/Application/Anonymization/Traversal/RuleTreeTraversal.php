@@ -6,7 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
-use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 
 /**
  * @internal recursive rule-tree coordinator
@@ -28,10 +27,7 @@ final readonly class RuleTreeTraversal
         $this->map($data, $context);
     }
 
-    /**
-     * @param list<RuleDefinition> $rules
-     */
-    public function dispatchChildren(mixed &$value, array $rules, TraversalExecutionContext $context): void
+    public function dispatchChildren(mixed &$value, CompiledRuleList $rules, TraversalExecutionContext $context): void
     {
         if (!$this->isMap($value)) {
             throw UnsupportedValue::at($context->profile, (string) $context->pointer, $value);
@@ -50,10 +46,7 @@ final readonly class RuleTreeTraversal
         $context->policy->strings($context->profile, $value, $context->pointer, $context->report, $context->anonymizationContext);
     }
 
-    /**
-     * @param list<RuleDefinition> $rules
-     */
-    public function dispatchEach(mixed &$value, array $rules, TraversalExecutionContext $context): void
+    public function dispatchEach(mixed &$value, CompiledRuleList $rules, TraversalExecutionContext $context): void
     {
         if (!is_array($value) || !array_is_list($value)) {
             throw UnsupportedValue::at($context->profile, (string) $context->pointer, $value);
@@ -78,28 +71,16 @@ final readonly class RuleTreeTraversal
         $context->budget->visit($context->profile, $context->pointer, $context->depth);
         $context->budget->collection($context->profile, $context->pointer, count($data));
         $snapshot = $data;
-        $scoped = new RuleIndex($context->rules, $snapshot, $context->normalizeKeys);
-        $global = new RuleIndex($context->globalRules, $snapshot, $context->normalizeKeys, false);
-        foreach ($context->rules as $rule) {
-            if ($scoped->matches($rule) && !array_key_exists($rule->field(), $data)) {
-                $context->report->missing($context->pointer->append($rule->field()));
-            }
-        }
+        $selector = new RuleSelector($context->rules, $context->globalRules, $snapshot, $context->normalizeKeys);
+        $selector->reportMissing($context->pointer, $context->report);
 
         foreach ($data as $field => &$value) {
             $field = (string) $field;
             $path = $context->pointer->append($field);
-            $rule = $scoped->resolve($field);
-            if ($rule instanceof RuleDefinition && $scoped->matches($rule)) {
+            $selected = $selector->select($field);
+            if ($selected instanceof SelectedRule) {
                 $context->budget->visit($context->profile, $path, $context->depth + 1);
-                $this->dispatcher->dispatch($value, $rule, $context->descend($path, $context->depth + 1));
-
-                continue;
-            }
-            $globalRule = $global->resolve($field);
-            if ($globalRule instanceof RuleDefinition && $global->matches($globalRule)) {
-                $context->budget->visit($context->profile, $path, $context->depth + 1);
-                $this->dispatcher->dispatch($value, $globalRule, $context->descend($path, $context->depth + 1));
+                $this->dispatcher->dispatch($value, $selected, $context->descend($path, $context->depth + 1));
 
                 continue;
             }
@@ -112,7 +93,7 @@ final readonly class RuleTreeTraversal
     {
         if (is_array($value) && (!array_is_list($value) || $value === [])) {
             /** @var array<mixed, mixed> $value */
-            $this->map($value, $context->descend($context->pointer, $context->depth, []));
+            $this->map($value, $context->descend($context->pointer, $context->depth, $context->emptyRules));
 
             return;
         }

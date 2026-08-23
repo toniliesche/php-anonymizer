@@ -6,9 +6,9 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
+use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
-use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
 /**
@@ -22,8 +22,9 @@ final readonly class SelectedValueDispatcher
     {
     }
 
-    public function dispatch(mixed &$value, RuleDefinition $rule, TraversalExecutionContext $context): void
+    public function dispatch(mixed &$value, SelectedRule $selected, TraversalExecutionContext $context): void
     {
+        $rule = $selected->rule;
         if ($rule->embedded() instanceof EmbeddedPayloadDefinition) {
             $embedded = $rule->embedded();
             $this->embedded->apply($context->profile, $value, (string) $context->pointer, $embedded->codec(), $embedded->profile(), $context->report, $context->budget, $context->anonymizationContext);
@@ -36,7 +37,10 @@ final readonly class SelectedValueDispatcher
             return;
         }
         if ($rule->hasChildren()) {
-            $this->tree->dispatchChildren($value, $rule->children(), $context);
+            if (!$selected->nested instanceof CompiledRuleList) {
+                throw new LogicException('Compiled child rules are missing.');
+            }
+            $this->tree->dispatchChildren($value, $selected->nested, $context);
 
             return;
         }
@@ -46,7 +50,10 @@ final readonly class SelectedValueDispatcher
             return;
         }
         if ($rule->eachRules() !== null) {
-            $this->tree->dispatchEach($value, $rule->eachRules(), $context);
+            if (!$selected->nested instanceof CompiledRuleList) {
+                throw new LogicException('Compiled each rules are missing.');
+            }
+            $this->tree->dispatchEach($value, $selected->nested, $context);
 
             return;
         }

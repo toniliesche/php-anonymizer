@@ -20,8 +20,12 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymization
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
 use PhpAnonymizer\Anonymizer\Application\Exception\ContextRequired;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
@@ -80,6 +84,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AnonymizationResult::class)]
 #[UsesClass(ArrayTraversal::class)]
 #[UsesClass(RuleTreeTraversal::class)]
+#[UsesClass(CompiledProfile::class)]
+#[UsesClass(CompiledRuleList::class)]
+#[UsesClass(RuleSelector::class)]
+#[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
 #[UsesClass(PayloadCodecRegistry::class)]

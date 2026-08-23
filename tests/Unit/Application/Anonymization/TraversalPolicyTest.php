@@ -15,8 +15,12 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactUnselectedVa
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
@@ -42,6 +46,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ArrayAnonymizer::class)]
 #[CoversClass(RedactUnselectedValues::class)]
 #[CoversClass(RuleTreeTraversal::class)]
+#[UsesClass(CompiledProfile::class)]
+#[UsesClass(CompiledRuleList::class)]
+#[UsesClass(RuleSelector::class)]
+#[UsesClass(SelectedRule::class)]
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(KeyNormalizer::class)]
 #[CoversClass(ConditionDefinition::class)]
@@ -165,6 +173,19 @@ final class TraversalPolicyTest extends TestCase
 
         self::assertSame(['accountType' => 'person', 'email' => '[REDACTED]'], $anonymizer->anonymize('customer', ['accountType' => 'person', 'email' => 'secret']));
         self::assertSame(['email' => 'secret'], $anonymizer->anonymize('customer', ['email' => 'secret']));
+    }
+
+    public function testConditionalGlobalRuleAppliesWhenLocalConditionDoesNotMatch(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'when' => ['path' => 'kind', 'equals' => 'person']]],
+            'global_rules' => [['field' => 'email', 'when' => ['path' => 'kind', 'equals' => 'company']]],
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+
+        self::assertSame(['kind' => 'company', 'email' => '[REDACTED]'], $anonymizer->anonymize('customer', ['kind' => 'company', 'email' => 'secret']));
+        self::assertSame(['kind' => 'other', 'email' => 'secret'], $anonymizer->anonymize('customer', ['kind' => 'other', 'email' => 'secret']));
     }
 
     public function testNormalizedConditionUsesFirstEquivalentInputKey(): void

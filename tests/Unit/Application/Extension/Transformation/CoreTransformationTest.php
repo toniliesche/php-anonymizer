@@ -14,8 +14,12 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPol
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
@@ -57,6 +61,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ArrayTraversal::class)]
 #[UsesClass(ExecutionBudget::class)]
 #[UsesClass(RuleTreeTraversal::class)]
+#[UsesClass(CompiledProfile::class)]
+#[UsesClass(CompiledRuleList::class)]
+#[UsesClass(RuleSelector::class)]
+#[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
