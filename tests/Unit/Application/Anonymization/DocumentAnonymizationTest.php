@@ -47,6 +47,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ConditionalDocumentPayloadCodec;
+use PhpAnonymizer\Anonymizer\Tests\Support\PullCountingIterable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -148,6 +149,22 @@ final class DocumentAnonymizationTest extends TestCase
 
         $this->expectException(LogicException::class);
         $stream->audit();
+    }
+
+    public function testNdjsonDoesNotPullSourceBeforeLinesAreRequested(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email']],
+            'root' => 'list',
+        ]);
+
+        $lines = new PullCountingIterable(['{"email":"one"}']);
+        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))->anonymizeNdjson('records', $lines);
+
+        self::assertSame(0, $lines->pulls());
+        iterator_to_array($stream->lines(), false);
+        self::assertSame(1, $lines->pulls());
     }
 
     public function testNdjsonOutputAndAuditAfterExhaustion(): void

@@ -51,6 +51,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
+use PhpAnonymizer\Anonymizer\Tests\Support\PullCountingIterable;
 use PhpAnonymizer\Anonymizer\Tests\Support\Records;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -218,6 +219,17 @@ final class AnonymizationRuntimeTest extends TestCase
             ['email' => '[REDACTED]'],
             ['email' => '[REDACTED]'],
         ], iterator_to_array($anonymizer->anonymizeRecords('customer', $records), false));
+    }
+
+    public function testBatchDoesNotPullSourceBeforeIterationStarts(): void
+    {
+        $records = new PullCountingIterable([['email' => 'one']]);
+
+        $stream = $this->engine()->anonymizeRecords('customer', $records);
+
+        self::assertSame(0, $records->pulls());
+        iterator_to_array($stream, false);
+        self::assertSame(1, $records->pulls());
     }
 
     public function testBatchRejectsListRecords(): void
