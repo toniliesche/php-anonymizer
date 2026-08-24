@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal operation wiring is covered through façade contracts. */
-
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization;
 
 use InvalidArgumentException;
@@ -24,8 +22,6 @@ use Webmozart\Assert\Assert;
 
 /**
  * @internal payload and document operations extracted from the core engine
- *
- * @codeCoverageIgnore Internal operation wiring.
  */
 final readonly class PayloadAnonymizationService
 {

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal execution state is covered through traversal contracts. */
-
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
@@ -13,8 +11,6 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationRepor
 
 /**
  * @internal immutable state shared by one recursive traversal
- *
- * @codeCoverageIgnore Internal execution value.
  */
 final readonly class TraversalExecutionContext
 {

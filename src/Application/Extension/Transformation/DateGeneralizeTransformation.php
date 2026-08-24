@@ -9,11 +9,9 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use Override;
 use Throwable;
+use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
-/**
- * @codeCoverageIgnore
- */
 // @internal
 final class DateGeneralizeTransformation implements ValueTransformationInterface
 {
@@ -60,8 +58,8 @@ final class DateGeneralizeTransformation implements ValueTransformationInterface
 
     private function date(mixed $value, bool $isString): DateTimeImmutable
     {
-        if ($isString && !is_string($value)) {
-            throw new InvalidArgumentException('date_generalize requires a valid RFC 3339 date or DateTimeInterface.');
+        if ($isString) {
+            Assert::string($value);
         }
 
         try {

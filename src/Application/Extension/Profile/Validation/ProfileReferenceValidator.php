@@ -20,8 +20,6 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 
 /**
  * @internal profile validation is performed by the builder pipeline
- *
- * @codeCoverageIgnore Internal validation implementation.
  */
 final readonly class ProfileReferenceValidator
 {
@@ -35,8 +33,6 @@ final readonly class ProfileReferenceValidator
 
     /**
      * @param list<RuleDefinition> $rules
-     *
-     * @codeCoverageIgnore
      */
     private function rules(ProfileRegistry $profiles, string $profile, array $rules, ReplacementStrategyRegistry $strategies, PayloadCodecRegistry $codecs, ?TransformationRegistry $transformations): void
     {

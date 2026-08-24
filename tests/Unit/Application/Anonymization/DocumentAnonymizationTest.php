@@ -8,18 +8,24 @@ use InvalidArgumentException;
 use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFacade;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerRuntime;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\NdjsonAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\PayloadAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DeferredNdjsonAuditProvider;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentPayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
@@ -27,6 +33,8 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedValueDispatcher;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecutionContext;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
@@ -40,9 +48,18 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
@@ -59,6 +76,8 @@ use Throwable;
 #[CoversClass(DocumentPayloadAnonymizationResult::class)]
 #[CoversClass(NdjsonAnonymizationResult::class)]
 #[CoversClass(NdjsonAuditResult::class)]
+#[CoversClass(NdjsonAnonymizationService::class)]
+#[CoversClass(PayloadAnonymizationService::class)]
 #[CoversClass(JsonPayloadCodec::class)]
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(ProfileRoot::class)]
@@ -94,8 +113,39 @@ use Throwable;
 #[UsesClass(ExecutionLimitExceeded::class)]
 #[UsesClass(PayloadCodecFailure::class)]
 #[UsesClass(ProfileNotFound::class)]
+#[UsesClass(RuntimeAssembler::class)]
+#[UsesClass(SelectedValueDispatcher::class)]
+#[UsesClass(TraversalExecutionContext::class)]
+#[UsesClass(AnonymizerRuntime::class)]
+#[UsesClass(AnonymizerFacade::class)]
+#[CoversClass(DeferredNdjsonAuditProvider::class)]
+#[UsesClass(DateGeneralizeTransformation::class)]
+#[UsesClass(NullifyTransformation::class)]
+#[UsesClass(NumericBucketTransformation::class)]
+#[UsesClass(PartialMaskTransformation::class)]
+#[UsesClass(ProfileDefinitionParser::class)]
+#[UsesClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileCompositionCompiler::class)]
+#[UsesClass(ProfileDefinitionData::class)]
+#[UsesClass(ProfileRuleAppender::class)]
 final class DocumentAnonymizationTest extends TestCase
 {
+    public function testDeferredAuditProviderRequiresCompletionBeforeAccess(): void
+    {
+        $provider = new DeferredNdjsonAuditProvider();
+        $this->expectException(LogicException::class);
+        $provider->audit();
+    }
+
+    public function testDeferredAuditProviderReturnsCompletedAudit(): void
+    {
+        $provider = new DeferredNdjsonAuditProvider();
+        $audit = new NdjsonAuditResult([]);
+        $provider->complete($audit);
+
+        self::assertSame($audit, $provider->audit());
+    }
+
     public function testDocumentListRootIsExplicitAndReported(): void
     {
         $profile = ProfileDefinition::fromArray('records', [

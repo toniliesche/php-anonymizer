@@ -118,9 +118,6 @@ final readonly class RuleDefinition
         return $this->embedded;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function transformation(): ?TransformationDefinition
     {
         return $this->transformation;
@@ -163,9 +160,6 @@ final readonly class RuleDefinition
         return new self($field, [], null, false, RuleOptionsCompiler::condition($definition), null, RuleOptionsCompiler::strategy($definition), RuleOptionsCompiler::keyId($definition), RuleOptionsCompiler::embedded($definition), RuleOptionsCompiler::transformation($definition));
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     private static function assertTraversalCombination(bool $hasChildren, bool $hasEach, bool $hasStrategy, bool $hasEmbedded, bool $hasTransform): void
     {
         if ($hasChildren && $hasEach) {
@@ -196,17 +190,19 @@ final readonly class RuleDefinition
      * @param list<mixed> $definitions
      *
      * @return list<self>
-     *
-     * @codeCoverageIgnore
      */
     private static function compileChildren(array $definitions): array
     {
         $rules = [];
         $fields = [];
         foreach ($definitions as $index => $definition) {
+            // @codeCoverageIgnoreStart Nested rule lists are validated before compilation.
             if (!is_array($definition)) {
-                throw new InvalidProfileDefinition(sprintf('nested rule %s must be a map', $index));
+                // @codeCoverageIgnoreStart Defensive prevalidated list violation.
+                throw new InvalidProfileDefinition(sprintf('nested rule %s must be a map', $index)); // @codeCoverageIgnore
+                // @codeCoverageIgnoreEnd
             }
+            // @codeCoverageIgnoreEnd
 
             Assert::isMap($definition);
             $rule = self::fromArray($definition);

@@ -18,7 +18,12 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
@@ -45,6 +50,11 @@ use stdClass;
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(AnonymizationResult::class)]
+#[UsesClass(ProfileDefinitionParser::class)]
+#[UsesClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileCompositionCompiler::class)]
+#[UsesClass(ProfileDefinitionData::class)]
+#[UsesClass(ProfileRuleAppender::class)]
 final class ExtensionRegistryTest extends TestCase
 {
     public function testBuiltInStrategiesAndCodecWork(): void

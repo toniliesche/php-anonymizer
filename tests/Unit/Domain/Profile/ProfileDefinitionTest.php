@@ -5,13 +5,20 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMode;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(ProfileDefinition::class)]
@@ -20,6 +27,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ConditionDefinition::class)]
 #[CoversClass(RuleOptionsCompiler::class)]
 #[CoversClass(EmbeddedPayloadDefinition::class)]
+#[CoversClass(ProfileDefinitionParser::class)]
+#[CoversClass(ProfileMetadataParser::class)]
+#[CoversClass(ProfileCompositionCompiler::class)]
+#[CoversClass(ProfileDefinitionData::class)]
+#[CoversClass(ProfileRuleAppender::class)]
+#[UsesClass(TransformationDefinition::class)]
 final class ProfileDefinitionTest extends TestCase
 {
     public function testCreatesAFlatRedactionProfile(): void
@@ -86,6 +99,56 @@ final class ProfileDefinitionTest extends TestCase
         ProfileDefinition::fromArray('customer', ['mode' => 'redact']);
     }
 
+    public function testRejectsNonBooleanKeyNormalization(): void
+    {
+        $this->expectExceptionMessageMatches('/key_normalization must be a boolean/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'key_normalization' => 'true',
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsMalformedAndDuplicateGlobalRules(): void
+    {
+        $this->expectExceptionMessageMatches('/global_rules\[0\] must be a map/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'global_rules' => [null],
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsDuplicateGlobalRuleFields(): void
+    {
+        $this->expectExceptionMessageMatches('/global_rules\[1\].*duplicated/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'global_rules' => [['field' => 'email'], ['field' => 'email']],
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsInvalidGlobalRuleDefinition(): void
+    {
+        $this->expectExceptionMessageMatches('/global_rules\[0\]/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'global_rules' => [['field' => 'email', 'children' => []]],
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsInvalidFragmentNameAndRules(): void
+    {
+        $this->expectExceptionMessageMatches('/fragments\[0\]\.name is invalid/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [['name' => '1invalid', 'rules' => [['field' => 'email']]]],
+            'rules' => [['use' => '1invalid']],
+        ]);
+    }
+
     public function testRejectsMalformedRule(): void
     {
         $this->expectExceptionMessageMatches('/rules\[0\]/');
@@ -108,6 +171,15 @@ final class ProfileDefinitionTest extends TestCase
     {
         $this->expectExceptionMessageMatches('/rule keys must contain field/');
         ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email', 'extra' => true]]]);
+    }
+
+    public function testRejectsMultipleLeafActions(): void
+    {
+        $this->expectExceptionMessageMatches('/more than one of strategy, transform, or embedded/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email', 'strategy' => 'redact', 'transform' => ['type' => 'nullify']]],
+        ]);
     }
 
     public function testRejectsDuplicateFields(): void

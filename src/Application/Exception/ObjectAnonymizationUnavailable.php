@@ -6,9 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Application\Exception;
 
 use RuntimeException;
 
-/**
- * @codeCoverageIgnore Transitional adapter exception is exercised through façade integration tests.
- */
 final class ObjectAnonymizationUnavailable extends RuntimeException
 {
     public static function forObject(object $object): self

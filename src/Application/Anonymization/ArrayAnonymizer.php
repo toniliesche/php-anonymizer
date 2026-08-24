@@ -148,18 +148,12 @@ final readonly class ArrayAnonymizer implements AnonymizerInterface
         return $this->ndjson->anonymize($profile, $lines, $context);
     }
 
-    /**
-     * @codeCoverageIgnore Transitional array adapter intentionally rejects object roots.
-     */
     #[Override]
     public function anonymizeObject(ObjectAnonymizationRequest $request): object
     {
         throw ObjectAnonymizationUnavailable::forObject($request->object());
     }
 
-    /**
-     * @codeCoverageIgnore Transitional array adapter intentionally rejects object roots.
-     */
     #[Override]
     public function anonymizeObjectWithReport(ObjectAnonymizationRequest $request): AnonymizationResultInterface
     {

@@ -16,8 +16,6 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use Webmozart\Assert\Assert;
 
 /**
- * @codeCoverageIgnore Builder wiring is exercised through the public façade contract.
- *
  * Immutable fluent construction API for the configured anonymizer façade.
  */
 final readonly class AnonymizerBuilder

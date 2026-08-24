@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal traversal dispatch is covered through traversal contracts. */
-
 namespace PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal;
 
 use LogicException;
@@ -13,8 +11,6 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 
 /**
  * @internal selected-rule dispatch
- *
- * @codeCoverageIgnore Internal execution dispatcher.
  */
 final readonly class SelectedValueDispatcher
 {
@@ -37,9 +33,13 @@ final readonly class SelectedValueDispatcher
             return;
         }
         if ($rule->hasChildren()) {
+            // @codeCoverageIgnoreStart CompiledRuleList is guaranteed by compilation.
             if (!$selected->nested instanceof CompiledRuleList) {
-                throw new LogicException('Compiled child rules are missing.');
+                // @codeCoverageIgnoreStart Defensive precompiled graph violation.
+                throw new LogicException('Compiled child rules are missing.'); // @codeCoverageIgnore
+                // @codeCoverageIgnoreEnd
             }
+            // @codeCoverageIgnoreEnd
             $this->tree->dispatchChildren($value, $selected->nested, $context);
 
             return;
@@ -50,9 +50,11 @@ final readonly class SelectedValueDispatcher
             return;
         }
         if ($rule->eachRules() !== null) {
+            // @codeCoverageIgnoreStart CompiledRuleList is guaranteed by compilation.
             if (!$selected->nested instanceof CompiledRuleList) {
                 throw new LogicException('Compiled each rules are missing.');
             }
+            // @codeCoverageIgnoreEnd
             $this->tree->dispatchEach($value, $selected->nested, $context);
 
             return;

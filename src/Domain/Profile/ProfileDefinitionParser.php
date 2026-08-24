@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal parser collaborator. */
-
 namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
@@ -13,8 +11,6 @@ use function Safe\preg_match;
 
 /**
  * @internal schema, metadata, and rule parser for ProfileDefinition
- *
- * @codeCoverageIgnore Internal parser collaborator.
  */
 final class ProfileDefinitionParser
 {

@@ -6,13 +6,18 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
 use InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerFacade;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerRuntime;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\NdjsonAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\PayloadAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
@@ -20,6 +25,8 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedValueDispatcher;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecutionContext;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
@@ -32,21 +39,33 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionS
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\CoreTransformationFactory;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NullifyTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadata;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(ProfileMetadata::class)]
 #[CoversClass(ProfileInspector::class)]
 #[CoversClass(ProfileInspection::class)]
+#[CoversClass(TransformationDefinition::class)]
 #[CoversClass(ArrayAnonymizer::class)]
 #[UsesClass(AnonymizationLimits::class)]
 #[UsesClass(JsonPointer::class)]
@@ -77,6 +96,22 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
+#[CoversClass(ProfileDefinitionParser::class)]
+#[CoversClass(ProfileMetadataParser::class)]
+#[CoversClass(ProfileCompositionCompiler::class)]
+#[CoversClass(ProfileDefinitionData::class)]
+#[CoversClass(ProfileRuleAppender::class)]
+#[UsesClass(AnonymizerRuntime::class)]
+#[UsesClass(AnonymizerFacade::class)]
+#[UsesClass(NdjsonAnonymizationService::class)]
+#[UsesClass(PayloadAnonymizationService::class)]
+#[UsesClass(RuntimeAssembler::class)]
+#[UsesClass(SelectedValueDispatcher::class)]
+#[UsesClass(TraversalExecutionContext::class)]
+#[UsesClass(DateGeneralizeTransformation::class)]
+#[UsesClass(NullifyTransformation::class)]
+#[UsesClass(NumericBucketTransformation::class)]
+#[UsesClass(PartialMaskTransformation::class)]
 final class ProfileCompositionTest extends TestCase
 {
     public function testMetadataAndFragmentNamesAreInspectable(): void
@@ -180,6 +215,47 @@ final class ProfileCompositionTest extends TestCase
         ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['use' => 'missing']]]);
     }
 
+    public function testRejectsInvalidFragmentCollectionShapes(): void
+    {
+        $this->expectExceptionMessageMatches('/fragments must be a non-empty ordered list/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [],
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsFragmentEntriesWithUnexpectedKeys(): void
+    {
+        $this->expectExceptionMessageMatches('/must contain exactly name and rules/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']], 'extra' => true]],
+            'rules' => [['use' => 'contact']],
+        ]);
+    }
+
+    public function testRejectsMalformedFragmentEntriesAndUseDeclarations(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', [
+                'mode' => 'redact',
+                'fragments' => [['name' => 'contact', 'rules' => []]],
+                'rules' => [['use' => 'contact']],
+            ]);
+            self::fail('Empty fragment rules should be rejected.');
+        } catch (InvalidProfileDefinition $exception) {
+            self::assertStringContainsString('rules must be a non-empty list', $exception->getMessage());
+        }
+
+        $this->expectExceptionMessageMatches('/must contain only a non-empty use name/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]],
+            'rules' => [['use' => 'contact', 'extra' => true]],
+        ]);
+    }
+
     public function testInspectorEnumeratesProfilesAndReturnsNullForUnknownNames(): void
     {
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
@@ -197,6 +273,34 @@ final class ProfileCompositionTest extends TestCase
             'metadata' => ['status' => 'retired'],
             'rules' => [['field' => 'email']],
         ]);
+    }
+
+    public function testRejectsNonStringMetadataValueAtParserValueBoundary(): void
+    {
+        $this->expectExceptionMessageMatches('/metadata.schema_version must be a non-empty string/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'metadata' => ['schema_version' => 1],
+            'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsNonMapNestedRules(): void
+    {
+        $this->expectExceptionMessageMatches('/nested rule 0 must be a map/');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'user', 'children' => [null]]],
+        ]);
+    }
+
+    public function testTransformationDefinitionExposesItsContract(): void
+    {
+        $definition = new TransformationDefinition('date_shift', ['days' => 2], 'tenant-key');
+
+        self::assertSame('date_shift', $definition->type());
+        self::assertSame(['days' => 2], $definition->options());
+        self::assertSame('tenant-key', $definition->keyId());
     }
 
     public function testRejectsEmptyMetadataMap(): void
@@ -234,6 +338,12 @@ final class ProfileCompositionTest extends TestCase
         $this->expectException(InvalidProfileDefinition::class);
         $this->expectExceptionMessageMatches('/nested rule 0 must be a map/');
         RuleDefinition::fromArray(['field' => 'email', 'children' => [null]]);
+    }
+
+    public function testRejectsObjectNestedRuleDefinitions(): void
+    {
+        $this->expectExceptionMessageMatches('/nested rule 0 must be a map/');
+        RuleDefinition::fromArray(['field' => 'email', 'children' => [new stdClass()]]);
     }
 
     public function testRejectsFragmentCycles(): void

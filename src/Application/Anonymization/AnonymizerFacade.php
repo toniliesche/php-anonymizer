@@ -16,8 +16,6 @@ use PhpAnonymizer\Anonymizer\Application\Extension\ObjectAnonymizerInterface;
 
 /**
  * @internal construct through AnonymizerBuilder
- *
- * @codeCoverageIgnore Wiring façade; behavior is covered through the façade contract.
  */
 final readonly class AnonymizerFacade implements AnonymizerInterface
 {
@@ -100,9 +98,13 @@ final readonly class AnonymizerFacade implements AnonymizerInterface
     public function anonymizeObject(ObjectAnonymizationRequest $request): object
     {
         $data = $this->anonymizeObjectWithReport($request)->data();
+        // @codeCoverageIgnoreStart anonymizeObjectWithReport validates this invariant before returning.
         if (!is_object($data)) {
-            throw new LogicException('Object anonymizer returned a non-object result.');
+            // @codeCoverageIgnoreStart Defensive return-contract violation.
+            throw new LogicException('Object anonymizer returned a non-object result.'); // @codeCoverageIgnore
+            // @codeCoverageIgnoreEnd
         }
+        // @codeCoverageIgnoreEnd
 
         return $data;
     }

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal parser collaborator. */
-
 namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use InvalidArgumentException;
@@ -12,8 +10,6 @@ use Webmozart\Assert\Assert;
 
 /**
  * @internal metadata schema parser
- *
- * @codeCoverageIgnore Internal parser collaborator.
  */
 final class ProfileMetadataParser
 {
@@ -56,9 +52,7 @@ final class ProfileMetadataParser
             return null;
         }
         $value = $metadata[$key];
-        if (!is_string($value)) {
-            throw new InvalidArgumentException(sprintf('metadata.%s must be a string', $key));
-        }
+        Assert::string($value);
 
         return $value;
     }

@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Domain\Rule;
 
-/**
- * @codeCoverageIgnore
- */
 final readonly class TransformationDefinition
 {
     /**

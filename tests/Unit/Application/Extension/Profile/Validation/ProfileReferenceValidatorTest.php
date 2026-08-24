@@ -13,10 +13,20 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\ProfileRef
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\DefaultRedactionStrategy;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\ReplacementStrategyRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Replacement\StarMaskStrategy;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\DateGeneralizeTransformation;
+use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -29,12 +39,81 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(ReplacementStrategyRegistry::class)]
 #[UsesClass(StarMaskStrategy::class)]
+#[UsesClass(TransformationRegistry::class)]
+#[UsesClass(DateGeneralizeTransformation::class)]
 #[UsesClass(ProfileDefinition::class)]
 #[UsesClass(EmbeddedPayloadDefinition::class)]
 #[UsesClass(RuleDefinition::class)]
+#[UsesClass(TransformationDefinition::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
+#[UsesClass(ProfileDefinitionParser::class)]
+#[UsesClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileCompositionCompiler::class)]
+#[UsesClass(ProfileDefinitionData::class)]
+#[UsesClass(ProfileRuleAppender::class)]
 final class ProfileReferenceValidatorTest extends TestCase
 {
+    public function testRejectsUnknownStrategyCodecAndTransformationReferences(): void
+    {
+        $profile = ProfileDefinition::fromArray('invalid', ['mode' => 'redact', 'rules' => [[
+            'field' => 'email', 'strategy' => 'missing',
+        ]]]);
+
+        try {
+            $this->validator()->validate(new ProfileRegistry([$profile]), $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]));
+            self::fail('Expected unknown strategy.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('unknown replacement strategy', $exception->getMessage());
+        }
+
+        $embedded = ProfileDefinition::fromArray('embedded', ['mode' => 'redact', 'rules' => [[
+            'field' => 'payload', 'embedded' => ['codec' => 'missing', 'profile' => 'invalid'],
+        ]]]);
+
+        try {
+            $this->validator()->validate(new ProfileRegistry([$embedded]), $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]));
+            self::fail('Expected unknown codec.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('unknown payload codec', $exception->getMessage());
+        }
+    }
+
+    public function testRejectsUnknownTransformationAndContextKeyMisconfiguration(): void
+    {
+        $transformed = ProfileDefinition::fromArray('transformed', ['mode' => 'redact', 'rules' => [[
+            'field' => 'email', 'transform' => ['type' => 'missing'],
+        ]]]);
+
+        try {
+            $this->validator()->validate(new ProfileRegistry([$transformed]), $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]), new TransformationRegistry([new StaticValueTransformation('known')]));
+            self::fail('Expected unknown transformation.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('unknown value transformation', $exception->getMessage());
+        }
+
+        $invalidOptions = ProfileDefinition::fromArray('invalid-options', ['mode' => 'redact', 'rules' => [[
+            'field' => 'date', 'transform' => ['type' => 'date_generalize', 'options' => ['unit' => 'minute']],
+        ]]]);
+
+        try {
+            $this->validator()->validate(new ProfileRegistry([$invalidOptions]), $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]), new TransformationRegistry([new DateGeneralizeTransformation()]));
+            self::fail('Expected invalid transformation options.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('date_generalize requires unit', $exception->getMessage());
+        }
+
+        $contextual = ProfileDefinition::fromArray('contextual', ['mode' => 'redact', 'rules' => [[
+            'field' => 'email', 'strategy' => 'contextual',
+        ]]]);
+
+        try {
+            $this->validator()->validate(new ProfileRegistry([$contextual]), new ReplacementStrategyRegistry([new StaticContextualReplacementStrategy()]), new PayloadCodecRegistry([new JsonPayloadCodec()]));
+            self::fail('Expected contextual key requirement.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('must configure key_id', $exception->getMessage());
+        }
+    }
+
     public function testRejectsEmbeddedReferenceCycles(): void
     {
         $first = ProfileDefinition::fromArray('first', ['mode' => 'redact', 'rules' => [['field' => 'payload', 'embedded' => ['codec' => 'json', 'profile' => 'second']]]]);
@@ -101,5 +180,15 @@ final class ProfileReferenceValidatorTest extends TestCase
             new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]),
             new PayloadCodecRegistry([new JsonPayloadCodec()]),
         );
+    }
+
+    private function validator(): ProfileReferenceValidator
+    {
+        return new ProfileReferenceValidator();
+    }
+
+    private function strategies(): ReplacementStrategyRegistry
+    {
+        return new ReplacementStrategyRegistry([new DefaultRedactionStrategy(), new StarMaskStrategy()]);
     }
 }

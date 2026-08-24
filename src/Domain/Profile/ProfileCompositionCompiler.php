@@ -8,7 +8,6 @@ use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
-// @codeCoverageIgnoreStart
 // @internal
 final readonly class ProfileCompositionCompiler
 {
@@ -161,4 +160,3 @@ final readonly class ProfileCompositionCompiler
         return $this->expandList($profile, $fragments[$name], $fragments, [...$stack, $name], $path . '.use(' . $name . ')', false);
     }
 }
-// @codeCoverageIgnoreEnd

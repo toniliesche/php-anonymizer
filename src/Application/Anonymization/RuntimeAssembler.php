@@ -21,9 +21,6 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransform
 
 /**
  * @internal
- *
- * @codeCoverageIgnore Runtime construction wiring is exercised through the
- * builder and façade contracts.
  */
 final class RuntimeAssembler
 {

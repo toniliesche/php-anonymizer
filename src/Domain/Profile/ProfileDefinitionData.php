@@ -2,16 +2,12 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal parser value. */
-
 namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 
 /**
  * @internal parsed profile construction data
- *
- * @codeCoverageIgnore Internal parser value.
  */
 final readonly class ProfileDefinitionData
 {

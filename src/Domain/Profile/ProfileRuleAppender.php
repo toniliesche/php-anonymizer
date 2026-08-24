@@ -2,14 +2,10 @@
 
 declare(strict_types=1);
 
-/** @codeCoverageIgnoreFile Internal parser collaborator. */
-
 namespace PhpAnonymizer\Anonymizer\Domain\Profile;
 
 /**
  * @internal fragment/rule collision policy
- *
- * @codeCoverageIgnore Internal parser collaborator.
  */
 final class ProfileRuleAppender
 {

@@ -7,8 +7,11 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 use InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerRuntime;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\NdjsonAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Path\JsonPointer;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\PayloadAnonymizationService;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveStringSelection;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
@@ -19,6 +22,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResul
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleList;
@@ -26,6 +30,8 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleTreeTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedValueDispatcher;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecutionContext;
 use PhpAnonymizer\Anonymizer\Application\Exception\ContextRequired;
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
@@ -45,7 +51,12 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\NumericBucketT
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\PartialMaskTransformation;
 use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\TransformationRegistry;
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
@@ -101,6 +112,17 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RuleDefinition::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
 #[UsesClass(ProfileNotFound::class)]
+#[UsesClass(AnonymizerRuntime::class)]
+#[UsesClass(NdjsonAnonymizationService::class)]
+#[UsesClass(PayloadAnonymizationService::class)]
+#[UsesClass(RuntimeAssembler::class)]
+#[UsesClass(SelectedValueDispatcher::class)]
+#[UsesClass(TraversalExecutionContext::class)]
+#[UsesClass(ProfileDefinitionParser::class)]
+#[UsesClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileCompositionCompiler::class)]
+#[UsesClass(ProfileDefinitionData::class)]
+#[UsesClass(ProfileRuleAppender::class)]
 final class AnonymizationRuntimeTest extends TestCase
 {
     public function testNoReportPathReturnsSameTransformation(): void

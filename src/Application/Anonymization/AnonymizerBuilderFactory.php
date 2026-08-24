@@ -13,8 +13,6 @@ use PhpAnonymizer\Anonymizer\Application\Extension\Transformation\ValueTransform
 
 /**
  * @internal framework construction helper for immutable builders
- *
- * @codeCoverageIgnore Container-only wiring helper.
  */
 final class AnonymizerBuilderFactory
 {

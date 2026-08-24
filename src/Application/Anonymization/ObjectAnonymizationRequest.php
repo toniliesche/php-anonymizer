@@ -10,9 +10,6 @@ namespace PhpAnonymizer\Anonymizer\Application\Anonymization;
  * Adapter options are intentionally opaque to the core package. For example,
  * the Symfony Serializer adapter uses them as serializer context options.
  */
-/**
- * @codeCoverageIgnore Immutable request accessors are covered by façade integration tests.
- */
 final readonly class ObjectAnonymizationRequest
 {
     private AnonymizationContext $context;

@@ -38,14 +38,11 @@ final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterfa
     {
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     #[Override]
     public function selected(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context = null): void
     {
         if ($rule->transformation() instanceof TransformationDefinition) {
-            $this->transform($profile, $value, $rule, $path, $report, $context);
+            $this->transform($profile, $value, $rule->transformation(), $path, $report, $context);
 
             return;
         }
@@ -75,15 +72,9 @@ final readonly class RedactTraversalPolicy implements RuleTraversalPolicyInterfa
         unset($item);
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    private function transform(string $profile, mixed &$value, RuleDefinition $rule, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context): void
+    private function transform(string $profile, mixed &$value, TransformationDefinition $definition, JsonPointer $path, AnonymizationReport $report, ?AnonymizationContext $context): void
     {
-        $definition = $rule->transformation();
-        if (!$definition instanceof TransformationDefinition) {
-            throw new UnsupportedValue('Missing value transformation definition.');
-        } $transformation = $this->transformations->get($definition->type());
+        $transformation = $this->transformations->get($definition->type());
         if (!$transformation instanceof ValueTransformationInterface) {
             throw new UnsupportedValue(sprintf('Value transformation "%s" is not available.', $definition->type()));
         }

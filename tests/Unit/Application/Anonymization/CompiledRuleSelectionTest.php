@@ -11,7 +11,12 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledRuleLis
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\RuleSelector;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedRule;
 use PhpAnonymizer\Anonymizer\Domain\Profile\KeyNormalizer;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
@@ -27,9 +32,14 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(KeyNormalizer::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(ProfileDefinition::class)]
-#[UsesClass(RuleDefinition::class)]
+#[CoversClass(RuleDefinition::class)]
 #[UsesClass(JsonPointer::class)]
 #[UsesClass(AnonymizationReport::class)]
+#[UsesClass(ProfileDefinitionParser::class)]
+#[UsesClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileCompositionCompiler::class)]
+#[UsesClass(ProfileDefinitionData::class)]
+#[UsesClass(ProfileRuleAppender::class)]
 final class CompiledRuleSelectionTest extends TestCase
 {
     public function testCompilesExactNormalizedAndNestedLookups(): void

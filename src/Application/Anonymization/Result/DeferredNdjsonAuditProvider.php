@@ -9,8 +9,6 @@ use Override;
 
 /**
  * @internal lazy state holder for NDJSON audit results
- *
- * @codeCoverageIgnore Internal operation wiring.
  */
 final class DeferredNdjsonAuditProvider implements NdjsonAuditProviderInterface
 {
