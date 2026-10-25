@@ -49,16 +49,20 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadata;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 use stdClass;
 
 #[CoversClass(ProfileDefinition::class)]
@@ -112,6 +116,9 @@ use stdClass;
 #[UsesClass(NullifyTransformation::class)]
 #[UsesClass(NumericBucketTransformation::class)]
 #[UsesClass(PartialMaskTransformation::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class ProfileCompositionTest extends TestCase
 {
     public function testMetadataAndFragmentNamesAreInspectable(): void
@@ -144,6 +151,70 @@ final class ProfileCompositionTest extends TestCase
         self::assertSame($profile->fingerprint(), $inspection->fingerprint());
     }
 
+    public function testCompositionCompilerRejectsMalformedFragmentAndRuleCollectionsPrecisely(): void
+    {
+        $compiler = new ProfileCompositionCompiler();
+        foreach ([
+            ['rules' => ['named' => ['field' => 'email']]],
+            ['fragments' => ['contact' => ['name' => 'contact', 'rules' => [['field' => 'email']]]]],
+            ['fragments' => [['name' => 'contact']]],
+            ['fragments' => [['rules' => [['field' => 'email']]]]],
+            ['fragments' => [['name' => 'contact', 'rules' => ['email' => ['field' => 'email']]]], 'rules' => [['use' => 'contact']]],
+            ['fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]], 'rules' => [['use' => 42]]],
+        ] as $definition) {
+            try {
+                $compiler->compile('customer', $definition);
+                self::fail('Malformed fragment or rule collections should be rejected.');
+            } catch (InvalidArgumentException|InvalidProfileDefinition $exception) {
+                self::assertNotSame('', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testCompositionCompilerDistinguishesNestedPathsAndFragmentPrecedence(): void
+    {
+        $compiler = new ProfileCompositionCompiler();
+        foreach ([
+            ['field' => 'container', 'children' => ['invalid']],
+            ['field' => 'items', 'each' => ['invalid']],
+            ['field' => 'items', 'each' => [['field' => 'inner', 'children' => ['invalid']]]],
+        ] as $rule) {
+            try {
+                $compiler->compile('customer', ['rules' => [$rule]]);
+                self::fail('Malformed nested composition entries should be rejected.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertSame('nested rule 0 must be a map', $exception->getMessage());
+            }
+        }
+
+        try {
+            $compiler->compile('customer', [
+                'fragments' => [['name' => 'base', 'rules' => [['field' => 'email']]]],
+                'rules' => [['use' => 42]],
+            ]);
+            self::fail('A non-string fragment reference should be rejected.');
+        } catch (InvalidProfileDefinition $exception) {
+            self::assertSame('Profile "customer" is invalid at rules[0] must contain only a non-empty use name.', $exception->getMessage());
+        }
+
+        self::assertSame([
+            'rules' => [['field' => 'email', 'strategy' => 'star_mask']],
+            'fragments' => ['base'],
+        ], $compiler->compile('customer', [
+            'fragments' => [['name' => 'base', 'rules' => [['field' => 'email', 'strategy' => 'redact']]]],
+            'rules' => [['use' => 'base'], ['field' => 'email', 'strategy' => 'star_mask']],
+        ]));
+    }
+
+    public function testCompositionCompilerBoundsFragmentExpansionDepth(): void
+    {
+        $expand = new ReflectionMethod(ProfileCompositionCompiler::class, 'expandList');
+
+        $this->expectException(InvalidProfileDefinition::class);
+        $this->expectExceptionMessageIsOrContains('creates fragment cycle: one -> one');
+        $expand->invoke(new ProfileCompositionCompiler(), 'customer', [], ['one' => []], ['one', 'one'], 'rules', true);
+    }
+
     public function testMetadataDoesNotChangeBehaviorFingerprint(): void
     {
         $plain = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
@@ -170,6 +241,7 @@ final class ProfileCompositionTest extends TestCase
             'rules' => [
                 ['use' => 'base'],
                 ['field' => 'email', 'strategy' => 'star_mask'],
+                ['use' => 'base'],
             ],
         ]);
 
@@ -179,6 +251,32 @@ final class ProfileCompositionTest extends TestCase
         ]);
 
         self::assertSame(['email' => '**', 'phone' => '[REDACTED]'], $result);
+    }
+
+    public function testFragmentsExpandInsideChildrenAndEachRules(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [[
+                'name' => 'contact',
+                'rules' => [['field' => 'email'], ['field' => 'phone']],
+            ]],
+            'rules' => [
+                ['field' => 'profile', 'children' => [['use' => 'contact']]],
+                ['field' => 'records', 'each' => [['use' => 'contact']]],
+            ],
+        ]);
+
+        self::assertSame([
+            'profile' => ['email' => '[REDACTED]', 'phone' => '[REDACTED]'],
+            'records' => [[
+                'email' => '[REDACTED]',
+                'phone' => '[REDACTED]',
+            ]],
+        ], new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))->anonymize('customer', [
+            'profile' => ['email' => 'alice@example.test', 'phone' => '123'],
+            'records' => [['email' => 'bob@example.test', 'phone' => '456']],
+        ]));
     }
 
     public function testFirstFragmentWinsAConflict(): void
@@ -215,6 +313,15 @@ final class ProfileCompositionTest extends TestCase
         ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['use' => 'missing']]]);
     }
 
+    public function testReportsNestedMissingFragmentPath(): void
+    {
+        $this->expectExceptionMessageIsOrContains('Profile "customer" is invalid at rules[0].children[0] references missing fragment "missing".');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'profile', 'children' => [['use' => 'missing']]]],
+        ]);
+    }
+
     public function testRejectsInvalidFragmentCollectionShapes(): void
     {
         $this->expectExceptionMessageMatches('/fragments must be a non-empty ordered list/');
@@ -222,6 +329,27 @@ final class ProfileCompositionTest extends TestCase
             'mode' => 'redact',
             'fragments' => [],
             'rules' => [['field' => 'email']],
+        ]);
+    }
+
+    public function testRejectsFragmentNamesWithTrailingNewlineOrInvalidCharacter(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', [
+                'mode' => 'redact',
+                'fragments' => [['name' => "contact\n", 'rules' => [['field' => 'email']]]],
+                'rules' => [['use' => "contact\n"]],
+            ]);
+            self::fail('A fragment name with a trailing newline should be rejected.');
+        } catch (InvalidProfileDefinition $exception) {
+            self::assertSame('Profile "customer" is invalid at fragments[0].name is invalid.', $exception->getMessage());
+        }
+
+        $this->expectExceptionMessageIsOrContains('Profile "customer" is invalid at fragments[0].name is invalid.');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [['name' => 'contact#', 'rules' => [['field' => 'email']]]],
+            'rules' => [['use' => 'contact#']],
         ]);
     }
 
@@ -254,6 +382,27 @@ final class ProfileCompositionTest extends TestCase
             'fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]],
             'rules' => [['use' => 'contact', 'extra' => true]],
         ]);
+    }
+
+    public function testRejectsMalformedFragmentAndUseValueTypes(): void
+    {
+        $definitions = [
+            ['fragments' => ['contact'], 'rules' => [['field' => 'email']]],
+            ['fragments' => [['name' => 42, 'rules' => [['field' => 'email']]]], 'rules' => [['field' => 'email']]],
+            ['fragments' => [['name' => 'contact', 'rules' => ['email']]], 'rules' => [['use' => 'contact']]],
+            ['fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]], 'rules' => [['use' => '']]],
+            ['fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]], 'rules' => [['use' => 42]]],
+            ['fragments' => [['name' => 'contact', 'rules' => [['field' => 'email']]]], 'rules' => ['invalid']],
+        ];
+
+        foreach ($definitions as $index => $definition) {
+            try {
+                ProfileDefinition::fromArray('customer', ['mode' => 'redact', ...$definition]);
+                self::fail(sprintf('Malformed fragment composition %s should be rejected.', $index));
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertNotSame('', $exception->getMessage());
+            }
+        }
     }
 
     public function testInspectorEnumeratesProfilesAndReturnsNullForUnknownNames(): void
@@ -356,6 +505,81 @@ final class ProfileCompositionTest extends TestCase
                 ['name' => 'one', 'rules' => [['use' => 'two']]],
                 ['name' => 'two', 'rules' => [['use' => 'one']]],
             ],
+            'rules' => [['use' => 'one']],
+        ]);
+    }
+
+    public function testRejectsMalformedAndDuplicateFragmentsBeforeExpansion(): void
+    {
+        foreach ([
+            [['name' => 'one', 'rules' => []]],
+            [['name' => 'one', 'rules' => [['field' => 'email']]], ['name' => 'one', 'rules' => [['field' => 'name']]]],
+        ] as $fragments) {
+            try {
+                ProfileDefinition::fromArray('customer', [
+                    'mode' => 'redact', 'fragments' => $fragments, 'rules' => [['use' => 'one']],
+                ]);
+                self::fail('Expected malformed fragment declaration.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertStringContainsString('fragment', mb_strtolower($exception->getMessage(), 'UTF-8'));
+            }
+        }
+    }
+
+    public function testRejectsUseEntriesWithExtraKeysAndUnknownNestedUses(): void
+    {
+        try {
+            ProfileDefinition::fromArray('customer', [
+                'mode' => 'redact', 'fragments' => [['name' => 'one', 'rules' => [['field' => 'email']]]],
+                'rules' => [['use' => 'one', 'extra' => true]],
+            ]);
+            self::fail('Expected invalid use declaration.');
+        } catch (InvalidProfileDefinition $exception) {
+            self::assertStringContainsString('use', mb_strtolower($exception->getMessage(), 'UTF-8'));
+        }
+
+        $this->expectExceptionMessageIsOrContains('references missing fragment "missing"');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact', 'rules' => [['field' => 'container', 'children' => [['use' => 'missing']]]],
+        ]);
+    }
+
+    public function testReportsCompleteFragmentCyclePath(): void
+    {
+        $this->expectExceptionMessageIsOrContains('Profile "customer" is invalid at rules.use(one).use(two).use(three)[0] creates fragment cycle: one -> two -> three -> one -> one.');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [
+                ['name' => 'one', 'rules' => [['use' => 'two']]],
+                ['name' => 'two', 'rules' => [['use' => 'three']]],
+                ['name' => 'three', 'rules' => [['use' => 'one']]],
+            ],
+            'rules' => [['use' => 'one']],
+        ]);
+    }
+
+    public function testDetectsFragmentCyclesInsideNestedChildren(): void
+    {
+        $this->expectExceptionMessageIsOrContains('Profile "customer" is invalid at rules.use(one)[0].children[0] creates fragment cycle: one -> one -> one.');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [[
+                'name' => 'one',
+                'rules' => [['field' => 'container', 'children' => [['use' => 'one']]]],
+            ]],
+            'rules' => [['use' => 'one']],
+        ]);
+    }
+
+    public function testDetectsFragmentCyclesInsideEachRulesWithExactPath(): void
+    {
+        $this->expectExceptionMessageIsOrContains('Profile "customer" is invalid at rules.use(one)[0].each[0] creates fragment cycle: one -> one -> one.');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'fragments' => [[
+                'name' => 'one',
+                'rules' => [['field' => 'items', 'each' => [['use' => 'one']]]],
+            ]],
             'rules' => [['use' => 'one']],
         ]);
     }

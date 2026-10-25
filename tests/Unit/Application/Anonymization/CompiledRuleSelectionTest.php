@@ -15,11 +15,15 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -29,10 +33,13 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RuleSelector::class)]
 #[CoversClass(SelectedRule::class)]
 #[UsesClass(ConditionDefinition::class)]
+#[UsesClass(ConditionDefinitionParser::class)]
 #[UsesClass(KeyNormalizer::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(ProfileDefinition::class)]
 #[CoversClass(RuleDefinition::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 #[UsesClass(JsonPointer::class)]
 #[UsesClass(AnonymizationReport::class)]
 #[UsesClass(ProfileDefinitionParser::class)]
@@ -40,6 +47,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ProfileCompositionCompiler::class)]
 #[UsesClass(ProfileDefinitionData::class)]
 #[UsesClass(ProfileRuleAppender::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
 final class CompiledRuleSelectionTest extends TestCase
 {
     public function testCompilesExactNormalizedAndNestedLookups(): void

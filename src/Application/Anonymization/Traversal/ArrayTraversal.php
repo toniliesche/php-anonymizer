@@ -125,7 +125,7 @@ final readonly class ArrayTraversal
         }
         $budget->collection($profile, JsonPointer::root(), count($data));
         foreach ($data as $index => &$item) {
-            if (!$this->isMap($item) || !is_array($item)) {
+            if (!$this->isMap($item)) {
                 throw new InvalidArgumentException(sprintf('Profile "%s" requires list items to be associative maps at /%s.', $profile, (string) $index));
             }
 

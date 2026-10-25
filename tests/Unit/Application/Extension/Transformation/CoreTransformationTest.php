@@ -49,10 +49,13 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -65,6 +68,7 @@ use stdClass;
 #[CoversClass(NumericBucketTransformation::class)]
 #[CoversClass(NullifyTransformation::class)]
 #[CoversClass(DateGeneralizeTransformation::class)]
+#[CoversClass(RuntimeAssembler::class)]
 #[UsesClass(AnonymizationLimits::class)]
 #[UsesClass(AnonymizerBuilder::class)]
 #[UsesClass(ArrayAnonymizer::class)]
@@ -106,9 +110,11 @@ use stdClass;
 #[UsesClass(AnonymizerRuntime::class)]
 #[UsesClass(NdjsonAnonymizationService::class)]
 #[UsesClass(PayloadAnonymizationService::class)]
-#[UsesClass(RuntimeAssembler::class)]
 #[UsesClass(SelectedValueDispatcher::class)]
 #[UsesClass(TraversalExecutionContext::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class CoreTransformationTest extends TestCase
 {
     public function testBuiltInTransformationContractsAndValidation(): void
@@ -154,6 +160,10 @@ final class CoreTransformationTest extends TestCase
         self::assertSame(['int', 'float'], $bucket->supportedTypes());
         self::assertSame('same', $bucket->outputType());
         self::assertSame(20, $bucket->transform(27, ['size' => 10]));
+        self::assertSame(-10, $bucket->transform(-1, ['size' => 10]));
+        self::assertSame(7, $bucket->transform(11, ['size' => 10, 'origin' => 7]));
+        self::assertSame(1.25, $bucket->transform(1.9, ['size' => 0.75, 'origin' => 0.5]));
+        $bucket->validateOptions(['size' => 0.75, 'origin' => 0.5]);
 
         try {
             $bucket->validateOptions(['size' => 0]);
@@ -176,6 +186,13 @@ final class CoreTransformationTest extends TestCase
         } catch (InvalidArgumentException) {
             self::addToAssertionCount(1);
         }
+
+        try {
+            $bucket->transform(5, ['size' => 1, 'origin' => 'invalid']);
+            self::fail('Expected invalid numeric bucket origin to be rejected during transformation.');
+        } catch (InvalidArgumentException) {
+            self::addToAssertionCount(1);
+        }
         $this->expectException(InvalidArgumentException::class);
         $bucket->transform('27', ['size' => 10]);
     }
@@ -189,6 +206,11 @@ final class CoreTransformationTest extends TestCase
         self::assertSame('ab****yz', $mask->transform('abcdefyz', ['prefix' => 2, 'suffix' => 2]));
         self::assertSame('abc', $mask->transform('abc', ['prefix' => 2, 'suffix' => 2]));
         self::assertSame('ab####', $mask->transform('abcdef', ['prefix' => 2, 'suffix' => 0, 'character' => '#']));
+        self::assertSame('**cdef', $mask->transform('abcdef', []));
+        self::assertSame('é🪄**字', $mask->transform('é🪄ab字', ['prefix' => 2, 'suffix' => 1]));
+        self::assertSame('**cdef', $mask->transform('abcdef', ['prefix' => 0, 'suffix' => 4]));
+        self::assertSame('ab****', $mask->transform('abcdef', ['prefix' => 2, 'suffix' => 0]));
+        $mask->validateOptions(['prefix' => 0, 'suffix' => 0, 'character' => '#']);
 
         try {
             $mask->validateOptions(['prefix' => -1]);
@@ -198,8 +220,22 @@ final class CoreTransformationTest extends TestCase
         }
 
         try {
+            $mask->validateOptions(['suffix' => -1]);
+            self::fail('Expected negative suffix to be rejected.');
+        } catch (InvalidArgumentException) {
+            self::addToAssertionCount(1);
+        }
+
+        try {
             $mask->validateOptions(['character' => '']);
             self::fail('Expected empty mask character to be rejected.');
+        } catch (InvalidArgumentException) {
+            self::addToAssertionCount(1);
+        }
+
+        try {
+            $mask->validateOptions(['character' => 42]);
+            self::fail('Expected non-string mask character to be rejected.');
         } catch (InvalidArgumentException) {
             self::addToAssertionCount(1);
         }
@@ -218,6 +254,14 @@ final class CoreTransformationTest extends TestCase
             self::fail('Expected unsupported date input to be rejected.');
         } catch (InvalidArgumentException) {
             self::addToAssertionCount(1);
+        }
+        foreach (['x2025-04-17T12:30:00Z', '2025-04-17T12:30:00Zx', "2025-04-17T12:30:00Z\n"] as $invalidDate) {
+            try {
+                $date->transform($invalidDate, ['unit' => 'day']);
+                self::fail('Expected date strings with surrounding junk to be rejected.');
+            } catch (InvalidArgumentException) {
+                self::addToAssertionCount(1);
+            }
         }
         $this->expectException(InvalidArgumentException::class);
         $date->transform('not-a-date', ['unit' => 'day']);

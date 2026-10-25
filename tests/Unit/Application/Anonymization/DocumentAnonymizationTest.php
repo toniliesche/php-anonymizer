@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
+use ArrayIterator;
 use InvalidArgumentException;
 use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
@@ -57,11 +58,14 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ConditionalDocumentPayloadCodec;
 use PhpAnonymizer\Anonymizer\Tests\Support\PullCountingIterable;
@@ -128,6 +132,9 @@ use Throwable;
 #[UsesClass(ProfileCompositionCompiler::class)]
 #[UsesClass(ProfileDefinitionData::class)]
 #[UsesClass(ProfileRuleAppender::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class DocumentAnonymizationTest extends TestCase
 {
     public function testDeferredAuditProviderRequiresCompletionBeforeAccess(): void
@@ -234,6 +241,22 @@ final class DocumentAnonymizationTest extends TestCase
         self::assertSame(2, $audit->entries()[0]->count());
     }
 
+    public function testNdjsonAcceptsWhitespaceAndSortsAggregatedAuditEntries(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email'], ['field' => 'name']],
+            'root' => 'list',
+        ]);
+        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))->anonymizeNdjson(
+            'records',
+            ["  {\"name\":\"one\",\"email\":\"one@example.test\"}\r\n"],
+        );
+
+        self::assertSame(['{"name":"[REDACTED]","email":"[REDACTED]"}'], iterator_to_array($stream->lines(), false));
+        self::assertSame(['/email', '/name'], array_map(static fn (AuditEntry $entry): string => mb_substr($entry->path(), 2, null, 'UTF-8'), $stream->audit()->entries()));
+    }
+
     public function testNdjsonRejectsNonObjectRecordsWhenPulled(): void
     {
         $profile = ProfileDefinition::fromArray('records', [
@@ -245,6 +268,97 @@ final class DocumentAnonymizationTest extends TestCase
 
         $this->expectException(InvalidArgumentException::class);
         iterator_to_array($stream->lines(), false);
+    }
+
+    public function testNdjsonRejectsEveryNonObjectJsonValue(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact', 'rules' => [['field' => 'email']], 'root' => 'list',
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+
+        foreach (['[1]'] as $line) {
+            try {
+                iterator_to_array($anonymizer->anonymizeNdjson('records', [$line])->lines(), false);
+                self::fail('Expected non-object record to be rejected.');
+            } catch (InvalidArgumentException $exception) {
+                self::assertStringContainsString('must be a JSON object', $exception->getMessage());
+            }
+        }
+        foreach (['null', 'true', '"text"'] as $line) {
+            try {
+                iterator_to_array($anonymizer->anonymizeNdjson('records', [$line])->lines(), false);
+                self::fail('Expected scalar JSON payload to fail decoding.');
+            } catch (PayloadCodecFailure $exception) {
+                self::assertStringContainsString('failed to decode', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testNdjsonAggregatesDistinctActionsAndMissingEventsInStableOrder(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email'], ['field' => 'name']],
+            'root' => 'list',
+        ]);
+        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))
+            ->anonymizeNdjson('records', ['{"name":"Ada"}', '{"email":"secret"}']);
+
+        self::assertSame([
+            '{"name":"[REDACTED]"}',
+            '{"email":"[REDACTED]"}',
+        ], iterator_to_array($stream->lines(), false));
+        $entries = $stream->audit()->entries();
+        self::assertCount(4, $entries);
+        self::assertSame([
+            ['/*/email', 'missing'], ['/*/email', 'replace'],
+            ['/*/name', 'missing'], ['/*/name', 'replace'],
+        ], array_map(static fn (AuditEntry $entry): array => [$entry->path(), $entry->action()], $entries));
+        self::assertSame([1, 1, 1, 1], array_map(static fn (AuditEntry $entry): int => $entry->count(), $entries));
+    }
+
+    public function testNdjsonRejectsBlankAndNonStringRecordsWhenPulled(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email']],
+            'root' => 'list',
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+
+        try {
+            iterator_to_array($anonymizer->anonymizeNdjson('records', ["\n"])->lines(), false);
+            self::fail('Expected blank NDJSON record to be rejected.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('must not be blank', $exception->getMessage());
+        }
+
+        try {
+            iterator_to_array($anonymizer->anonymizeNdjson('records', [42])->lines(), false);
+            self::fail('Expected non-string NDJSON record to be rejected.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('must be a string', $exception->getMessage());
+        }
+    }
+
+    public function testNdjsonFormatsStringOrdinalsInValidationErrors(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'root' => 'list',
+            'rules' => [['field' => 'email']],
+        ]);
+        $lines = new ArrayIterator(['record-key' => 42]);
+        $stream = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]))
+            ->anonymizeNdjson('records', $lines);
+
+        try {
+            iterator_to_array($stream->lines(), false);
+            self::fail('Expected a non-string NDJSON record to be rejected.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('record record-key must be a string', $exception->getMessage());
+        }
     }
 
     public function testNdjsonRequiresListProfile(): void
@@ -283,9 +397,10 @@ final class DocumentAnonymizationTest extends TestCase
         $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$mapProfile, $listProfile]));
 
         try {
-            $anonymizer->anonymizeDocument('map', 'json', '[]');
+            $anonymizer->anonymizeDocument('map', 'json', '  []');
             self::fail('A map profile must reject a JSON list document.');
-        } catch (InvalidArgumentException) {
+        } catch (InvalidArgumentException $exception) {
+            self::assertSame('Profile "map" root does not match the document root.', $exception->getMessage());
         }
 
         $shapeCodec = new ConditionalDocumentPayloadCodec();
@@ -304,6 +419,26 @@ final class DocumentAnonymizationTest extends TestCase
         }
         $this->expectException(InvalidArgumentException::class);
         $anonymizer->anonymizeDocument('list', 'json', '["scalar"]');
+    }
+
+    public function testDocumentInputLimitCountsUtf8CharactersAndChecksWhitespaceBeforeJsonShape(): void
+    {
+        $profile = ProfileDefinition::fromArray('unicode-document', ['mode' => 'redact', 'rules' => [['field' => 'payload']]]);
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxInputBytes: 15),
+        );
+
+        self::assertSame('{"payload":"[REDACTED]"}', $anonymizer->anonymizeDocument('unicode-document', 'json', '{"payload":"€"}'));
+
+        $list = ProfileDefinition::fromArray('list-root', ['mode' => 'redact', 'root' => 'list', 'rules' => [['field' => 'email']]]);
+
+        try {
+            new ArrayAnonymizer(new InMemoryProfileProvider([$list]))->anonymizeDocument('list-root', 'json', "\n  {\"email\":\"secret\"}");
+            self::fail('A whitespace-prefixed JSON object must not pass a list-root profile.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertSame('Profile "list-root" root does not match the document root.', $exception->getMessage());
+        }
     }
 
     public function testDocumentResultExposesAllReportCollections(): void

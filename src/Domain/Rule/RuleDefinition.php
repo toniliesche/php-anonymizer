@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpAnonymizer\Anonymizer\Domain\Rule;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
@@ -135,7 +136,7 @@ final readonly class RuleDefinition
         $hasStrategy = array_key_exists('strategy', $definition);
         $hasEmbedded = array_key_exists('embedded', $definition);
         $hasTransform = array_key_exists('transform', $definition);
-        self::assertTraversalCombination($hasChildren, $hasEach, $hasStrategy, $hasEmbedded, $hasTransform);
+        RuleTraversalCombinationValidator::assert($hasChildren, $hasEach, $hasStrategy, $hasEmbedded, $hasTransform);
 
         if ($hasChildren) {
             self::assertRuleList($definition['children'], 'children must be a non-empty list of rules');
@@ -157,23 +158,7 @@ final readonly class RuleDefinition
             throw new InvalidProfileDefinition('on_scalar requires children or each');
         }
 
-        return new self($field, [], null, false, RuleOptionsCompiler::condition($definition), null, RuleOptionsCompiler::strategy($definition), RuleOptionsCompiler::keyId($definition), RuleOptionsCompiler::embedded($definition), RuleOptionsCompiler::transformation($definition));
-    }
-
-    private static function assertTraversalCombination(bool $hasChildren, bool $hasEach, bool $hasStrategy, bool $hasEmbedded, bool $hasTransform): void
-    {
-        if ($hasChildren && $hasEach) {
-            throw new InvalidProfileDefinition('a rule cannot contain both children and each');
-        }
-        if (($hasChildren || $hasEach) && ($hasStrategy || $hasEmbedded || $hasTransform)) {
-            throw new InvalidProfileDefinition('strategy, transform, and embedded require a leaf rule');
-        }
-        if ($hasStrategy && $hasEmbedded) {
-            throw new InvalidProfileDefinition('a rule cannot contain both strategy and embedded');
-        }
-        if (($hasStrategy && $hasTransform) || ($hasEmbedded && $hasTransform)) {
-            throw new InvalidProfileDefinition('a rule cannot contain more than one of strategy, transform, or embedded');
-        }
+        return new self($field, [], null, false, RuleOptionsCompiler::condition($definition), null, RuleOptionsCompiler::strategy($definition), RuleOptionsCompiler::keyId($definition), EmbeddedPayloadDefinitionParser::parse($definition), RuleOptionsCompiler::transformation($definition));
     }
 
     /**

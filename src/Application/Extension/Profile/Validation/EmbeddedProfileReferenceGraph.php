@@ -30,23 +30,35 @@ final readonly class EmbeddedProfileReferenceGraph
     public function assertAcyclic(): void
     {
         foreach ($this->edges as $profile => $_) {
-            $this->visit($profile, [], []);
+            $cycle = $this->visit($profile, [], []);
+            if ($cycle !== null) {
+                throw new InvalidArgumentException(sprintf('Embedded profile reference cycle detected: %s.', implode(' -> ', $cycle)));
+            }
         }
     }
 
     /**
      * @param list<string> $path
      * @param array<string, true> $visited
+     *
+     * @return null|list<string>
      */
-    private function visit(string $profile, array $path, array $visited): void
+    private function visit(string $profile, array $path, array $visited): ?array
     {
+        $cycle = null;
         if (isset($visited[$profile])) {
-            throw new InvalidArgumentException(sprintf('Embedded profile reference cycle detected: %s.', implode(' -> ', [...$path, $profile])));
+            $cycle = [...$path, $profile];
+        } else {
+            $visited[$profile] = true;
+            foreach ($this->edges[$profile] ?? [] as $next) {
+                $cycle = $this->visit($next, [...$path, $profile], $visited);
+                if ($cycle !== null) {
+                    break;
+                }
+            }
         }
-        $visited[$profile] = true;
-        foreach ($this->edges[$profile] ?? [] as $next) {
-            $this->visit($next, [...$path, $profile], $visited);
-        }
+
+        return $cycle;
     }
 
     /**

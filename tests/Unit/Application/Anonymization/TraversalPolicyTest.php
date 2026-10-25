@@ -51,11 +51,15 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualValueTransformation;
@@ -75,10 +79,13 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(KeyNormalizer::class)]
 #[CoversClass(ConditionDefinition::class)]
+#[UsesClass(ConditionDefinitionParser::class)]
 #[UsesClass(InvalidProfileDefinition::class)]
 #[UsesClass(ContextRequired::class)]
 #[CoversClass(ValueTransformationContext::class)]
 #[CoversClass(RuleDefinition::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 #[UsesClass(RuleOptionsCompiler::class)]
 #[UsesClass(AnonymizationContext::class)]
 #[UsesClass(AnonymizationLimits::class)]
@@ -116,6 +123,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(NullifyTransformation::class)]
 #[UsesClass(NumericBucketTransformation::class)]
 #[UsesClass(PartialMaskTransformation::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
 final class TraversalPolicyTest extends TestCase
 {
     public function testSelectedTransformationsRunInPreserveAndRedactModes(): void

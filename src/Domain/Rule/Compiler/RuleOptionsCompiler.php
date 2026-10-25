@@ -6,7 +6,6 @@ namespace PhpAnonymizer\Anonymizer\Domain\Rule\Compiler;
 
 use PhpAnonymizer\Anonymizer\Domain\Exception\InvalidProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
-use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\ScalarAction;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use Webmozart\Assert\Assert;
@@ -104,23 +103,5 @@ final class RuleOptionsCompiler
         Assert::isMap($options);
 
         return new TransformationDefinition($transform['type'], $options, self::keyId($definition));
-    }
-
-    /**
-     * @param array<string, mixed> $definition
-     */
-    public static function embedded(array $definition): ?EmbeddedPayloadDefinition
-    {
-        if (!array_key_exists('embedded', $definition)) {
-            return null;
-        }
-        if (!is_array($definition['embedded']) || array_keys($definition['embedded']) !== ['codec', 'profile']) {
-            throw new InvalidProfileDefinition('embedded must be a map with exactly codec and profile');
-        }
-        if (!is_string($definition['embedded']['codec']) || $definition['embedded']['codec'] === '' || !is_string($definition['embedded']['profile']) || $definition['embedded']['profile'] === '') {
-            throw new InvalidProfileDefinition('embedded codec and profile must be non-empty strings');
-        }
-
-        return new EmbeddedPayloadDefinition($definition['embedded']['codec'], $definition['embedded']['profile']);
     }
 }

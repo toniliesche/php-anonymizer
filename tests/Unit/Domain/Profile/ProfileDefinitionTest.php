@@ -9,13 +9,18 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadata;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMode;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Condition\ConditionDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -25,10 +30,15 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RuleDefinition::class)]
 #[CoversClass(InvalidProfileDefinition::class)]
 #[CoversClass(ConditionDefinition::class)]
+#[UsesClass(ConditionDefinitionParser::class)]
 #[CoversClass(RuleOptionsCompiler::class)]
+#[CoversClass(EmbeddedPayloadDefinitionParser::class)]
+#[CoversClass(RuleTraversalCombinationValidator::class)]
 #[CoversClass(EmbeddedPayloadDefinition::class)]
 #[CoversClass(ProfileDefinitionParser::class)]
+#[CoversClass(ProfileGlobalRuleParser::class)]
 #[CoversClass(ProfileMetadataParser::class)]
+#[UsesClass(ProfileMetadata::class)]
 #[CoversClass(ProfileCompositionCompiler::class)]
 #[CoversClass(ProfileDefinitionData::class)]
 #[CoversClass(ProfileRuleAppender::class)]
@@ -45,6 +55,46 @@ final class ProfileDefinitionTest extends TestCase
         self::assertSame('customer', $profile->name());
         self::assertSame('email', $profile->rules()[0]->field());
         self::assertSame(ProfileMode::REDACT, $profile->mode());
+    }
+
+    public function testKeyNormalizationIsExplicitAndMetadataIsRetainedStructurally(): void
+    {
+        $default = ProfileDefinition::fromArray('default', [
+            'mode' => 'redact', 'rules' => [['field' => 'email']],
+        ]);
+        self::assertFalse($default->keyNormalization());
+
+        $profile = ProfileDefinition::fromArray('documented', [
+            'mode' => 'redact',
+            'key_normalization' => true,
+            'metadata' => ['owner' => ' team ', 'status' => 'active'],
+            'rules' => [['field' => 'email']],
+        ]);
+        self::assertTrue($profile->keyNormalization());
+        $metadata = $profile->metadata();
+        self::assertNotNull($metadata);
+        self::assertSame(' team ', $metadata->owner());
+        self::assertSame('active', $metadata->status());
+    }
+
+    public function testRejectsMetadataScalarListAndUnknownKeysWithSpecificMessages(): void
+    {
+        foreach ([
+            ['metadata' => 'owner', 'message' => 'metadata must be a non-empty map'],
+            ['metadata' => [], 'message' => 'metadata must be a non-empty map'],
+            ['metadata' => ['owner'], 'message' => 'metadata must be a non-empty map'],
+            ['metadata' => ['unknown' => 'value'], 'message' => 'metadata contains an unknown key'],
+            ['metadata' => ['owner' => '   '], 'message' => 'metadata.owner must be a non-empty string'],
+        ] as $case) {
+            try {
+                ProfileDefinition::fromArray('metadata', [
+                    'mode' => 'redact', 'rules' => [['field' => 'email']], 'metadata' => $case['metadata'],
+                ]);
+                self::fail('Expected invalid metadata.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertStringContainsString($case['message'], $exception->getMessage());
+            }
+        }
     }
 
     public function testRejectsInvalidName(): void
@@ -137,6 +187,23 @@ final class ProfileDefinitionTest extends TestCase
             'global_rules' => [['field' => 'email', 'children' => []]],
             'rules' => [['field' => 'email']],
         ]);
+    }
+
+    public function testPreservesEveryValidGlobalRuleInDefinitionOrder(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'global_rules' => [
+                ['field' => 'email'],
+                ['field' => 'phone'],
+            ],
+            'rules' => [['field' => 'name']],
+        ]);
+
+        self::assertSame(['email', 'phone'], array_map(
+            static fn (RuleDefinition $rule): string => $rule->field(),
+            $profile->globalRules(),
+        ));
     }
 
     public function testRejectsInvalidFragmentNameAndRules(): void
@@ -293,13 +360,49 @@ final class ProfileDefinitionTest extends TestCase
         self::assertSame(['mode' => 'strict'], $transformation->options());
     }
 
+    public function testCompilesKeyIdsOnlyWithLeafCollaborators(): void
+    {
+        $profile = ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [
+                ['field' => 'email', 'strategy' => 'star_mask', 'key_id' => 'tenant'],
+                ['field' => 'name', 'transform' => ['type' => 'custom'], 'key_id' => 'tenant'],
+            ],
+        ]);
+
+        self::assertSame('tenant', $profile->rules()[0]->keyId());
+        self::assertSame('tenant', $profile->rules()[1]->keyId());
+    }
+
+    public function testRejectsKeyIdWithoutLeafActionAndInvalidScalarActionValues(): void
+    {
+        foreach ([
+            ['field' => 'email', 'key_id' => 'tenant'],
+            ['field' => 'email', 'key_id' => ''],
+            ['field' => 'email', 'on_scalar' => 'unknown', 'children' => [['field' => 'value']]],
+        ] as $rule) {
+            try {
+                ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [$rule]]);
+                self::fail('Expected invalid rule option.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertNotSame('', $exception->getMessage());
+            }
+        }
+    }
+
     public function testRejectsMalformedTransformationOptions(): void
     {
-        $this->expectExceptionMessageMatches('/transform options must be a map/');
-        ProfileDefinition::fromArray('customer', [
-            'mode' => 'redact',
-            'rules' => [['field' => 'email', 'transform' => ['type' => 'custom', 'options' => ['strict']]]],
-        ]);
+        foreach ([['strict']] as $options) {
+            try {
+                ProfileDefinition::fromArray('customer', [
+                    'mode' => 'redact',
+                    'rules' => [['field' => 'email', 'transform' => ['type' => 'custom', 'options' => $options]]],
+                ]);
+                self::fail('Non-map transformation options must be rejected.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertSame('Profile "customer" is invalid at rules[0]: transform options must be a map.', $exception->getMessage());
+            }
+        }
     }
 
     public function testRejectsMalformedTransformationDefinition(): void
@@ -308,6 +411,32 @@ final class ProfileDefinitionTest extends TestCase
         ProfileDefinition::fromArray('customer', [
             'mode' => 'redact',
             'rules' => [['field' => 'email', 'transform' => ['options' => []]]],
+        ]);
+    }
+
+    public function testRejectsNonStringTransformationTypesAndTraversalLeafActions(): void
+    {
+        foreach ([
+            ['field' => 'email', 'transform' => ['type' => 42]],
+            ['field' => 'user', 'children' => [['field' => 'email']], 'transform' => ['type' => 'custom']],
+            ['field' => 'user', 'children' => [['field' => 'email']], 'embedded' => ['codec' => 'json', 'profile' => 'nested']],
+            ['field' => 'items', 'each' => [['field' => 'email']], 'transform' => ['type' => 'custom']],
+        ] as $rule) {
+            try {
+                ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [$rule]]);
+                self::fail('Invalid transformation types and traversal leaf actions must be rejected.');
+            } catch (InvalidProfileDefinition $exception) {
+                self::assertNotSame('', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testRejectsAssociativeNestedRuleCollections(): void
+    {
+        $this->expectExceptionMessageIsOrContains('children must be a non-empty list of rules.');
+        ProfileDefinition::fromArray('customer', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'user', 'children' => ['email' => ['field' => 'email']]]],
         ]);
     }
 

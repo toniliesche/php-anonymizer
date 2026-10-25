@@ -19,11 +19,14 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
@@ -51,6 +54,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ProfileCompositionCompiler::class)]
 #[UsesClass(ProfileDefinitionData::class)]
 #[UsesClass(ProfileRuleAppender::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class ProfileReferenceValidatorTest extends TestCase
 {
     public function testRejectsUnknownStrategyCodecAndTransformationReferences(): void
@@ -111,6 +117,37 @@ final class ProfileReferenceValidatorTest extends TestCase
             self::fail('Expected contextual key requirement.');
         } catch (InvalidArgumentException $exception) {
             self::assertStringContainsString('must configure key_id', $exception->getMessage());
+        }
+    }
+
+    public function testValidatesStrategyReferencesInsideBothNestedRuleKinds(): void
+    {
+        $profiles = new ProfileRegistry([
+            ProfileDefinition::fromArray('children', ['mode' => 'redact', 'rules' => [[
+                'field' => 'address',
+                'children' => [['field' => 'email', 'strategy' => 'missing.children']],
+            ]]]),
+        ]);
+
+        try {
+            $this->validator()->validate($profiles, $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]));
+            self::fail('Expected unknown strategy in children.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('missing.children', $exception->getMessage());
+        }
+
+        $profiles = new ProfileRegistry([
+            ProfileDefinition::fromArray('each', ['mode' => 'redact', 'rules' => [[
+                'field' => 'contacts',
+                'each' => [['field' => 'email', 'strategy' => 'missing.each']],
+            ]]]),
+        ]);
+
+        try {
+            $this->validator()->validate($profiles, $this->strategies(), new PayloadCodecRegistry([new JsonPayloadCodec()]));
+            self::fail('Expected unknown strategy in each.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('missing.each', $exception->getMessage());
         }
     }
 

@@ -84,12 +84,7 @@ final readonly class PayloadAnonymizationService
         }
 
         $definition = $this->profiles->get($profile);
-        if ($definition instanceof ProfileDefinition && $codec === 'json') {
-            $first = ltrim($payload)[0] ?? '';
-            if (($first === '[' && $definition->root() === ProfileRoot::MAP) || ($first === '{' && $definition->root() === ProfileRoot::LIST)) {
-                throw new InvalidArgumentException(sprintf('Profile "%s" root does not match the document root.', $profile));
-            }
-        }
+        $this->validateJsonDocumentRoot($profile, $codec, $payload, $definition);
         $result = $this->traversal->applyDocument($profile, $data, $context);
 
         try {
@@ -109,6 +104,18 @@ final readonly class PayloadAnonymizationService
         }
 
         return $payloadCodec;
+    }
+
+    private function validateJsonDocumentRoot(string $profile, string $codec, string $payload, ?ProfileDefinition $definition): void
+    {
+        if (!$definition instanceof ProfileDefinition || $codec !== 'json') {
+            return;
+        }
+
+        $first = ltrim($payload)[0] ?? '';
+        if (($first === '[' && $definition->root() === ProfileRoot::MAP) || ($first === '{' && $definition->root() === ProfileRoot::LIST)) {
+            throw new InvalidArgumentException(sprintf('Profile "%s" root does not match the document root.', $profile));
+        }
     }
 
     private function isMap(mixed $value): bool

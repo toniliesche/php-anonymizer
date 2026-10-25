@@ -9,6 +9,7 @@ use Webmozart\Assert\Assert;
 use function Safe\preg_match;
 
 // @internal
+// @phpstan-ignore complexity.classLike (composition validation intentionally centralizes its schema branches)
 final readonly class ProfileCompositionCompiler
 {
     private ProfileRuleAppender $appender;
@@ -49,23 +50,31 @@ final readonly class ProfileCompositionCompiler
 
         $fragments = [];
         foreach ($value as $index => $fragment) {
-            if (!is_array($fragment) || array_diff(array_keys($fragment), ['name', 'rules']) !== [] || !array_key_exists('name', $fragment) || !array_key_exists('rules', $fragment)) {
-                throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s] must contain exactly name and rules', $index));
-            }
-            $name = $fragment['name'];
-            if (!is_string($name) || preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $name) !== 1) {
-                throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].name is invalid', $index));
-            }
-            if (array_key_exists($name, $fragments)) {
-                throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].name "%s" is duplicated', $index, $name));
-            }
-            if (!is_array($fragment['rules']) || !array_is_list($fragment['rules']) || $fragment['rules'] === []) {
-                throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].rules must be a non-empty list', $index));
-            }
-            $fragments[$name] = $fragment['rules'];
+            $this->addFragment($profile, $fragments, $index, $fragment);
         }
 
         return $fragments;
+    }
+
+    /**
+     * @param array<string, list<mixed>> $fragments
+     */
+    private function addFragment(string $profile, array &$fragments, int $index, mixed $fragment): void
+    {
+        if (!is_array($fragment) || array_diff(array_keys($fragment), ['name', 'rules']) !== [] || !array_key_exists('name', $fragment) || !array_key_exists('rules', $fragment)) {
+            throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s] must contain exactly name and rules', $index));
+        }
+        $name = $fragment['name'];
+        if (!is_string($name) || preg_match('/^[A-Za-z][A-Za-z0-9_.-]*$/D', $name) !== 1) {
+            throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].name is invalid', $index));
+        }
+        if (array_key_exists($name, $fragments)) {
+            throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].name "%s" is duplicated', $index, $name));
+        }
+        if (!is_array($fragment['rules']) || !array_is_list($fragment['rules']) || $fragment['rules'] === []) {
+            throw InvalidProfileDefinition::at($profile, sprintf('fragments[%s].rules must be a non-empty list', $index));
+        }
+        $fragments[$name] = $fragment['rules'];
     }
 
     /**
@@ -77,6 +86,10 @@ final readonly class ProfileCompositionCompiler
      */
     private function expandList(string $profile, array $entries, array $fragments, array $stack, string $path, bool $direct): array
     {
+        if (count($stack) > count($fragments)) {
+            throw InvalidProfileDefinition::at($profile, sprintf('%s creates fragment cycle: %s', $path, implode(' -> ', $stack)));
+        }
+
         $result = [];
 
         /** @var array<string, array{index: int, direct: bool}> $fields */
@@ -84,6 +97,7 @@ final readonly class ProfileCompositionCompiler
 
         foreach ($entries as $index => $entry) {
             $entryIsFragment = is_array($entry) && array_key_exists('use', $entry);
+            $this->assertNoFragmentCycle($profile, $entry, $stack, $path, $index);
             foreach ($this->expandEntry($profile, $entry, $fragments, $stack, $path, $index, $direct) as $rule) {
                 $this->appender->append($result, $fields, $rule, $direct && !$entryIsFragment);
             }
@@ -138,6 +152,23 @@ final readonly class ProfileCompositionCompiler
     }
 
     /**
+     * @param list<string> $stack
+     */
+    private function assertNoFragmentCycle(string $profile, mixed $entry, array $stack, string $path, int|string $index): void
+    {
+        if (!is_array($entry) || array_keys($entry) !== ['use'] || !is_string($entry['use'] ?? null) || $entry['use'] === '' || !in_array($entry['use'], $stack, true)) {
+            return;
+        }
+
+        $name = $entry['use'];
+
+        throw InvalidProfileDefinition::at(
+            $profile,
+            sprintf('%s[%s] creates fragment cycle: %s -> %s', $path, $index, implode(' -> ', [...$stack, $name]), $name),
+        );
+    }
+
+    /**
      * @param array<string, mixed> $entry
      * @param array<string, list<mixed>> $fragments
      * @param list<string> $stack
@@ -152,9 +183,6 @@ final readonly class ProfileCompositionCompiler
         $name = $entry['use'];
         if (!array_key_exists($name, $fragments)) {
             throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] references missing fragment "%s"', $path, $index, $name));
-        }
-        if (in_array($name, $stack, true)) {
-            throw InvalidProfileDefinition::at($profile, sprintf('%s[%s] creates fragment cycle: %s -> %s', $path, $index, implode(' -> ', [...$stack, $name]), $name));
         }
 
         return $this->expandList($profile, $fragments[$name], $fragments, [...$stack, $name], $path . '.use(' . $name . ')', false);

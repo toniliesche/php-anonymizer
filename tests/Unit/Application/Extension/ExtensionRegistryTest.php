@@ -22,11 +22,14 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticReplacementStrategy;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticValueTransformation;
@@ -55,6 +58,9 @@ use stdClass;
 #[UsesClass(ProfileCompositionCompiler::class)]
 #[UsesClass(ProfileDefinitionData::class)]
 #[UsesClass(ProfileRuleAppender::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class ExtensionRegistryTest extends TestCase
 {
     public function testBuiltInStrategiesAndCodecWork(): void
@@ -87,6 +93,11 @@ final class ExtensionRegistryTest extends TestCase
 
         $this->expectException(JsonException::class);
         $codec->decode('[]');
+    }
+
+    public function testJsonCodecAcceptsWhitespaceBeforeAnObjectRoot(): void
+    {
+        self::assertSame(['email' => 'secret'], new JsonPayloadCodec()->decode(" \n\t{\"email\":\"secret\"}"));
     }
 
     public function testJsonCodecRejectsScalarRoots(): void

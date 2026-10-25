@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
+use Generator;
 use InvalidArgumentException;
 use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationContext;
@@ -62,10 +63,14 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
+use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ConditionalDocumentPayloadCodec;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ProfileProviderSequence;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticAnonymizerExtension;
@@ -132,6 +137,7 @@ use stdClass;
 #[UsesClass(NullifyTransformation::class)]
 #[UsesClass(NumericBucketTransformation::class)]
 #[UsesClass(PartialMaskTransformation::class)]
+#[UsesClass(TransformationDefinition::class)]
 #[UsesClass(AuditAnonymizationResult::class)]
 #[UsesClass(AuditEntry::class)]
 #[UsesClass(DocumentAnonymizationResult::class)]
@@ -139,6 +145,9 @@ use stdClass;
 #[UsesClass(NdjsonAnonymizationResult::class)]
 #[UsesClass(PayloadAnonymizationResult::class)]
 #[AllowMockObjectsWithoutExpectations]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class AnonymizerBuilderTest extends TestCase
 {
     public function testFactoryCreatesAConfiguredBuilder(): void
@@ -221,12 +230,17 @@ final class AnonymizerBuilderTest extends TestCase
     {
         $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
         $profileTwo = ProfileDefinition::fromArray('customer.two', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $codecProfile = ProfileDefinition::fromArray('codec.bulk', ['mode' => 'preserve', 'rules' => [['field' => 'value']]]);
         $providerProfile = ProfileDefinition::fromArray('provider.profile', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $bulkProviderProfile = ProfileDefinition::fromArray('provider.bulk', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'builder.strategy.bulk']]]);
         $extensionProfile = ProfileDefinition::fromArray('extension.profile', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
         $provider = new StaticProfileProvider([$providerProfile]);
         $strategy = new StaticReplacementStrategy('builder.strategy', suffix: '-safe');
+        $bulkStrategy = new StaticReplacementStrategy('builder.strategy.bulk', suffix: '-bulk');
         $codec = new StaticPayloadCodec('builder.codec');
+        $bulkCodec = new StaticPayloadCodec('builder.codec.bulk', decodeKey: 'value');
         $transformation = new StaticValueTransformation('builder.transformation');
+        $bulkTransformation = new StaticValueTransformation('builder.transformation.bulk', prefix: 'bulk:');
         $adapter = self::createStub(ObjectAnonymizerInterface::class);
         $adapter->method('anonymize')->willReturn(new ObjectAnonymizationResult(new stdClass(), new AnonymizationResult([], [], [])));
         $extension = new StaticAnonymizerExtension($extensionProfile);
@@ -235,15 +249,16 @@ final class AnonymizerBuilderTest extends TestCase
         $builder = $original
             ->withProfile($profile)
             ->withProfiles([$profileTwo])
+            ->withProfile($codecProfile)
             ->withProfileProvider($provider)
-            ->withProfileProviders([new StaticProfileProvider([ProfileDefinition::fromArray('provider.two', ['mode' => 'redact', 'rules' => [['field' => 'email']]])])])
+            ->withProfileProviders([new StaticProfileProvider([$bulkProviderProfile])])
             ->withReplacementStrategy($strategy)
-            ->withReplacementStrategies([])
+            ->withReplacementStrategies([$bulkStrategy])
             ->withPayloadCodec($codec)
             ->withPayloadCodec(new ConditionalDocumentPayloadCodec())
-            ->withPayloadCodecs([])
+            ->withPayloadCodecs([$bulkCodec])
             ->withValueTransformation($transformation)
-            ->withValueTransformations([])
+            ->withValueTransformations([$bulkTransformation])
             ->withLimits(new AnonymizationLimits(maxDepth: 8))
             ->withObjectAnonymizer($adapter)
             ->withExtension($extension);
@@ -258,10 +273,25 @@ final class AnonymizerBuilderTest extends TestCase
         $facade->anonymizeWithReport('customer', new stdClass());
         self::assertIsArray($facade->anonymize('customer', ['email' => 'secret']));
         self::assertInstanceOf(AnonymizationResult::class, $facade->anonymizeWithReport('customer', ['email' => 'secret']));
+        self::assertSame(['email' => 'secret-bulk'], $facade->anonymize('provider.bulk', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $facade->anonymize('customer.two', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $facade->anonymize('provider.profile', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $facade->anonymize('extension.profile', ['email' => 'secret']));
+        $strategyProfile = ProfileDefinition::fromArray('strategy.bulk', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'builder.strategy.bulk']]]);
+        $transformationProfile = ProfileDefinition::fromArray('transformation.bulk', ['mode' => 'preserve', 'rules' => [['field' => 'email', 'transform' => ['type' => 'builder.transformation.bulk']]]]);
+        $facadeWithBulkProfiles = new AnonymizerBuilder()
+            ->withProfile($strategyProfile)
+            ->withProfile($transformationProfile)
+            ->withReplacementStrategies([$bulkStrategy])
+            ->withValueTransformations([$bulkTransformation])
+            ->build();
+        self::assertSame(['email' => 'secret-bulk'], $facadeWithBulkProfiles->anonymize('strategy.bulk', ['email' => 'secret']));
+        self::assertSame(['email' => 'bulk:secret'], $facadeWithBulkProfiles->anonymize('transformation.bulk', ['email' => 'secret']));
         $facade->anonymizeRecords('customer', [['email' => 'secret']]);
         $facade->anonymizeWithAudit('customer', ['email' => 'secret']);
         $facade->anonymizePayload('customer', 'builder.codec', 'payload');
         $facade->anonymizePayloadWithReport('customer', 'builder.codec', 'payload');
+        self::assertSame('payload', $facade->anonymizePayload('codec.bulk', 'builder.codec.bulk', 'payload'));
         $facade->anonymizeDocument('customer', 'shape', 'map');
         $facade->anonymizeDocumentWithReport('customer', 'shape', 'map');
         self::addToAssertionCount(6);
@@ -274,8 +304,91 @@ final class AnonymizerBuilderTest extends TestCase
 
         self::assertSame(['email' => '[REDACTED]'], $builder->build()->anonymize('generated', ['email' => 'secret']));
 
+        $first = ProfileDefinition::fromArray('duplicate.first', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $second = ProfileDefinition::fromArray('duplicate.second', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $profiles = $this->duplicateKeySequence($first, $second);
+        $generatedProfiles = AnonymizerBuilder::create()->withProfiles($profiles)->build();
+        self::assertSame(['email' => '[REDACTED]'], $generatedProfiles->anonymize('duplicate.first', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $generatedProfiles->anonymize('duplicate.second', ['email' => 'secret']));
+
         $this->expectException(InvalidArgumentException::class);
         AnonymizerBuilder::create()->withProfileProviders([new stdClass()]);
+    }
+
+    public function testSingleAndBulkRegistrationsRetainEveryDistinctValue(): void
+    {
+        $providerOne = new StaticProfileProvider([ProfileDefinition::fromArray('provider.one', ['mode' => 'redact', 'rules' => [['field' => 'email']]])]);
+        $providerTwo = new StaticProfileProvider([ProfileDefinition::fromArray('provider.two', ['mode' => 'redact', 'rules' => [['field' => 'email']]])]);
+        $providerFacade = AnonymizerBuilder::create()
+            ->withProfileProvider($providerOne)
+            ->withProfileProvider($providerTwo)
+            ->build();
+        self::assertSame(['email' => '[REDACTED]'], $providerFacade->anonymize('provider.one', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $providerFacade->anonymize('provider.two', ['email' => 'secret']));
+
+        $bulkFacade = AnonymizerBuilder::create()
+            ->withProfileProviders($this->duplicateKeySequence($providerOne, $providerTwo))
+            ->build();
+        self::assertSame(['email' => '[REDACTED]'], $bulkFacade->anonymize('provider.one', ['email' => 'secret']));
+        self::assertSame(['email' => '[REDACTED]'], $bulkFacade->anonymize('provider.two', ['email' => 'secret']));
+
+        $strategyOne = new StaticReplacementStrategy('builder.one', suffix: '-one');
+        $strategyTwo = new StaticReplacementStrategy('builder.two', suffix: '-two');
+        $strategyProfiles = [
+            ProfileDefinition::fromArray('strategy.one', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'builder.one']]]),
+            ProfileDefinition::fromArray('strategy.two', ['mode' => 'redact', 'rules' => [['field' => 'email', 'strategy' => 'builder.two']]]),
+        ];
+        $strategyFacade = AnonymizerBuilder::create()
+            ->withProfiles($strategyProfiles)
+            ->withReplacementStrategy($strategyOne)
+            ->withReplacementStrategy($strategyTwo)
+            ->build();
+        self::assertSame(['email' => 'secret-one'], $strategyFacade->anonymize('strategy.one', ['email' => 'secret']));
+        self::assertSame(['email' => 'secret-two'], $strategyFacade->anonymize('strategy.two', ['email' => 'secret']));
+
+        $bulkStrategyFacade = AnonymizerBuilder::create()
+            ->withProfiles($strategyProfiles)
+            ->withReplacementStrategies($this->duplicateKeySequence($strategyOne, $strategyTwo))
+            ->build();
+        self::assertSame(['email' => 'secret-one'], $bulkStrategyFacade->anonymize('strategy.one', ['email' => 'secret']));
+        self::assertSame(['email' => 'secret-two'], $bulkStrategyFacade->anonymize('strategy.two', ['email' => 'secret']));
+    }
+
+    public function testBulkRegistrationsAppendWithoutDroppingEarlierSingleRegistrations(): void
+    {
+        $firstStrategy = new StaticReplacementStrategy('builder.first', suffix: '-first');
+        $secondStrategy = new StaticReplacementStrategy('builder.second', suffix: '-second');
+        $thirdStrategy = new StaticReplacementStrategy('builder.third', suffix: '-third');
+        $strategyProfiles = [
+            ProfileDefinition::fromArray('strategy.first', ['mode' => 'redact', 'rules' => [['field' => 'value', 'strategy' => 'builder.first']]]),
+            ProfileDefinition::fromArray('strategy.second', ['mode' => 'redact', 'rules' => [['field' => 'value', 'strategy' => 'builder.second']]]),
+            ProfileDefinition::fromArray('strategy.third', ['mode' => 'redact', 'rules' => [['field' => 'value', 'strategy' => 'builder.third']]]),
+        ];
+        $strategyFacade = AnonymizerBuilder::create()
+            ->withProfiles($strategyProfiles)
+            ->withReplacementStrategy($firstStrategy)
+            ->withReplacementStrategies([$secondStrategy, $thirdStrategy])
+            ->build();
+        self::assertSame(['value' => 'secret-first'], $strategyFacade->anonymize('strategy.first', ['value' => 'secret']));
+        self::assertSame(['value' => 'secret-second'], $strategyFacade->anonymize('strategy.second', ['value' => 'secret']));
+        self::assertSame(['value' => 'secret-third'], $strategyFacade->anonymize('strategy.third', ['value' => 'secret']));
+
+        $firstTransformation = new StaticValueTransformation('builder.transform.first', prefix: 'first:');
+        $secondTransformation = new StaticValueTransformation('builder.transform.second', prefix: 'second:');
+        $thirdTransformation = new StaticValueTransformation('builder.transform.third', prefix: 'third:');
+        $transformationProfiles = [
+            ProfileDefinition::fromArray('transform.first', ['mode' => 'preserve', 'rules' => [['field' => 'value', 'transform' => ['type' => 'builder.transform.first']]]]),
+            ProfileDefinition::fromArray('transform.second', ['mode' => 'preserve', 'rules' => [['field' => 'value', 'transform' => ['type' => 'builder.transform.second']]]]),
+            ProfileDefinition::fromArray('transform.third', ['mode' => 'preserve', 'rules' => [['field' => 'value', 'transform' => ['type' => 'builder.transform.third']]]]),
+        ];
+        $transformationFacade = AnonymizerBuilder::create()
+            ->withProfiles($transformationProfiles)
+            ->withValueTransformation($firstTransformation)
+            ->withValueTransformations([$secondTransformation, $thirdTransformation])
+            ->build();
+        self::assertSame(['value' => 'first:secret'], $transformationFacade->anonymize('transform.first', ['value' => 'secret']));
+        self::assertSame(['value' => 'second:secret'], $transformationFacade->anonymize('transform.second', ['value' => 'secret']));
+        self::assertSame(['value' => 'third:secret'], $transformationFacade->anonymize('transform.third', ['value' => 'secret']));
     }
 
     public function testDirectAndBuilderRuntimesExposeEquivalentOperations(): void
@@ -320,5 +433,12 @@ final class AnonymizerBuilderTest extends TestCase
 
         $this->expectException(ObjectAnonymizationUnavailable::class);
         AnonymizerBuilder::create()->build()->anonymizeObject($request);
+    }
+
+    private function duplicateKeySequence(mixed $first, mixed $second): Generator
+    {
+        yield 0 => $first;
+
+        yield 0 => $second;
     }
 }

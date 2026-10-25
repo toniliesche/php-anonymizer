@@ -55,10 +55,13 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileCompositionCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
+use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
@@ -69,6 +72,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(ArrayAnonymizer::class)]
+#[CoversClass(RuleTreeTraversal::class)]
 #[CoversClass(AnonymizationLimits::class)]
 #[CoversClass(ExecutionLimitExceeded::class)]
 #[CoversClass(ExecutionBudget::class)]
@@ -92,10 +96,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(JsonPointer::class)]
 #[UsesClass(PreserveTraversalPolicy::class)]
 #[UsesClass(RedactUnselectedValues::class)]
-#[UsesClass(AnonymizationReport::class)]
+#[CoversClass(AnonymizationReport::class)]
 #[UsesClass(AnonymizationResult::class)]
 #[UsesClass(ArrayTraversal::class)]
-#[UsesClass(RuleTreeTraversal::class)]
 #[UsesClass(CompiledProfile::class)]
 #[UsesClass(CompiledRuleList::class)]
 #[UsesClass(RuleSelector::class)]
@@ -123,6 +126,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ProfileCompositionCompiler::class)]
 #[UsesClass(ProfileDefinitionData::class)]
 #[UsesClass(ProfileRuleAppender::class)]
+#[UsesClass(ProfileGlobalRuleParser::class)]
+#[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(RuleTraversalCombinationValidator::class)]
 final class AnonymizationRuntimeTest extends TestCase
 {
     public function testNoReportPathReturnsSameTransformation(): void
@@ -302,6 +308,7 @@ final class AnonymizationRuntimeTest extends TestCase
         );
 
         $this->expectException(ExecutionLimitExceeded::class);
+        $this->expectExceptionMessageMatches('/maxCollectionEntries.*\/items/');
         $anonymizer->anonymize('nested', ['items' => [['email' => 'one'], ['email' => 'two']]]);
     }
 
@@ -317,7 +324,97 @@ final class AnonymizationRuntimeTest extends TestCase
         );
 
         $this->expectException(ExecutionLimitExceeded::class);
+        $this->expectExceptionMessageMatches('/maxDepth.*\/customer/');
         $anonymizer->anonymize('nested', ['customer' => ['email' => 'secret']]);
+    }
+
+    public function testTraversalCountsEmptyChildrenAndEachMapsAtTheirDepth(): void
+    {
+        foreach ([
+            [['field' => 'customer', 'children' => [['field' => 'email']]], ['customer' => []]],
+            [['field' => 'items', 'each' => [['field' => 'email']]], ['items' => [[]]]],
+        ] as [$rule, $data]) {
+            $profile = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [$rule]]);
+            $anonymizer = new ArrayAnonymizer(
+                new InMemoryProfileProvider([$profile]),
+                limits: new AnonymizationLimits(maxDepth: 1),
+            );
+
+            try {
+                $anonymizer->anonymize('nested', $data);
+                self::fail('An empty nested map beyond maxDepth should be rejected.');
+            } catch (ExecutionLimitExceeded $exception) {
+                self::assertStringContainsString('maxDepth', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testTraversalBudgetsCoverStringListsRootMapsAndEmptyUnselectedMaps(): void
+    {
+        $plain = ProfileDefinition::fromArray('plain', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
+        $limited = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$plain]),
+            limits: new AnonymizationLimits(maxCollectionEntries: 1),
+        );
+
+        try {
+            $limited->anonymize('plain', ['email' => 'one', 'name' => 'two']);
+            self::fail('The root map should count every entry against the collection budget.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('maxCollectionEntries', $exception->getMessage());
+        }
+
+        $strings = ProfileDefinition::fromArray('strings', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'tags', 'each' => true]],
+        ]);
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$strings]),
+                limits: new AnonymizationLimits(maxCollectionEntries: 1),
+            )->anonymize('strings', ['tags' => ['one', 'two']]);
+            self::fail('Selected string lists should count their entries against the collection budget.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('/tags', $exception->getMessage());
+        }
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$plain]),
+                limits: new AnonymizationLimits(maxVisitedNodes: 1),
+            )->anonymize('plain', ['metadata' => []]);
+            self::fail('An empty unselected map should still count as a visited node.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('/metadata', $exception->getMessage());
+        }
+    }
+
+    public function testTraversalCountsDepthAcrossUnselectedMapsAndDoesNotReapplyUnselectedLists(): void
+    {
+        $preserve = ProfileDefinition::fromArray('preserve', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'email']],
+        ]);
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$preserve]),
+                limits: new AnonymizationLimits(maxDepth: 1),
+            )->anonymize('preserve', ['metadata' => ['nested' => ['value' => 'secret']]]);
+            self::fail('Deep unselected maps should still count toward maxDepth.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('/metadata/nested', $exception->getMessage());
+        }
+
+        $result = new ArrayAnonymizer(new InMemoryProfileProvider([$preserve]))
+            ->anonymizeWithReport('preserve', ['tags' => ['public', 'internal']]);
+        self::assertSame(['tags' => ['[REDACTED]', '[REDACTED]']], $result->data());
+        self::assertSame([
+            ['path' => '/email', 'action' => 'missing', 'handler' => null],
+            ['path' => '/tags/0', 'action' => 'replace', 'handler' => 'redact'],
+            ['path' => '/tags/1', 'action' => 'replace', 'handler' => 'redact'],
+        ], $result->events());
     }
 
     public function testTraversalReusesAnExecutionBudgetSuppliedByTheCaller(): void
@@ -490,6 +587,26 @@ final class AnonymizationRuntimeTest extends TestCase
         self::assertSame([], $report->anonymizedPaths());
         self::assertSame([], $report->missingPaths());
         self::assertSame([], $report->events());
+    }
+
+    public function testCollectingReportRecordsNullableHandlersAndPreservesEventOrder(): void
+    {
+        $report = AnonymizationReport::collecting();
+        $first = JsonPointer::root()->append('first');
+        $second = JsonPointer::root()->append('second');
+
+        $report->event($first, 'observe');
+        $report->anonymized($second, 'transform');
+        $report->missing($first);
+
+        self::assertTrue($report->isCollecting());
+        self::assertSame(['/second'], $report->anonymizedPaths());
+        self::assertSame(['/first'], $report->missingPaths());
+        self::assertSame([
+            ['path' => '/first', 'action' => 'observe', 'handler' => null],
+            ['path' => '/second', 'action' => 'transform', 'handler' => null],
+            ['path' => '/first', 'action' => 'missing', 'handler' => null],
+        ], $report->events());
     }
 
     public function testReportMergePrefixesAllPathsAndPreservesEventMetadata(): void

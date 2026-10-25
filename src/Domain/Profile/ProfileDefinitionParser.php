@@ -30,7 +30,7 @@ final class ProfileDefinitionParser
 
         $globalDefinitions = $definition['global_rules'] ?? [];
         Assert::isList($globalDefinitions);
-        $globalRules = $this->globalRules($name, $globalDefinitions);
+        $globalRules = new ProfileGlobalRuleParser()->parse($name, $globalDefinitions);
 
         return new ProfileDefinitionData($name, $rules, $mode, $root, (bool) ($definition['key_normalization'] ?? false), $globalRules, $metadata, $composition['fragments']);
     }
@@ -111,34 +111,6 @@ final class ProfileDefinitionParser
             }
             if (isset($fields[$rule->field()])) {
                 throw InvalidProfileDefinition::at($name, sprintf('rules[%s]: field "%s" is duplicated', $index, $rule->field()));
-            }
-            $fields[$rule->field()] = true;
-            $rules[] = $rule;
-        }
-
-        return $rules;
-    }
-
-    /** @param list<mixed> $definitions
-     * @return list<RuleDefinition> */
-    private function globalRules(string $name, array $definitions): array
-    {
-        $rules = [];
-        $fields = [];
-        foreach ($definitions as $index => $definition) {
-            if (!is_array($definition)) {
-                throw InvalidProfileDefinition::at($name, sprintf('global_rules[%s] must be a map', $index));
-            }
-
-            Assert::isMap($definition);
-
-            try {
-                $rule = RuleDefinition::fromGlobalArray($definition);
-            } catch (InvalidProfileDefinition $exception) {
-                throw InvalidProfileDefinition::at($name, sprintf('global_rules[%s]: %s', $index, $exception->getMessage()));
-            }
-            if (isset($fields[$rule->field()])) {
-                throw InvalidProfileDefinition::at($name, sprintf('global_rules[%s]: field "%s" is duplicated', $index, $rule->field()));
             }
             $fields[$rule->field()] = true;
             $rules[] = $rule;
