@@ -9,6 +9,14 @@
         "thecodingmachine/safe": "^3.4",
         "webmozart/assert": "^2.5"
     },
+    "suggest": {
+        "php-anonymizer/anonymizer-bundle": "Add Symfony Bundle integration",
+        "php-anonymizer/anonymizer-faker": "Add Faker replacement strategies",
+        "php-anonymizer/anonymizer-laravel": "Add Laravel integration",
+        "php-anonymizer/anonymizer-personas": "Add fixed European persona strategies",
+        "php-anonymizer/anonymizer-pseudonymization": "Add keyed deterministic pseudonymisation",
+        "php-anonymizer/anonymizer-symfony-serializer": "Add object anonymization through Symfony Serializer"
+    },
     "autoload": {
         "psr-4": {
             "PhpAnonymizer\\Anonymizer\\": "src/"

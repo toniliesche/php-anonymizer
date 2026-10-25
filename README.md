@@ -1,67 +1,85 @@
 # PHP Anonymizer Core
 
-Pure PHP array anonymization with immutable profile definitions. The core
-supports flat and nested string redaction, preserve-mode allow-lists, and
-conditional rules without mutating the input array. Named replacement
-strategies and encoded JSON payloads are supported through framework-free
-extension ports.
+Pure PHP array anonymization with reusable profiles. The core supports nested
+map and list traversal, conditional rules, named replacement strategies,
+encoded documents, batches, and safe reports and audits. It requires PHP 8.5
+and `ext-mbstring`.
 
-```php
-$profile = ProfileDefinition::fromArray('customer', [
-    'mode' => 'redact',
-    'rules' => [
-        ['field' => 'customer', 'children' => [['field' => 'email']]],
-        ['field' => 'orders', 'each' => [['field' => 'reference']]],
-        ['field' => 'tags', 'each' => true],
-    ],
-]);
+### Project Status
 
-$result = $anonymizer->anonymizeWithReport('customer', [
-    'customer' => ['email' => 'a@example.com'],
-    'orders' => [['reference' => 'A-1']],
-    'tags' => ['internal'],
-]);
+[![Tests](https://github.com/toniliesche/php-anonymizer-monorepo/actions/workflows/quality.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer-monorepo/actions/workflows/quality.yml)
+[![Code Coverage](https://codecov.io/gh/toniliesche/php-anonymizer-monorepo/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer-monorepo)
+[![Downloads](https://img.shields.io/packagist/dt/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
+[![Stars](https://img.shields.io/github/stars/toniliesche/php-anonymizer-monorepo)](https://github.com/toniliesche/php-anonymizer-monorepo/stargazers)
 
-$result->data();              // redacted array
-$result->anonymizedPaths();   // ['/customer/email', '/orders/0/reference', '/tags/0']
-$result->missingPaths();      // []
+### Project Info
+
+[![PHP Version](https://img.shields.io/packagist/php-v/php-anonymizer/anonymizer)](https://github.com/toniliesche/php-anonymizer-monorepo)
+[![Latest Version](https://img.shields.io/packagist/v/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
+[![License](https://img.shields.io/github/license/toniliesche/php-anonymizer-monorepo)](https://github.com/toniliesche/php-anonymizer-monorepo/blob/main/LICENSE)
+
+### Repo Status
+
+[![Last Commit](https://img.shields.io/github/last-commit/toniliesche/php-anonymizer-monorepo)](https://github.com/toniliesche/php-anonymizer-monorepo)
+[![Issues](https://img.shields.io/github/issues/toniliesche/php-anonymizer-monorepo)](https://github.com/toniliesche/php-anonymizer-monorepo/issues)
+
+### License
+
+This project is released under the MIT license.
+
+See the [LICENSE](https://github.com/toniliesche/php-anonymizer-monorepo/blob/main/LICENSE) for more information.
+
+## Install
+
+```sh
+composer require php-anonymizer/anonymizer
 ```
 
-`AnonymizerInterface` is the single public service contract. Use
-`AnonymizerBuilder::create()` with `withProfiles()` or
-`withProfileProviders()` when constructing the core outside Symfony; concrete
-engines and profile collections remain implementation details. Providers must
-be registered explicitly and return immutable profile definitions.
+## Quick start
 
-`children` traverses an associative map, while `each` traverses a PHP list.
-`each: true` redacts every string list element; `each: [rules]` traverses list
-elements as maps. Wrong runtime shapes and selected non-string values fail with
-path-aware exceptions. Report and exception paths use RFC 6901 JSON Pointer
-notation, so `/` is encoded as `~1` and `~` as `~0`.
+Profiles are registered with an immutable builder. The returned façade can be
+reused for independent inputs:
 
-The profile schema supports preserve mode, conditions, scalar fallbacks,
-strategies, embedded payloads, comparison-only key normalization, and global
-scalar rules. Extension contracts are the public interfaces under
-`Application/Extension` and do not require a framework.
-
-Profiles may optionally carry validated governance metadata and ordered,
-profile-local reusable fragments. Fragment expansion is performed when the
-profile is compiled; it does not evaluate expressions at runtime. Use
-`ProfileInspectorInterface` when an application needs a safe summary containing
-the profile name, metadata, behavior fingerprint, and fragment names. Raw rules,
-source values, replacements, and secrets are never part of inspection or audit
-output.
-
-Global rules can target a named scalar at every map depth, including maps in
-lists, while retaining the original key spelling:
-
+<!-- executable -->
 ```php
+use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizerBuilder;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinition;
+
 $profile = ProfileDefinition::fromArray('customer', [
     'mode' => 'redact',
-    'key_normalization' => true,
-    'global_rules' => [['field' => 'email_address']],
+    'rules' => [['field' => 'email']],
 ]);
+$anonymizer = AnonymizerBuilder::create()->withProfile($profile)->build();
+$safe = $anonymizer->anonymize('customer', ['email' => 'ada@example.test']);
+
+if ($safe !== ['email' => '[REDACTED]']) {
+    throw new RuntimeException('The core quick-start example failed.');
+}
 ```
 
-See the package-local [user guide](docs/user-guide.md) and
-[2.0 migration extract](docs/migration-v2.md).
+In `preserve` mode, selected strings remain unchanged and other strings in the
+input tree are redacted. See the [user guide](docs/user-guide.md) for the
+complete walkthrough and the [profile schema](https://github.com/toniliesche/php-anonymizer-monorepo/blob/main/docs/profile-schema.md)
+for rule syntax, matching behavior, and validation.
+
+## Core capabilities
+
+- `anonymize()` transforms associative arrays without changing their shape.
+- `anonymizePayload()` handles encoded maps; `anonymizeDocument()` also
+  supports explicitly declared list roots.
+- `anonymizeRecords()` and `anonymizeNdjson()` process records lazily.
+- `anonymizeWithReport()` and `anonymizeWithAudit()` return paths or aggregate
+  operational metadata without source or replacement values.
+- Strategies, codecs, transformations, and profile providers use the public,
+  framework-free extension interfaces.
+
+The builder does not scan for profiles or extensions. Register each profile,
+provider, or extension explicitly. For framework setup, install the
+[Symfony Bundle](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-bundle)
+or [Laravel integration](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-laravel).
+Object anonymization is available through the optional
+[Symfony Serializer adapter](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-symfony-serializer).
+
+Read the [extension author guide](https://github.com/toniliesche/php-anonymizer-monorepo/blob/main/docs/extension-author-guide.md)
+to implement custom ports. For changes from the previous API, see the
+[2.0 migration guide](docs/migration-v2.md).
