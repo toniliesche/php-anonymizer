@@ -37,7 +37,7 @@ final readonly class EmbeddedPayloadTraversal
         $report->event($pointer, 'embedded', $codecId);
         $budget ??= new ExecutionBudget(new AnonymizationLimits());
         $budget->enterEmbedded($profile, $pointer);
-        $budget->inputBytes($profile, $path, mb_strlen($value, 'UTF-8'));
+        $budget->inputBytes($profile, $path, mb_strlen($value, '8bit'));
 
         try {
             $decoded = $codec->decode($value);

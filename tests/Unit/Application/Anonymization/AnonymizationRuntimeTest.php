@@ -65,7 +65,6 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticContextualReplacementStrategy;
-use PhpAnonymizer\Anonymizer\Tests\Support\Extension\StaticPayloadCodec;
 use PhpAnonymizer\Anonymizer\Tests\Support\PullCountingIterable;
 use PhpAnonymizer\Anonymizer\Tests\Support\Records;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -467,7 +466,10 @@ final class AnonymizationRuntimeTest extends TestCase
                 new InMemoryProfileProvider([$strings]),
                 limits: new AnonymizationLimits(maxVisitedNodes: 4, maxCollectionEntries: 2, maxDepth: 2),
             )->anonymize('strings', ['tags' => ['one', 'two']]);
-            self::assertSame(2, count($result['tags']));
+            self::assertSame(
+                $mode === ProfileMode::REDACT ? ['[REDACTED]', '[REDACTED]'] : ['one', 'two'],
+                $result['tags'],
+            );
         }
     }
 
@@ -603,19 +605,6 @@ final class AnonymizationRuntimeTest extends TestCase
 
         $this->expectException(ExecutionLimitExceeded::class);
         $anonymizer->anonymizePayload('customer', 'json', '{"email":"secret"}');
-    }
-
-    public function testPayloadInputLimitUsesUtf8CharacterLength(): void
-    {
-        $profile = ProfileDefinition::fromArray('customer', ['mode' => 'redact', 'rules' => [['field' => 'email']]]);
-        $codec = new StaticPayloadCodec('unicode', []);
-        $anonymizer = new ArrayAnonymizer(
-            new InMemoryProfileProvider([$profile]),
-            codecs: [$codec],
-            limits: new AnonymizationLimits(maxInputBytes: 1),
-        );
-
-        self::assertSame('', $anonymizer->anonymizePayload('customer', 'unicode', '€'));
     }
 
     public function testPreserveScalarRedactionIsAuditedWithRedactHandler(): void

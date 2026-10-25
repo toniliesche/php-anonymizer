@@ -68,6 +68,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
 use PhpAnonymizer\Anonymizer\Tests\Support\Extension\ConditionalDocumentPayloadCodec;
+use PhpAnonymizer\Anonymizer\Tests\Support\Extension\RecordingPayloadCodec;
 use PhpAnonymizer\Anonymizer\Tests\Support\PullCountingIterable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -421,15 +422,31 @@ final class DocumentAnonymizationTest extends TestCase
         $anonymizer->anonymizeDocument('list', 'json', '["scalar"]');
     }
 
-    public function testDocumentInputLimitCountsUtf8CharactersAndChecksWhitespaceBeforeJsonShape(): void
+    public function testDocumentInputLimitCountsBytesAndChecksWhitespaceBeforeJsonShape(): void
     {
         $profile = ProfileDefinition::fromArray('unicode-document', ['mode' => 'redact', 'rules' => [['field' => 'payload']]]);
-        $anonymizer = new ArrayAnonymizer(
-            new InMemoryProfileProvider([$profile]),
-            limits: new AnonymizationLimits(maxInputBytes: 15),
-        );
+        foreach ([['abc', 3, true], ['abcd', 3, false], ['€', 3, true], ['€a', 3, false]] as [$payload, $limit, $withinLimit]) {
+            $codec = new RecordingPayloadCodec('recording', ['payload' => 'secret']);
+            $anonymizer = new ArrayAnonymizer(
+                new InMemoryProfileProvider([$profile]),
+                codecs: [$codec],
+                limits: new AnonymizationLimits(maxInputBytes: $limit),
+            );
 
-        self::assertSame('{"payload":"[REDACTED]"}', $anonymizer->anonymizeDocument('unicode-document', 'json', '{"payload":"€"}'));
+            if ($withinLimit) {
+                $anonymizer->anonymizeDocument('unicode-document', 'recording', $payload);
+                self::assertSame(1, $codec->documentDecodeCalls);
+
+                continue;
+            }
+
+            try {
+                $anonymizer->anonymizeDocument('unicode-document', 'recording', $payload);
+                self::fail('Documents larger than the byte limit should be rejected.');
+            } catch (ExecutionLimitExceeded) {
+                self::assertSame(0, $codec->documentDecodeCalls);
+            }
+        }
 
         $list = ProfileDefinition::fromArray('list-root', ['mode' => 'redact', 'root' => 'list', 'rules' => [['field' => 'email']]]);
 

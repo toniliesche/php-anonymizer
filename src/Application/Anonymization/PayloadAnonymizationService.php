@@ -39,7 +39,7 @@ final readonly class PayloadAnonymizationService
         $payloadCodec = $this->codec($codec);
 
         try {
-            new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, 'UTF-8'));
+            new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, '8bit'));
             $data = $payloadCodec->decode($payload);
         } catch (ExecutionLimitExceeded $exception) {
             throw $exception;
@@ -75,7 +75,7 @@ final readonly class PayloadAnonymizationService
         }
 
         try {
-            new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, 'UTF-8'));
+            new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, '8bit'));
             $data = $payloadCodec->decodeDocument($payload);
         } catch (ExecutionLimitExceeded $exception) {
             throw $exception;
