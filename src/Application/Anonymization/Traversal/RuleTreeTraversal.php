@@ -34,7 +34,7 @@ final readonly class RuleTreeTraversal
         }
 
         /** @var array<mixed, mixed> $value */
-        $this->map($value, $context->descend($context->pointer, $context->depth + 1, $rules));
+        $this->map($value, $context->descend($context->pointer, $context->depth, $rules, true));
     }
 
     public function dispatchStrings(mixed &$value, TraversalExecutionContext $context): void
@@ -43,6 +43,10 @@ final readonly class RuleTreeTraversal
             throw UnsupportedValue::at($context->profile, (string) $context->pointer, $value);
         }
         $context->budget->collection($context->profile, $context->pointer, count($value));
+        foreach ($value as $index => &$item) {
+            $this->visitNode($item, $context->descend($context->pointer->append($index), $context->depth + 1));
+        }
+        unset($item);
         $context->policy->strings($context->profile, $value, $context->pointer, $context->report, $context->anonymizationContext);
     }
 
@@ -58,7 +62,9 @@ final readonly class RuleTreeTraversal
             }
 
             /** @var array<mixed, mixed> $item */
-            $this->map($item, $context->descend($context->pointer->append($index), $context->depth + 1, $rules));
+            $childContext = $context->descend($context->pointer->append($index), $context->depth + 1, $rules);
+            $this->visitNode($item, $childContext);
+            $this->map($item, $childContext->descend($childContext->pointer, $childContext->depth, $rules, true));
         }
         unset($item);
     }
@@ -68,8 +74,9 @@ final readonly class RuleTreeTraversal
      */
     private function map(array &$data, TraversalExecutionContext $context): void
     {
-        $context->budget->visit($context->profile, $context->pointer, $context->depth);
-        $context->budget->collection($context->profile, $context->pointer, count($data));
+        if (!$context->currentNodeVisited) {
+            $this->visitNode($data, $context);
+        }
         $snapshot = $data;
         $selector = new RuleSelector($context->rules, $context->globalRules, $snapshot, $context->normalizeKeys);
         $selector->reportMissing($context->pointer, $context->report);
@@ -78,13 +85,15 @@ final readonly class RuleTreeTraversal
             $field = (string) $field;
             $path = $context->pointer->append($field);
             $selected = $selector->select($field);
+            $childContext = $context->descend($path, $context->depth + 1);
+            $this->visitNode($value, $childContext);
+            $childContext = $childContext->descend($path, $childContext->depth, currentNodeVisited: true);
             if ($selected instanceof SelectedRule) {
-                $context->budget->visit($context->profile, $path, $context->depth + 1);
-                $this->dispatcher->dispatch($value, $selected, $context->descend($path, $context->depth + 1));
+                $this->dispatcher->dispatch($value, $selected, $childContext);
 
                 continue;
             }
-            $this->unselected($value, $context->descend($path, $context->depth + 1));
+            $this->unselected($value, $childContext);
         }
         unset($value);
     }
@@ -93,19 +102,29 @@ final readonly class RuleTreeTraversal
     {
         if (is_array($value) && (!array_is_list($value) || $value === [])) {
             /** @var array<mixed, mixed> $value */
-            $this->map($value, $context->descend($context->pointer, $context->depth, $context->emptyRules));
+            $this->map($value, $context->descend($context->pointer, $context->depth, $context->emptyRules, true));
 
             return;
         }
         if (is_array($value)) {
             foreach ($value as $index => &$item) {
-                $this->unselected($item, $context->descend($context->pointer->append($index), $context->depth));
+                $childContext = $context->descend($context->pointer->append($index), $context->depth + 1);
+                $this->visitNode($item, $childContext);
+                $this->unselected($item, $childContext->descend($childContext->pointer, $childContext->depth, currentNodeVisited: true));
             }
             unset($item);
 
             return;
         }
         $context->policy->unselected($value, $context->pointer, $context->report, $context->anonymizationContext);
+    }
+
+    private function visitNode(mixed $value, TraversalExecutionContext $context): void
+    {
+        $context->budget->visit($context->profile, $context->pointer, $context->depth);
+        if (is_array($value)) {
+            $context->budget->collection($context->profile, $context->pointer, count($value));
+        }
     }
 
     private function isMap(mixed $value): bool

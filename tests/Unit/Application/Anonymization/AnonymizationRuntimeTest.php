@@ -57,6 +57,7 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionData;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileGlobalRuleParser;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMetadataParser;
+use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileMode;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
@@ -331,20 +332,20 @@ final class AnonymizationRuntimeTest extends TestCase
     public function testTraversalCountsEmptyChildrenAndEachMapsAtTheirDepth(): void
     {
         foreach ([
-            [['field' => 'customer', 'children' => [['field' => 'email']]], ['customer' => []]],
-            [['field' => 'items', 'each' => [['field' => 'email']]], ['items' => [[]]]],
-        ] as [$rule, $data]) {
+            [['field' => 'customer', 'children' => [['field' => 'email']]], ['customer' => []], ['maxVisitedNodes' => 1], 'maxVisitedNodes'],
+            [['field' => 'items', 'each' => [['field' => 'email']]], ['items' => [[]]], ['maxDepth' => 1], 'maxDepth'],
+        ] as [$rule, $data, $limits, $limitName]) {
             $profile = ProfileDefinition::fromArray('nested', ['mode' => 'redact', 'rules' => [$rule]]);
             $anonymizer = new ArrayAnonymizer(
                 new InMemoryProfileProvider([$profile]),
-                limits: new AnonymizationLimits(maxDepth: 1),
+                limits: new AnonymizationLimits(...$limits),
             );
 
             try {
                 $anonymizer->anonymize('nested', $data);
-                self::fail('An empty nested map beyond maxDepth should be rejected.');
+                self::fail('An over-budget nested map should be rejected.');
             } catch (ExecutionLimitExceeded $exception) {
-                self::assertStringContainsString('maxDepth', $exception->getMessage());
+                self::assertStringContainsString($limitName, $exception->getMessage());
             }
         }
     }
@@ -415,6 +416,59 @@ final class AnonymizationRuntimeTest extends TestCase
             ['path' => '/tags/0', 'action' => 'replace', 'handler' => 'redact'],
             ['path' => '/tags/1', 'action' => 'replace', 'handler' => 'redact'],
         ], $result->events());
+    }
+
+    public function testTraversalLimitsCoverEveryNodeInUnselectedListsAndRespectExactBoundaries(): void
+    {
+        $plain = ProfileDefinition::fromArray('plain', ['mode' => 'preserve', 'rules' => [['field' => 'unused']]]);
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$plain]),
+                limits: new AnonymizationLimits(maxCollectionEntries: 1),
+            )->anonymize('plain', ['metadata' => ['one', 'two']]);
+            self::fail('An oversized unselected list should exceed the collection limit.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('maxCollectionEntries', $exception->getMessage());
+            self::assertStringContainsString('profile "plain"', $exception->getMessage());
+            self::assertStringContainsString('/metadata', $exception->getMessage());
+        }
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$plain]),
+                limits: new AnonymizationLimits(maxDepth: 2),
+            )->anonymize('plain', ['metadata' => [[['secret']]]]);
+            self::fail('Nested list indices should increase traversal depth.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('maxDepth', $exception->getMessage());
+            self::assertStringContainsString('profile "plain"', $exception->getMessage());
+            self::assertStringContainsString('/metadata/0/0', $exception->getMessage());
+        }
+
+        try {
+            new ArrayAnonymizer(
+                new InMemoryProfileProvider([$plain]),
+                limits: new AnonymizationLimits(maxVisitedNodes: 2),
+            )->anonymize('plain', ['first' => 'one', 'second' => 'two']);
+            self::fail('Unselected scalar leaves should count toward the node limit.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('maxVisitedNodes', $exception->getMessage());
+            self::assertStringContainsString('profile "plain"', $exception->getMessage());
+            self::assertStringContainsString('/second', $exception->getMessage());
+        }
+
+        foreach ([ProfileMode::REDACT, ProfileMode::PRESERVE] as $mode) {
+            $strings = ProfileDefinition::fromArray('strings', [
+                'mode' => $mode->value,
+                'rules' => [['field' => 'tags', 'each' => true]],
+            ]);
+            $result = new ArrayAnonymizer(
+                new InMemoryProfileProvider([$strings]),
+                limits: new AnonymizationLimits(maxVisitedNodes: 4, maxCollectionEntries: 2, maxDepth: 2),
+            )->anonymize('strings', ['tags' => ['one', 'two']]);
+            self::assertSame(2, count($result['tags']));
+        }
     }
 
     public function testTraversalReusesAnExecutionBudgetSuppliedByTheCaller(): void

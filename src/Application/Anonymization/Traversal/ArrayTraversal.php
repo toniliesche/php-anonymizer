@@ -99,9 +99,13 @@ final readonly class ArrayTraversal
     /**
      * @param array<mixed, mixed> $data
      */
-    private function applyMap(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null): void
+    private function applyMap(string $profile, array &$data, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null, int $depth = 0, bool $currentNodeVisited = false): void
     {
-        $this->rules->apply($data, $this->context($profile, $definition, $report, $budget, $context, $parent));
+        $executionContext = $this->context($profile, $definition, $report, $budget, $context, $parent, $depth);
+        if ($currentNodeVisited) {
+            $executionContext = $executionContext->descend($executionContext->pointer, $executionContext->depth, currentNodeVisited: true);
+        }
+        $this->rules->apply($data, $executionContext);
     }
 
     /**
@@ -123,6 +127,7 @@ final readonly class ArrayTraversal
         if (!array_is_list($data)) {
             throw new InvalidArgumentException(sprintf('Profile "%s" requires a list document root.', $profile));
         }
+        $budget->visit($profile, JsonPointer::root(), 0);
         $budget->collection($profile, JsonPointer::root(), count($data));
         foreach ($data as $index => &$item) {
             if (!$this->isMap($item)) {
@@ -130,18 +135,21 @@ final readonly class ArrayTraversal
             }
 
             /** @var array<mixed, mixed> $item */
-            $this->applyMap($profile, $item, $definition, $report, $budget, $context, JsonPointer::root()->append((string) $index));
+            $itemPath = JsonPointer::root()->append((string) $index);
+            $budget->visit($profile, $itemPath, 1);
+            $budget->collection($profile, $itemPath, count($item));
+            $this->applyMap($profile, $item, $definition, $report, $budget, $context, $itemPath, 1, true);
         }
         unset($item);
     }
 
-    private function context(string $profile, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null): TraversalExecutionContext
+    private function context(string $profile, ProfileDefinition $definition, AnonymizationReport $report, ExecutionBudget $budget, ?AnonymizationContext $context, ?JsonPointer $parent = null, int $depth = 0): TraversalExecutionContext
     {
         $policy = $definition->mode() === ProfileMode::PRESERVE ? $this->preserver : $this->redactor;
 
         $compiled = $this->compiledProfiles[$profile];
 
-        return new TraversalExecutionContext($profile, $compiled->rules, $compiled->globalRules, $compiled->emptyRules, $policy, $report, $budget, $parent ?? JsonPointer::root(), 0, $context, $definition->keyNormalization());
+        return new TraversalExecutionContext($profile, $compiled->rules, $compiled->globalRules, $compiled->emptyRules, $policy, $report, $budget, $parent ?? JsonPointer::root(), $depth, $context, $definition->keyNormalization());
     }
 
     private function isMap(mixed $value): bool

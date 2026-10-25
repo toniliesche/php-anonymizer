@@ -26,10 +26,11 @@ final readonly class TraversalExecutionContext
         public int $depth,
         public ?AnonymizationContext $anonymizationContext,
         public bool $normalizeKeys,
+        public bool $currentNodeVisited = false,
     ) {
     }
 
-    public function descend(JsonPointer $pointer, int $depth, ?CompiledRuleList $rules = null): self
+    public function descend(JsonPointer $pointer, int $depth, ?CompiledRuleList $rules = null, bool $currentNodeVisited = false): self
     {
         return new self(
             $this->profile,
@@ -43,6 +44,7 @@ final readonly class TraversalExecutionContext
             $depth,
             $this->anonymizationContext,
             $this->normalizeKeys,
+            $currentNodeVisited,
         );
     }
 }
