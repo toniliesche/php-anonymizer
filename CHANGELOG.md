@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.1
+
 ## 2.0.0
 
 - Iteration 29: validated extension registry entries at runtime and removed
