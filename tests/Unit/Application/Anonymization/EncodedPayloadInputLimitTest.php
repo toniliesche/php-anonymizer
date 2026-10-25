@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Anonymization;
 
+use LogicException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\AnonymizationLimits;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\ArrayAnonymizer;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\NdjsonAnonymizationService;
@@ -14,6 +15,10 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\PreserveTraversalP
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPolicy;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DeferredNdjsonAuditProvider;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
@@ -61,7 +66,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(ArrayAnonymizer::class)]
 #[CoversClass(PayloadAnonymizationService::class)]
-#[UsesClass(NdjsonAnonymizationService::class)]
+#[CoversClass(NdjsonAnonymizationService::class)]
 #[UsesClass(AnonymizationLimits::class)]
 #[UsesClass(JsonPointer::class)]
 #[UsesClass(PreserveStringSelection::class)]
@@ -70,6 +75,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AnonymizationReport::class)]
 #[UsesClass(AnonymizationResult::class)]
 #[UsesClass(PayloadAnonymizationResult::class)]
+#[UsesClass(AuditEntry::class)]
+#[UsesClass(DeferredNdjsonAuditProvider::class)]
+#[UsesClass(NdjsonAnonymizationResult::class)]
+#[UsesClass(NdjsonAuditResult::class)]
 #[UsesClass(RuntimeAssembler::class)]
 #[UsesClass(ExecutionLimitExceeded::class)]
 #[UsesClass(ArrayTraversal::class)]
@@ -168,5 +177,100 @@ final class EncodedPayloadInputLimitTest extends TestCase
                 self::assertSame(0, $codec->decodeCalls);
             }
         }
+    }
+
+    public function testNdjsonEnforcesLimitsPerRecordAndResetsBudgets(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email']],
+            'root' => 'list',
+        ]);
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxInputBytes: 13, maxVisitedNodes: 2),
+        );
+        $stream = $anonymizer->anonymizeNdjson('records', ["{\"email\":\"x\"}\r\n", '{"email":"x"}']);
+
+        self::assertSame(
+            ['{"email":"[REDACTED]"}', '{"email":"[REDACTED]"}'],
+            iterator_to_array($stream->lines(), false),
+        );
+        self::assertSame(2, $stream->audit()->entries()[0]->count());
+
+        $multibyteProfile = ProfileDefinition::fromArray('multibyte-records', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'x']],
+            'root' => 'list',
+        ]);
+        $multibyteStream = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$multibyteProfile]),
+            limits: new AnonymizationLimits(maxInputBytes: 11),
+        )->anonymizeNdjson('multibyte-records', ["{\"x\":\"€\"}\n"]);
+
+        self::assertSame(['{"x":"\u20ac"}'], iterator_to_array($multibyteStream->lines(), false));
+    }
+
+    public function testNdjsonRejectsOversizedRecordsLazilyAndLeavesAuditIncomplete(): void
+    {
+        $profile = ProfileDefinition::fromArray('records', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'email']],
+            'root' => 'list',
+        ]);
+        $anonymizer = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxInputBytes: 13),
+        );
+        $oversizedFirst = $anonymizer->anonymizeNdjson('records', ['{"email":"xx"}']);
+
+        try {
+            iterator_to_array($oversizedFirst->lines(), false);
+            self::fail('Oversized first record should fail only when pulled.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('maxInputBytes', $exception->getMessage());
+            self::assertStringContainsString('record 0', $exception->getMessage());
+        }
+        $this->assertNdjsonAuditIsIncomplete($oversizedFirst);
+
+        $oversizedLater = $anonymizer->anonymizeNdjson('records', ['{"email":"x"}', '{"email":"xx"}']);
+
+        try {
+            foreach ($oversizedLater->lines() as $output) {
+                self::assertSame('{"email":"[REDACTED]"}', $output);
+            }
+            self::fail('Oversized later record should fail when iteration reaches it.');
+        } catch (ExecutionLimitExceeded $exception) {
+            self::assertStringContainsString('record 1', $exception->getMessage());
+        }
+        $this->assertNdjsonAuditIsIncomplete($oversizedLater);
+
+        $multibyteProfile = ProfileDefinition::fromArray('multibyte-records', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'x']],
+            'root' => 'list',
+        ]);
+        $oversizedMultibyte = new ArrayAnonymizer(
+            new InMemoryProfileProvider([$multibyteProfile]),
+            limits: new AnonymizationLimits(maxInputBytes: 11),
+        )->anonymizeNdjson('multibyte-records', ['{"x":"€"} ']);
+
+        try {
+            iterator_to_array($oversizedMultibyte->lines(), false);
+            self::fail('A multibyte record one byte above the limit should fail.');
+        } catch (ExecutionLimitExceeded) {
+            $this->assertNdjsonAuditIsIncomplete($oversizedMultibyte);
+        }
+    }
+
+    private function assertNdjsonAuditIsIncomplete(NdjsonAnonymizationResult $result): void
+    {
+        try {
+            $result->audit();
+        } catch (LogicException) {
+            return;
+        }
+
+        self::fail('A failed or incomplete stream must not expose a completed audit.');
     }
 }

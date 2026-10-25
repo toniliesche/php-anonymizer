@@ -11,6 +11,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizatio
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditProviderInterface;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
@@ -25,7 +26,7 @@ use Webmozart\Assert\Assert;
  */
 final readonly class NdjsonAnonymizationService
 {
-    public function __construct(private ProfileRegistry $profiles, private ArrayTraversal $traversal)
+    public function __construct(private ProfileRegistry $profiles, private ArrayTraversal $traversal, private AnonymizationLimits $limits)
     {
     }
 
@@ -75,6 +76,9 @@ final readonly class NdjsonAnonymizationService
     private function processLine(string $profile, mixed $ordinal, mixed $line, ?AnonymizationContext $context, array &$counts, JsonPayloadCodec $json): string
     {
         $line = $this->line($ordinal, $line);
+        $budget = new ExecutionBudget($this->limits);
+
+        $budget->inputBytes($profile, sprintf('record %s', $this->formatOrdinal($ordinal)), mb_strlen($line, '8bit'));
 
         try {
             $decoded = $json->decodeDocument($line);
@@ -87,7 +91,7 @@ final readonly class NdjsonAnonymizationService
 
         Assert::isMap($decoded);
         $map = $decoded;
-        $result = $this->traversal->apply($profile, $map, true, context: $context);
+        $result = $this->traversal->apply($profile, $map, true, $budget, $context);
         foreach ($result->events() as $event) {
             $path = '/*' . $event['path'];
             $key = implode("\0", [$path, $event['action'], $event['handler'] ?? '']);

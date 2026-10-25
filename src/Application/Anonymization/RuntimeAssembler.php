@@ -59,7 +59,7 @@ final class RuntimeAssembler
             $codecRegistry,
             $transformationRegistry,
             $traversal,
-            new NdjsonAnonymizationService($profileRegistry, $traversal),
+            new NdjsonAnonymizationService($profileRegistry, $traversal, $limits),
             new PayloadAnonymizationService($codecRegistry, $profileRegistry, $traversal, $limits),
             $limits,
         );
