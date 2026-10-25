@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.0
+
 - Iteration 29: validated extension registry entries at runtime and removed
   unsafe iterable type claims from registry and provider registration paths.
 - Iteration 26: compiled immutable exact and normalized traversal lookups,
@@ -11,9 +13,6 @@
   the internal direct `ArrayAnonymizer` compatibility path.
 - Added stable string-path accessors for contextual replacement and
   transformation values, plus provider-free NDJSON result construction.
-
-## 2.0.0
-
 - Iteration 22: extracted `RuleIndex` and the deferred NDJSON audit provider,
   renamed and reorganized structural tests, and consolidated reusable test
   extension fixtures without changing anonymization behavior.
