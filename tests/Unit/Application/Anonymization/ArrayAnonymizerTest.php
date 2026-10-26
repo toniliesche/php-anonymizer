@@ -39,6 +39,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -103,6 +104,7 @@ use stdClass;
 #[CoversClass(DefaultRedactionStrategy::class)]
 #[CoversClass(StarMaskStrategy::class)]
 #[CoversClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[CoversClass(CoreTransformationFactory::class)]
 #[CoversClass(DateGeneralizeTransformation::class)]
 #[CoversClass(NullifyTransformation::class)]

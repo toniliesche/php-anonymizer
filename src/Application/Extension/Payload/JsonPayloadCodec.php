@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace PhpAnonymizer\Anonymizer\Application\Extension\Payload;
 
-use JsonException;
 use Override;
 use Webmozart\Assert\Assert;
-use function Safe\json_decode;
 use function Safe\json_encode;
 
 // @internal
@@ -25,19 +23,10 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
     #[Override]
     public function decode(string $payload): array
     {
-        $first = ltrim($payload)[0] ?? '';
-        if ($first !== '{') {
-            throw new JsonException('JSON payload root must be an object.');
-        }
+        $data = $this->decodeWithShape($payload)->data();
+        Assert::isNonEmptyMap($data);
 
-        $decoded = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($decoded) || array_is_list($decoded)) {
-            throw new JsonException('JSON payload root must be an object.');
-        }
-
-        Assert::isNonEmptyMap($decoded);
-
-        return $decoded;
+        return $data;
     }
 
     /**
@@ -46,12 +35,7 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
     #[Override]
     public function decodeDocument(string $payload): array
     {
-        $decoded = json_decode($payload, true, flags: JSON_THROW_ON_ERROR);
-        if (!is_array($decoded)) {
-            throw new JsonException('JSON document root must be an object or array.');
-        }
-
-        return $decoded;
+        return $this->decodeDocumentWithShape($payload)->data();
     }
 
     /**
@@ -70,5 +54,43 @@ final class JsonPayloadCodec implements DocumentPayloadCodecInterface
     public function encodeDocument(array $data): string
     {
         return json_encode($data, JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @internal
+     */
+    public function decodeWithShape(string $payload): JsonPayloadData
+    {
+        return JsonPayloadData::decodeMap($payload);
+    }
+
+    /**
+     * @internal
+     */
+    public function decodeDocumentWithShape(string $payload): JsonPayloadData
+    {
+        return JsonPayloadData::decodeDocument($payload);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @param list<string> $invalidatedPaths
+     *
+     * @internal
+     */
+    public function encodeWithShape(array $data, JsonPayloadData $decoded, array $invalidatedPaths): string
+    {
+        return $decoded->encode($data, $invalidatedPaths);
+    }
+
+    /**
+     * @param array<mixed, mixed> $data
+     * @param list<string> $invalidatedPaths
+     *
+     * @internal
+     */
+    public function encodeDocumentWithShape(array $data, JsonPayloadData $decoded, array $invalidatedPaths): string
+    {
+        return $decoded->encode($data, $invalidatedPaths);
     }
 }

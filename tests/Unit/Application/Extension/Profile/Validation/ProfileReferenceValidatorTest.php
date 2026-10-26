@@ -6,6 +6,7 @@ namespace PhpAnonymizer\Anonymizer\Tests\Unit\Application\Extension\Profile\Vali
 
 use InvalidArgumentException;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -38,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(EmbeddedProfileReferenceGraph::class)]
 #[UsesClass(DefaultRedactionStrategy::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(ReplacementStrategyRegistry::class)]
@@ -120,6 +122,24 @@ final class ProfileReferenceValidatorTest extends TestCase
         }
     }
 
+    public function testTransformationValidationWithoutRegistryFailsAsConfigurationError(): void
+    {
+        $profile = ProfileDefinition::fromArray('transformed', ['mode' => 'redact', 'rules' => [[
+            'field' => 'email', 'transform' => ['type' => 'missing'],
+        ]]]);
+
+        try {
+            $this->validator()->validate(
+                new ProfileRegistry([$profile]),
+                $this->strategies(),
+                new PayloadCodecRegistry([new JsonPayloadCodec()]),
+            );
+            self::fail('Expected absent transformation registry to reject the configured transformation.');
+        } catch (InvalidArgumentException $exception) {
+            self::assertStringContainsString('unknown value transformation "missing"', $exception->getMessage());
+        }
+    }
+
     public function testValidatesStrategyReferencesInsideBothNestedRuleKinds(): void
     {
         $profiles = new ProfileRegistry([
@@ -148,6 +168,50 @@ final class ProfileReferenceValidatorTest extends TestCase
             self::fail('Expected unknown strategy in each.');
         } catch (InvalidArgumentException $exception) {
             self::assertStringContainsString('missing.each', $exception->getMessage());
+        }
+    }
+
+    public function testValidatesReferencesAndOptionsOnGlobalRules(): void
+    {
+        $cases = [
+            [
+                ProfileDefinition::fromArray('global-strategy', ['mode' => 'redact', 'global_rules' => [['field' => 'email', 'strategy' => 'missing']]]),
+                $this->strategies(),
+                new TransformationRegistry([]),
+                'unknown replacement strategy',
+            ],
+            [
+                ProfileDefinition::fromArray('global-transformation', ['mode' => 'redact', 'global_rules' => [['field' => 'email', 'transform' => ['type' => 'missing']]]]),
+                $this->strategies(),
+                new TransformationRegistry([]),
+                'unknown value transformation',
+            ],
+            [
+                ProfileDefinition::fromArray('global-options', ['mode' => 'redact', 'global_rules' => [['field' => 'date', 'transform' => ['type' => 'date_generalize', 'options' => ['unit' => 'minute']]]]]),
+                $this->strategies(),
+                new TransformationRegistry([new DateGeneralizeTransformation()]),
+                'date_generalize requires unit',
+            ],
+            [
+                ProfileDefinition::fromArray('global-key', ['mode' => 'redact', 'global_rules' => [['field' => 'email', 'strategy' => 'contextual']]]),
+                new ReplacementStrategyRegistry([new StaticContextualReplacementStrategy()]),
+                new TransformationRegistry([]),
+                'must configure key_id',
+            ],
+        ];
+
+        foreach ($cases as [$profile, $strategies, $transformations, $message]) {
+            try {
+                $this->validator()->validate(
+                    new ProfileRegistry([$profile]),
+                    $strategies,
+                    new PayloadCodecRegistry([new JsonPayloadCodec()]),
+                    $transformations,
+                );
+                self::fail(sprintf('Expected global rule validation to fail with "%s".', $message));
+            } catch (InvalidArgumentException $exception) {
+                self::assertStringContainsString($message, $exception->getMessage());
+            }
         }
     }
 

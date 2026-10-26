@@ -9,6 +9,7 @@ use JsonException;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
@@ -41,6 +42,7 @@ use stdClass;
 #[CoversClass(DefaultRedactionStrategy::class)]
 #[CoversClass(StarMaskStrategy::class)]
 #[CoversClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[CoversClass(ReplacementStrategyRegistry::class)]
 #[CoversClass(PayloadCodecRegistry::class)]
 #[CoversClass(TransformationRegistry::class)]
@@ -181,6 +183,12 @@ final class ExtensionRegistryTest extends TestCase
 
         $this->expectExceptionMessageMatches('/ID .* invalid/');
         new TransformationRegistry([$invalid]);
+    }
+
+    public function testTransformationRegistryRejectsIdsWithTrailingNewlines(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        new TransformationRegistry([new StaticValueTransformation("custom\n")]);
     }
 
     public function testRegistriesRejectIdsWithTrailingNewlines(): void

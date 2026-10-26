@@ -12,6 +12,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ExecutionBudget
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\DocumentPayloadCodecInterface;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
@@ -38,9 +39,16 @@ final readonly class PayloadAnonymizationService
     {
         $payloadCodec = $this->codec($codec);
 
+        $jsonData = null;
+
         try {
             new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, '8bit'));
-            $data = $payloadCodec->decode($payload);
+            if ($payloadCodec instanceof JsonPayloadCodec) {
+                $jsonData = $payloadCodec->decodeWithShape($payload);
+                $data = $jsonData->data();
+            } else {
+                $data = $payloadCodec->decode($payload);
+            }
         } catch (ExecutionLimitExceeded $exception) {
             throw $exception;
         } catch (Throwable $exception) {
@@ -54,7 +62,9 @@ final readonly class PayloadAnonymizationService
         $result = $this->traversal->apply($profile, $data, true, context: $context);
 
         try {
-            $encoded = $payloadCodec->encode($result->data());
+            $encoded = $payloadCodec instanceof JsonPayloadCodec
+                ? $payloadCodec->encodeWithShape($result->data(), $jsonData, $result->anonymizedPaths())
+                : $payloadCodec->encode($result->data());
         } catch (Throwable $exception) {
             throw PayloadCodecFailure::topLevel($profile, $codec, 'encode', $exception);
         }
@@ -74,9 +84,16 @@ final readonly class PayloadAnonymizationService
             throw new InvalidArgumentException(sprintf('Payload codec "%s" does not support document roots.', $codec));
         }
 
+        $jsonData = null;
+
         try {
             new ExecutionBudget($this->limits)->inputBytes($profile, '', mb_strlen($payload, '8bit'));
-            $data = $payloadCodec->decodeDocument($payload);
+            if ($payloadCodec instanceof JsonPayloadCodec) {
+                $jsonData = $payloadCodec->decodeDocumentWithShape($payload);
+                $data = $jsonData->data();
+            } else {
+                $data = $payloadCodec->decodeDocument($payload);
+            }
         } catch (ExecutionLimitExceeded $exception) {
             throw $exception;
         } catch (Throwable $exception) {
@@ -88,7 +105,9 @@ final readonly class PayloadAnonymizationService
         $result = $this->traversal->applyDocument($profile, $data, $context);
 
         try {
-            $encoded = $payloadCodec->encodeDocument($result->data());
+            $encoded = $payloadCodec instanceof JsonPayloadCodec
+                ? $payloadCodec->encodeDocumentWithShape($result->data(), $jsonData, $result->anonymizedPaths())
+                : $payloadCodec->encodeDocument($result->data());
         } catch (Throwable $exception) {
             throw PayloadCodecFailure::topLevel($profile, $codec, 'encode', $exception);
         }

@@ -39,8 +39,15 @@ final readonly class EmbeddedPayloadTraversal
         $budget->enterEmbedded($profile, $pointer);
         $budget->inputBytes($profile, $path, mb_strlen($value, '8bit'));
 
+        $jsonData = null;
+
         try {
-            $decoded = $codec->decode($value);
+            if ($codec instanceof JsonPayloadCodec) {
+                $jsonData = $codec->decodeWithShape($value);
+                $decoded = $jsonData->data();
+            } else {
+                $decoded = $codec->decode($value);
+            }
         } catch (Throwable $exception) {
             $budget->leaveEmbedded();
 
@@ -56,7 +63,9 @@ final readonly class EmbeddedPayloadTraversal
         }
 
         try {
-            $value = $codec->encode($result->data());
+            $value = $codec instanceof JsonPayloadCodec
+                ? $codec->encodeWithShape($result->data(), $jsonData, $result->anonymizedPaths())
+                : $codec->encode($result->data());
         } catch (Throwable $exception) {
             throw PayloadCodecFailure::embedded($profile, $codecId, 'encode', $path, $exception);
         }

@@ -26,6 +26,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentAnonymizat
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\DocumentPayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\NdjsonAuditResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\PayloadAnonymizationResult;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
@@ -41,6 +42,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\PayloadCodecFailure;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -64,6 +66,7 @@ use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRoot;
 use PhpAnonymizer\Anonymizer\Domain\Profile\ProfileRuleAppender;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\EmbeddedPayloadDefinitionParser;
 use PhpAnonymizer\Anonymizer\Domain\Rule\Compiler\RuleOptionsCompiler;
+use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Infrastructure\Profile\InMemoryProfileProvider;
@@ -79,11 +82,13 @@ use Throwable;
 #[CoversClass(ArrayAnonymizer::class)]
 #[CoversClass(DocumentAnonymizationResult::class)]
 #[CoversClass(DocumentPayloadAnonymizationResult::class)]
+#[UsesClass(PayloadAnonymizationResult::class)]
 #[CoversClass(NdjsonAnonymizationResult::class)]
 #[CoversClass(NdjsonAuditResult::class)]
 #[CoversClass(NdjsonAnonymizationService::class)]
 #[CoversClass(PayloadAnonymizationService::class)]
 #[CoversClass(JsonPayloadCodec::class)]
+#[CoversClass(JsonPayloadData::class)]
 #[CoversClass(ProfileDefinition::class)]
 #[CoversClass(ProfileRoot::class)]
 #[UsesClass(AnonymizationContext::class)]
@@ -97,7 +102,7 @@ use Throwable;
 #[UsesClass(AuditEntry::class)]
 #[CoversClass(ArrayTraversal::class)]
 #[UsesClass(ExecutionBudget::class)]
-#[UsesClass(RuleTreeTraversal::class)]
+#[CoversClass(RuleTreeTraversal::class)]
 #[UsesClass(CompiledProfile::class)]
 #[UsesClass(CompiledRuleList::class)]
 #[UsesClass(RuleSelector::class)]
@@ -135,6 +140,7 @@ use Throwable;
 #[UsesClass(ProfileRuleAppender::class)]
 #[UsesClass(ProfileGlobalRuleParser::class)]
 #[UsesClass(EmbeddedPayloadDefinitionParser::class)]
+#[UsesClass(EmbeddedPayloadDefinition::class)]
 #[UsesClass(RuleTraversalCombinationValidator::class)]
 final class DocumentAnonymizationTest extends TestCase
 {
@@ -193,6 +199,34 @@ final class DocumentAnonymizationTest extends TestCase
 
         self::assertSame('{"email":"[REDACTED]"}', $anonymizer->anonymizeDocument('customer', 'json', '{"email":"secret"}'));
         self::assertSame(ProfileRoot::MAP, $profile->root());
+    }
+
+    public function testJsonOperationsPreserveEmptyObjectAndArrayShapes(): void
+    {
+        $mapProfile = ProfileDefinition::fromArray('preserve-map', ['mode' => 'preserve', 'rules' => [['field' => 'keep']]]);
+        $listProfile = ProfileDefinition::fromArray('preserve-list', ['mode' => 'preserve', 'root' => 'list', 'rules' => [['field' => 'keep']]]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$mapProfile, $listProfile]));
+
+        self::assertSame('{"nested":{},"array":[]}', $anonymizer->anonymizePayload('preserve-map', 'json', '{"nested":{},"array":[]}'));
+        self::assertSame('{"nested":{},"array":[]}', $anonymizer->anonymizeDocument('preserve-map', 'json', '{"nested":{},"array":[]}'));
+        self::assertSame('[{},[],{"nested":{}}]', $anonymizer->anonymizeDocument('preserve-list', 'json', '[{},[],{"nested":{}}]'));
+        self::assertSame('{}', $anonymizer->anonymizeDocument('preserve-map', 'json', '{}'));
+        self::assertSame(['{}', '{"nested":[]}'], iterator_to_array(
+            $anonymizer->anonymizeNdjson('preserve-list', ['{}', '{"nested":[]}'])->lines(),
+            false,
+        ));
+    }
+
+    public function testEmbeddedJsonPreservesEmptyObjectShape(): void
+    {
+        $metadata = ProfileDefinition::fromArray('metadata', ['mode' => 'preserve', 'rules' => [['field' => 'keep']]]);
+        $outer = ProfileDefinition::fromArray('outer', [
+            'mode' => 'preserve',
+            'rules' => [['field' => 'metadata', 'embedded' => ['codec' => 'json', 'profile' => 'metadata']]],
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$outer, $metadata]));
+
+        self::assertSame('{"metadata":"{\"empty\":{},\"list\":[]}"}', $anonymizer->anonymizePayload('outer', 'json', '{"metadata":"{\"empty\":{},\"list\":[]}"}'));
     }
 
     public function testNdjsonIsLazyAndAggregatesWildcardAudit(): void

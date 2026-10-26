@@ -17,6 +17,8 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactTraversalPol
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Policy\RedactUnselectedValues;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationReport;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditAnonymizationResult;
+use PhpAnonymizer\Anonymizer\Application\Anonymization\Result\AuditEntry;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\RuntimeAssembler;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\ArrayTraversal;
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\CompiledProfile;
@@ -32,6 +34,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ContextRequired;
 use PhpAnonymizer\Anonymizer\Application\Exception\UnsupportedValue;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -96,6 +99,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExecutionBudget::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]
@@ -106,6 +110,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(CoreTransformationFactory::class)]
 #[UsesClass(TransformationRegistry::class)]
 #[UsesClass(AnonymizationResult::class)]
+#[UsesClass(AuditEntry::class)]
+#[UsesClass(AuditAnonymizationResult::class)]
 #[UsesClass(InMemoryProfileProvider::class)]
 #[UsesClass(RuntimeAssembler::class)]
 #[UsesClass(SelectedValueDispatcher::class)]
@@ -231,6 +237,48 @@ final class TraversalPolicyTest extends TestCase
 
         self::assertSame(['emailAddress' => '[REDACTED]'], $anonymizer->anonymize('customer', ['emailAddress' => 'secret']));
         self::assertSame(['email_address' => '******'], $anonymizer->anonymize('customer', ['email_address' => 'secret']));
+
+        $result = $anonymizer->anonymizeWithReport('customer', ['emailAddress' => 'secret']);
+        self::assertSame(['/email_address'], $result->missingPaths());
+        self::assertSame(['/emailAddress'], $result->anonymizedPaths());
+    }
+
+    public function testNormalizedNestedMatchIsNotMissingAndAuditKeepsInputPath(): void
+    {
+        $profile = ProfileDefinition::fromArray('normalized-nested', [
+            'mode' => 'redact',
+            'key_normalization' => true,
+            'rules' => [['field' => 'account', 'children' => [['field' => 'email_address']]]],
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$profile]));
+        $input = ['account' => ['emailAddress' => 'secret']];
+
+        $result = $anonymizer->anonymizeWithReport('normalized-nested', $input);
+        $audit = $anonymizer->anonymizeWithAudit('normalized-nested', $input);
+
+        self::assertSame(['account' => ['emailAddress' => '[REDACTED]']], $result->data());
+        self::assertSame(['/account/emailAddress'], $result->anonymizedPaths());
+        self::assertSame([], $result->missingPaths());
+        self::assertCount(1, $audit->entries());
+        self::assertSame('/account/emailAddress', $audit->entries()[0]->path());
+        self::assertSame('replace', $audit->entries()[0]->action());
+    }
+
+    public function testConditionalNormalizedMissAndGlobalRulesDoNotReportMissing(): void
+    {
+        $conditional = ProfileDefinition::fromArray('conditional-normalized', [
+            'mode' => 'preserve',
+            'key_normalization' => true,
+            'rules' => [['field' => 'phone_address', 'when' => ['path' => 'kind', 'equals' => 'person']]],
+        ]);
+        $global = ProfileDefinition::fromArray('global-no-missing', [
+            'mode' => 'preserve',
+            'global_rules' => [['field' => 'email']],
+        ]);
+        $anonymizer = new ArrayAnonymizer(new InMemoryProfileProvider([$conditional, $global]));
+
+        self::assertSame([], $anonymizer->anonymizeWithReport('conditional-normalized', ['kind' => 'company', 'phoneAddress' => 'keep'])->missingPaths());
+        self::assertSame([], $anonymizer->anonymizeWithReport('global-no-missing', [])->missingPaths());
     }
 
     public function testGlobalRulesApplyAtNestedMapDepthsAndInsideLists(): void

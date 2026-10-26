@@ -9,6 +9,7 @@ and `ext-mbstring`.
 
 [![Tests](https://github.com/toniliesche/php-anonymizer-monorepo/actions/workflows/quality.yml/badge.svg)](https://github.com/toniliesche/php-anonymizer-monorepo/actions/workflows/quality.yml)
 [![Code Coverage](https://codecov.io/gh/toniliesche/php-anonymizer-monorepo/branch/develop/graph/badge.svg)](https://codecov.io/gh/toniliesche/php-anonymizer-monorepo)
+[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2Ftoniliesche%2Fphp-anonymizer-monorepo%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/toniliesche/php-anonymizer-monorepo/main)
 [![Downloads](https://img.shields.io/packagist/dt/php-anonymizer/anonymizer.svg)](https://packagist.org/packages/php-anonymizer/anonymizer)
 [![Stars](https://img.shields.io/github/stars/toniliesche/php-anonymizer-monorepo)](https://github.com/toniliesche/php-anonymizer-monorepo/stargazers)
 
@@ -72,6 +73,19 @@ for rule syntax, matching behavior, and validation.
   operational metadata without source or replacement values.
 - Strategies, codecs, transformations, and profile providers use the public,
   framework-free extension interfaces.
+
+## Packages
+
+The PHP Anonymizer project is split into packages for core anonymization and
+optional integrations:
+
+- [`php-anonymizer/anonymizer`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer) — framework-independent core library.
+- [`php-anonymizer/anonymizer-bundle`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-bundle) — Symfony Bundle integration.
+- [`php-anonymizer/anonymizer-faker`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-faker) — Faker-powered replacement strategies.
+- [`php-anonymizer/anonymizer-laravel`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-laravel) — Laravel integration.
+- [`php-anonymizer/anonymizer-personas`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-personas) — reusable persona data for anonymized fixtures.
+- [`php-anonymizer/anonymizer-pseudonymization`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-pseudonymization) — pseudonymization strategies.
+- [`php-anonymizer/anonymizer-symfony-serializer`](https://github.com/toniliesche/php-anonymizer-monorepo/tree/main/packages/anonymizer-symfony-serializer) — optional Symfony Serializer object adapter.
 
 The builder does not scan for profiles or extensions. Register each profile,
 provider, or extension explicitly. For framework setup, install the

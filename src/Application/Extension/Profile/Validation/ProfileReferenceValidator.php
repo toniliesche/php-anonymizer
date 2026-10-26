@@ -27,6 +27,7 @@ final readonly class ProfileReferenceValidator
     {
         foreach ($profiles->profiles() as $profile) {
             $this->rules($profiles, $profile->name(), $profile->rules(), $strategies, $codecs, $transformations);
+            $this->rules($profiles, $profile->name(), $profile->globalRules(), $strategies, $codecs, $transformations);
         }
         new EmbeddedProfileReferenceGraph($profiles->profiles())->assertAcyclic();
     }

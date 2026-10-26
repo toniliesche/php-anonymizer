@@ -81,7 +81,8 @@ final readonly class NdjsonAnonymizationService
         $budget->inputBytes($profile, sprintf('record %s', $this->formatOrdinal($ordinal)), mb_strlen($line, '8bit'));
 
         try {
-            $decoded = $json->decodeDocument($line);
+            $jsonData = $json->decodeDocumentWithShape($line);
+            $decoded = $jsonData->data();
         } catch (Throwable $exception) {
             throw PayloadCodecFailure::topLevel($profile, 'json', 'decode', $exception);
         }
@@ -99,7 +100,7 @@ final readonly class NdjsonAnonymizationService
             ++$counts[$key]['count'];
         }
 
-        return $json->encodeDocument($result->data());
+        return $json->encodeDocumentWithShape($result->data(), $jsonData, $result->anonymizedPaths());
     }
 
     private function line(mixed $ordinal, mixed $line): string

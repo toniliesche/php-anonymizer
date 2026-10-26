@@ -31,6 +31,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedValueDi
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecutionContext;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileCollection;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
@@ -87,6 +88,7 @@ use stdClass;
 #[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileCollection::class)]
 #[UsesClass(ProfileRegistry::class)]
@@ -95,7 +97,7 @@ use stdClass;
 #[UsesClass(DefaultRedactionStrategy::class)]
 #[UsesClass(ReplacementStrategyRegistry::class)]
 #[UsesClass(StarMaskStrategy::class)]
-#[UsesClass(CoreTransformationFactory::class)]
+#[CoversClass(CoreTransformationFactory::class)]
 #[UsesClass(TransformationDefinition::class)]
 #[UsesClass(TransformationRegistry::class)]
 #[UsesClass(ProfileDefinition::class)]

@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 2.0.1
+
+- Corrected traversal accounting so depth, visited-node, and collection limits
+  cover selected and unselected input trees consistently.
+- Measure encoded payloads in bytes before decoding and enforce input and
+  execution limits independently for each lazy NDJSON record.
+- Preserve empty JSON objects as objects, and arrays as arrays, across payload,
+  document, embedded JSON, and NDJSON operations.
+- Resolve missing-field reporting through exact and normalized key matching,
+  and validate global strategy and transformation references during build.
+
 ## 2.0.0
 
 - Iteration 29: validated extension registry entries at runtime and removed

@@ -22,6 +22,7 @@ use PhpAnonymizer\Anonymizer\Domain\Rule\Payload\EmbeddedPayloadDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleDefinition;
 use PhpAnonymizer\Anonymizer\Domain\Rule\RuleTraversalCombinationValidator;
 use PhpAnonymizer\Anonymizer\Domain\Rule\TransformationDefinition;
+use PHPUnit\Framework\Assert as PHPUnitAssert;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -55,6 +56,13 @@ final class ProfileDefinitionTest extends TestCase
         self::assertSame('customer', $profile->name());
         self::assertSame('email', $profile->rules()[0]->field());
         self::assertSame(ProfileMode::REDACT, $profile->mode());
+    }
+
+    public function testFingerprintIncludesProfileName(): void
+    {
+        $definition = ['mode' => 'redact', 'rules' => [['field' => 'email']]];
+
+        PHPUnitAssert::assertNotSame(ProfileDefinition::fromArray('first', $definition)->fingerprint(), ProfileDefinition::fromArray('second', $definition)->fingerprint());
     }
 
     public function testKeyNormalizationIsExplicitAndMetadataIsRetainedStructurally(): void

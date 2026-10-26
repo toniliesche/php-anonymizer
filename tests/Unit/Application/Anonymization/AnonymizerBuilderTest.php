@@ -42,6 +42,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ObjectAnonymizationUnavailabl
 use PhpAnonymizer\Anonymizer\Application\Extension\ObjectAnonymizerInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecInterface;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileCollection;
@@ -121,6 +122,7 @@ use stdClass;
 #[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]
@@ -413,6 +415,29 @@ final class AnonymizerBuilderTest extends TestCase
             self::assertSame($entry->handler(), $builtAudit[$index]->handler());
             self::assertSame($entry->count(), $builtAudit[$index]->count());
         }
+    }
+
+    public function testBuildAcceptsAValidGlobalOnlyProfile(): void
+    {
+        $profile = ProfileDefinition::fromArray('global-only', [
+            'mode' => 'redact',
+            'global_rules' => [['field' => 'email']],
+        ]);
+
+        $anonymizer = AnonymizerBuilder::create()->withProfile($profile)->build();
+
+        self::assertSame(['email' => '[REDACTED]'], $anonymizer->anonymize('global-only', ['email' => 'secret']));
+    }
+
+    public function testBuildRejectsUnknownReferencesInGlobalRules(): void
+    {
+        $profile = ProfileDefinition::fromArray('invalid-global', [
+            'mode' => 'redact',
+            'global_rules' => [['field' => 'email', 'strategy' => 'missing']],
+        ]);
+
+        $this->expectExceptionMessageMatches('/unknown replacement strategy/');
+        AnonymizerBuilder::create()->withProfile($profile)->build();
     }
 
     public function testItRejectsMultipleObjectAdapters(): void

@@ -45,8 +45,17 @@ final class RuleSelector
 
     public function reportMissing(JsonPointer $pointer, AnonymizationReport $report): void
     {
+        /** @var array<int, RuleDefinition> $present */
+        $present = [];
+        foreach (array_keys($this->snapshot) as $field) {
+            $rule = $this->scoped->resolve((string) $field, $this->normalizeKeys);
+            if ($rule instanceof RuleDefinition) {
+                $present[spl_object_id($rule)] = $rule;
+            }
+        }
+
         foreach ($this->scoped->rules() as $rule) {
-            if ($this->matches($rule) && !array_key_exists($rule->field(), $this->snapshot)) {
+            if ($this->matches($rule) && !isset($present[spl_object_id($rule)])) {
                 $report->missing($pointer->append($rule->field()));
             }
         }

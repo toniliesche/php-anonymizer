@@ -37,6 +37,7 @@ use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Exception\ProfileNotFound;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -98,13 +99,14 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(RedactUnselectedValues::class)]
 #[CoversClass(AnonymizationReport::class)]
 #[UsesClass(AnonymizationResult::class)]
-#[UsesClass(ArrayTraversal::class)]
+#[CoversClass(ArrayTraversal::class)]
 #[UsesClass(CompiledProfile::class)]
 #[UsesClass(CompiledRuleList::class)]
 #[UsesClass(RuleSelector::class)]
 #[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]
@@ -417,6 +419,55 @@ final class AnonymizationRuntimeTest extends TestCase
         ], $result->events());
     }
 
+    public function testSelectedStringListsEnforceDepthAndNodeBoundaries(): void
+    {
+        $profile = ProfileDefinition::fromArray('strings', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'tags', 'each' => true]],
+        ]);
+        $input = ['tags' => ['one', 'two']];
+
+        self::assertSame(['tags' => ['[REDACTED]', '[REDACTED]']], new ArrayAnonymizer(
+            new InMemoryProfileProvider([$profile]),
+            limits: new AnonymizationLimits(maxDepth: 2, maxVisitedNodes: 4, maxCollectionEntries: 2),
+        )->anonymize('strings', $input));
+
+        foreach ([
+            [new AnonymizationLimits(maxDepth: 1, maxVisitedNodes: 10, maxCollectionEntries: 2), '/tags/0'],
+            [new AnonymizationLimits(maxDepth: 2, maxVisitedNodes: 3, maxCollectionEntries: 2), '/tags/1'],
+        ] as [$limits, $pointer]) {
+            try {
+                new ArrayAnonymizer(new InMemoryProfileProvider([$profile]), limits: $limits)
+                    ->anonymize('strings', $input);
+                self::fail(sprintf('The selected string list should exceed its budget at %s.', $pointer));
+            } catch (ExecutionLimitExceeded $exception) {
+                self::assertStringContainsString('profile "strings"', $exception->getMessage());
+                self::assertStringContainsString($pointer, $exception->getMessage());
+            }
+        }
+    }
+
+    public function testSelectedChildrenAndEachCountEachMapExactlyOnce(): void
+    {
+        $children = ProfileDefinition::fromArray('children', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'customer', 'children' => [['field' => 'email']]]],
+        ]);
+        self::assertSame(['customer' => ['email' => '[REDACTED]']], new ArrayAnonymizer(
+            new InMemoryProfileProvider([$children]),
+            limits: new AnonymizationLimits(maxVisitedNodes: 3),
+        )->anonymize('children', ['customer' => ['email' => 'secret']]));
+
+        $each = ProfileDefinition::fromArray('each', [
+            'mode' => 'redact',
+            'rules' => [['field' => 'items', 'each' => [['field' => 'email']]]],
+        ]);
+        self::assertSame(['items' => [['email' => '[REDACTED]'], ['email' => '[REDACTED]']]], new ArrayAnonymizer(
+            new InMemoryProfileProvider([$each]),
+            limits: new AnonymizationLimits(maxVisitedNodes: 6),
+        )->anonymize('each', ['items' => [['email' => 'one'], ['email' => 'two']]]));
+    }
+
     public function testTraversalLimitsCoverEveryNodeInUnselectedListsAndRespectExactBoundaries(): void
     {
         $plain = ProfileDefinition::fromArray('plain', ['mode' => 'preserve', 'rules' => [['field' => 'unused']]]);
@@ -464,12 +515,9 @@ final class AnonymizationRuntimeTest extends TestCase
             ]);
             $result = new ArrayAnonymizer(
                 new InMemoryProfileProvider([$strings]),
-                limits: new AnonymizationLimits(maxVisitedNodes: 4, maxCollectionEntries: 2, maxDepth: 2),
+                limits: new AnonymizationLimits(maxDepth: 2, maxVisitedNodes: 4, maxCollectionEntries: 2),
             )->anonymize('strings', ['tags' => ['one', 'two']]);
-            self::assertSame(
-                $mode === ProfileMode::REDACT ? ['[REDACTED]', '[REDACTED]'] : ['one', 'two'],
-                $result['tags'],
-            );
+            self::assertSame($mode === ProfileMode::REDACT ? ['[REDACTED]', '[REDACTED]'] : ['one', 'two'], $result['tags']);
         }
     }
 

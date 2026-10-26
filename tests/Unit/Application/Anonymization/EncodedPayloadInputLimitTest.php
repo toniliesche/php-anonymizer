@@ -33,6 +33,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecut
 use PhpAnonymizer\Anonymizer\Application\Exception\ExecutionLimitExceeded;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\Validation\EmbeddedProfileReferenceGraph;
@@ -92,6 +93,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TraversalExecutionContext::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]
@@ -192,10 +194,7 @@ final class EncodedPayloadInputLimitTest extends TestCase
         );
         $stream = $anonymizer->anonymizeNdjson('records', ["{\"email\":\"x\"}\r\n", '{"email":"x"}']);
 
-        self::assertSame(
-            ['{"email":"[REDACTED]"}', '{"email":"[REDACTED]"}'],
-            iterator_to_array($stream->lines(), false),
-        );
+        self::assertSame(['{"email":"[REDACTED]"}', '{"email":"[REDACTED]"}'], iterator_to_array($stream->lines(), false));
         self::assertSame(2, $stream->audit()->entries()[0]->count());
 
         $multibyteProfile = ProfileDefinition::fromArray('multibyte-records', [

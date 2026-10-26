@@ -29,6 +29,7 @@ use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\SelectedValueDi
 use PhpAnonymizer\Anonymizer\Application\Anonymization\Traversal\TraversalExecutionContext;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\EmbeddedPayloadTraversal;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadCodec;
+use PhpAnonymizer\Anonymizer\Application\Extension\Payload\JsonPayloadData;
 use PhpAnonymizer\Anonymizer\Application\Extension\Payload\PayloadCodecRegistry;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileInspection;
 use PhpAnonymizer\Anonymizer\Application\Extension\Profile\ProfileInspector;
@@ -87,6 +88,7 @@ use stdClass;
 #[UsesClass(SelectedRule::class)]
 #[UsesClass(EmbeddedPayloadTraversal::class)]
 #[UsesClass(JsonPayloadCodec::class)]
+#[UsesClass(JsonPayloadData::class)]
 #[UsesClass(PayloadCodecRegistry::class)]
 #[UsesClass(ProfileRegistry::class)]
 #[UsesClass(EmbeddedProfileReferenceGraph::class)]

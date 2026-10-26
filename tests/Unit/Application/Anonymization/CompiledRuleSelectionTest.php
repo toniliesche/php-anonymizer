@@ -120,4 +120,31 @@ final class CompiledRuleSelectionTest extends TestCase
 
         self::assertSame(['/missing'], $report->missingPaths());
     }
+
+    public function testMissingIndexUsesNormalizedLookupAndExactMatchPrecedence(): void
+    {
+        $normalized = RuleDefinition::fromArray(['field' => 'email_address']);
+        $exact = RuleDefinition::fromArray(['field' => 'emailAddress']);
+        $selector = new RuleSelector(
+            CompiledRuleList::compile([$normalized, $exact], true),
+            CompiledRuleList::empty(),
+            ['emailAddress' => 'secret'],
+            true,
+        );
+        $report = AnonymizationReport::collecting();
+        $selector->reportMissing(JsonPointer::root(), $report);
+
+        self::assertSame(['/email_address'], $report->missingPaths());
+
+        $normalizedOnly = new RuleSelector(
+            CompiledRuleList::compile([$normalized], true),
+            CompiledRuleList::empty(),
+            ['emailAddress' => 'secret'],
+            true,
+        );
+        $normalizedReport = AnonymizationReport::collecting();
+        $normalizedOnly->reportMissing(JsonPointer::root(), $normalizedReport);
+
+        self::assertSame([], $normalizedReport->missingPaths());
+    }
 }
